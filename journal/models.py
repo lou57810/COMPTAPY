@@ -22,11 +22,11 @@ class Journal(models.Model):
     type = models.CharField(max_length=20, choices=JOURNAL_TYPES)
 
 
-
 class EcritureJournal(models.Model):
     date = models.DateField()
-    libelle = models.CharField(max_length=255)
     compte = models.ForeignKey(Compte, on_delete=models.CASCADE)
+    nom = models.CharField(max_length=20)
+    libelle = models.CharField(max_length=255)
     quantite = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     taux = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     debit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
