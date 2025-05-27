@@ -1,5 +1,5 @@
 from django.db import models
-
+from comptes.models import Compte
 
 JOURNAL_TYPES = [
     ('1', 'Journal Achats'),
@@ -16,20 +16,6 @@ JOURNAL_TYPES = [
     ('12', 'Journal de réouverture'),
     ]
 
-
-class Compte(models.Model):
-    numero = models.CharField(max_length=10)
-    nom = models.CharField(max_length=255)
-
-    def __str__(self):
-        return f"{self.numero} - {self.nom}"
-
-
-class CreationCompte(models.Model):  # Comptes Clients ou Fournisseurs
-    date = models.DateField()
-    compte = models.ForeignKey(Compte, on_delete=models.CASCADE)  # N° compte
-    nom = models.CharField(max_length=20)
-    libelle = models.CharField(max_length=255)
 
 class Journal(models.Model):
     code = models.CharField(max_length=5)
