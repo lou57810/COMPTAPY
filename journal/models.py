@@ -1,18 +1,34 @@
 from django.db import models
+from comptes.models import Compte
+
+JOURNAL_TYPES = [
+    ('1', 'Journal Achats'),
+    ('2', 'Journal Ventes'),
+    ('3', 'Journal OD'),
+    ('4', 'Banque'),
+    ('5', 'Caisse'),
+    ('6', 'Compte chèques postaux'),
+    ('7', 'Effets à payer'),
+    ('8', 'Effets à recevoir'),
+    ('9', 'Reports à Nouveau'),
+    ('10', 'Journal de clôture'),
+    ('11', 'Journal expert OD'),
+    ('12', 'Journal de réouverture'),
+    ]
 
 
-class Compte(models.Model):
-    numero = models.CharField(max_length=10)
-    nom = models.CharField(max_length=255)
-
-    def __str__(self):
-        return f"{self.numero} - {self.nom}"
+class Journal(models.Model):
+    code = models.CharField(max_length=5)
+    libelle = models.CharField(max_length=100)
+    type = models.CharField(max_length=20, choices=JOURNAL_TYPES)
 
 
 class EcritureJournal(models.Model):
     date = models.DateField()
+    compte = models.ForeignKey(Compte, on_delete=models.CASCADE)  # N° compte
+    nom = models.CharField(max_length=20)
     libelle = models.CharField(max_length=255)
-    compte = models.ForeignKey(Compte, on_delete=models.CASCADE)
+    quantite = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     taux = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     debit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     credit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
