@@ -17,9 +17,16 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-import journal.urls
+import journal.urls, frontend.urls, authentication.urls
+# from django.conf.urls.static import static
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(journal.urls)),
+    path("", include("frontend.urls")),
+    path("", include("journal.urls")),
+    path("authentication/", include("authentication.urls"))
 ]
+
+
