@@ -26,7 +26,7 @@ class Journal(models.Model):
 class EcritureJournal(models.Model):
     date = models.DateField()
     compte = models.ForeignKey(Compte, on_delete=models.CASCADE)  # N° compte
-    nom = models.CharField(max_length=20)
+    nom = models.CharField(max_length=20, blank=True, null=True)
     libelle = models.CharField(max_length=255)
     quantite = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     taux = models.DecimalField(max_digits=12, decimal_places=2, default=0)
