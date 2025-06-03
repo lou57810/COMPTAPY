@@ -2,6 +2,8 @@
 
 ### L'application utilise une base de donnée postgreql, le langage de programmation python ainsi que Django.
 ### Pour le moment cette application est en construction et non opérationnelle.
+#### Initialisation de git en local, puis copie du code version https:
+#### Lancer la commande ``git clone adresse https copiée``
 #### Création d'un environnement virtuel 'venv' ou nommé comme vous le souhaitez:
 #### ``python  -m venv venv``
 #### Puis, Win (avec console git bash): ``source venv/Scripts/activate``
