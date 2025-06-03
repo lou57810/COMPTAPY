@@ -1,0 +1,6 @@
+venv
+.idea
+.git
+__pycache__
+PGC.xlsx
+db.sqlite3
