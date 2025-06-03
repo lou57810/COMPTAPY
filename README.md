@@ -1,6 +1,7 @@
 # Essai création application comptable.
 
 ### L'application utilise une base de donnée postgresql, le langage de programmation python ainsi que Django.
+### Nécessite l'installation de python, PostgreSQL ainsi que PgAdmin.
 ### Pour le moment cette application est en construction et non opérationnelle.
 #### Initialisation de git en local, puis copie du code version https:
 #### Lancer la commande ``git clone adresse https copiée``
