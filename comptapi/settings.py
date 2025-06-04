@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-# import os
+import os
 from pathlib import Path
 from decouple import config
 
@@ -64,7 +64,9 @@ ROOT_URLCONF = 'comptapi.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'),
+                 os.path.join(BASE_DIR, 'authentication', 'templates'),
+                 os.path.join(BASE_DIR, 'frontend', 'templates'),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -104,7 +106,7 @@ print('ok:', config("DB_PASSWORD"))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+"""
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -119,13 +121,23 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+"""
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'authentication.validators.ContainsLetterValidator',
+    },
+    # {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
+    # {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
+    # {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+    # {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
+]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/api-auth/login/'
+LOGIN_REDIRECT_URL = 'login'
+# LOGOUT_REDIRECT_URL = '/api-auth/login/'
 
 LANGUAGE_CODE = 'en-us'
 
@@ -138,10 +150,15 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
+STATIC_ROOT = os.path.join(BASE_DIR / 'staticfiles')
 STATIC_URL = 'static/'
-
+STATICFILES_DIRS = [BASE_DIR / "static", ]
+MEDIA_URL = '/media/'   # images téléchargées par les utilisateurs loggés
+MEDIA_ROOT = BASE_DIR.joinpath('media/')
+# MEDIA_ROOT = os.path.join(BASE_DIR / "media/")
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'authentication.User'
