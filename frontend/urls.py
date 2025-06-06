@@ -12,6 +12,7 @@ urlpatterns = [
     #router.register(r'', views.accueil, basename='accueil'),
     path('', views.accueil, name='accueil'),
     path("journaux/", include("journaux.urls")),
+    path("comptes/", include ("comptes.urls")),
 ]
 
 if settings.DEBUG:
