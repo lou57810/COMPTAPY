@@ -1,15 +1,19 @@
 from django.shortcuts import render
 
+<<<<<<< HEAD
 # import requests
 # from PIL import Image
 # from rest_framework import viewsets
 # from .models import CompteComptable
 
+=======
+>>>>>>> backDev
 
 def accueil(request):
     return render(request, 'frontend/accueil.html')
 
 
+<<<<<<< HEAD
 def journal_achats(request):
     return render(request,'frontend/journal_achats.html')
 
@@ -59,4 +63,6 @@ def journal_reouverture(request):
 
 def journal_type(request):
     return render(request,'frontend/journal_type.html')
+=======
+>>>>>>> backDev
 

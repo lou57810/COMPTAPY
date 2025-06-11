@@ -12,6 +12,10 @@ urlpatterns = [
     #router.register(r'', views.accueil, basename='accueil'),
     path('', views.accueil, name='accueil'),
     path("journaux/", include("journaux.urls")),
+<<<<<<< HEAD
+=======
+    path("comptes/", include ("comptes.urls")),
+>>>>>>> backDev
 ]
 
 if settings.DEBUG:

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {% extends 'base.html' %}
 {% block content %}
 
@@ -14,3 +15,21 @@
 </section>
 
 {% endblock content %}
+=======
+{% extends 'base.html' %}
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+        <h2>Téléverser une photo de profil</h2>
+            <form method="post" enctype="multipart/form-data">
+                {{ form.as_p }}
+                {% csrf_token %}
+                <button type="submit" >Publier</button>
+            </form>
+        <p>Pas encore membre ? <a href="{% url 'signup' %}">Inscrivez-vous maintenant !</a></p>
+    </div>
+</section>
+
+{% endblock content %}
+>>>>>>> backDev

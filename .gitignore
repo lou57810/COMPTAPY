@@ -5,4 +5,8 @@ venv
 __pycache__
 PGC.xlsx
 db.sqlite3
+<<<<<<< HEAD
+=======
+.env
+>>>>>>> backDev
 media
