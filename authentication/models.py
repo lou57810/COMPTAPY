@@ -78,4 +78,7 @@ class Subscriber(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return self.is_staff
 """
+<<<<<<< HEAD
 
+=======
+>>>>>>> backDev

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 h1 {
@@ -95,3 +96,102 @@ main .signup_container .wrapper {
             background-position: center; /* Centrer l'image */
             height: 100vh; /* Hauteur de l'écran */
             }
+=======
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+h1 {
+    text-align: center;
+}
+
+h2 {
+    text-align: center;
+}
+
+h3 {
+    text-align: center;
+}
+
+container{
+    text-align: center;
+}
+
+#logo {
+    display: block;
+  margin-left: auto;
+  margin-right: auto;
+  height: 5em;
+}
+
+.header_title {
+    text-align: center;
+}
+
+.banner {
+    padding: 0.2em;
+    display: flex;
+}
+
+.img-fluid {
+    .img-fluid.max-width: 100%;
+    height: auto;
+}
+
+.navbar h1 {
+    color: white;
+    padding: 10px;
+}
+
+main {
+    padding-top: 20px;
+}
+
+.avatar {
+    width: 45px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    margin: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+main .wrapper {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 400px;
+    height: 440px;
+    background: #c5d1d3;
+    border: 2px solid rgba(0, 100, 255, .5);
+    border-radius: 20px;
+    backdrop-filter: blur;
+}
+
+main .signup_container .wrapper {
+    margin: 0 auto;
+    margin-bottom: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1400px;
+    height: 640px;
+    background: #c5d1d3;
+    border: 2px solid rgba(0, 100, 255, .5);
+    border-radius: 20px;
+    backdrop-filter: blur;
+}
+
+.img_center {
+    display: flex;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.background-image {
+            background-image: url("static/img1.jpg"); /* Remplacez par le chemin de votre image */
+            background-size: cover; /* Ajuste l'image pour couvrir tout l'élément */
+            background-position: center; /* Centrer l'image */
+            height: 100vh; /* Hauteur de l'écran */
+            }
+>>>>>>> backDev

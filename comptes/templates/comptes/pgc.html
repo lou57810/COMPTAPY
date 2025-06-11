@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Plan Comptable Général</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: sans-serif;
+        }
+        th, td {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+        }
+        th {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <h1>Plan Comptable Général</h1>
+    <table id="pgc-table">
+        <thead>
+            <tr>
+                <th>Numéro</th>
+                <th>Libellé</th>
+                <th>Type</th>
+                <th>Origine</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        fetch("/api/comptes/")
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.querySelector("#pgc-table tbody");
+                data.forEach(compte => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${compte.numero}</td>
+                        <td>${compte.nom}</td>
+                        <td>${compte.type_compte}</td>
+                        <td>${compte.origine}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => console.error("Erreur chargement PGC:", error));
+    </script>
+</body>
+</html>

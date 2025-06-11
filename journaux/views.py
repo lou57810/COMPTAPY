@@ -52,5 +52,8 @@ def journal_reouverture(request):
 
 def journal_type(request):
     return render(request,'journaux/journal_type.html')
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> backDev

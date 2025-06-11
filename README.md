@@ -13,4 +13,16 @@
 #### ``pip install -r requirements.txt``
 #### Et enfin pour lancer l'application:
 #### ``python manage.py runserver``
+
+### Préparation pour un déploiement:
+#### Création d'un fichier .env
+#### Ce fichier ne doit être accessible qu'à l'auteur du projet créé, et contient des données personnalisées.
+
+#### DB_USER = 
+#### DB_PASSWORD = 
+#### DB_HOST = (ex: 127.0.0.1)
+#### DB_PORT =  (ex: pour postgres: 5432)
+#### DB_NAME = (ex: ma_db)
+#### SECRET_KEY = (ex: dans settings.py 'django-insecure.....' crée quand le projet a été créé)
+#### DATABASE_URL = "postgresql://postgres:postgres@localhost:5431/base_de_données"
             

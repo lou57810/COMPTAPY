@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {% extends 'base.html' %}
 {% block content %}
 {% load static %}
@@ -37,3 +38,44 @@
     </div>
 </section>
 {% endblock content %}
+=======
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+<section class="py-5">
+    <div class="container">
+        <h1>Journal expert opérations diverses</h1>
+            <div id="hot">
+              <script>
+                const container = document.getElementById('hot');
+                const hot = new Handsontable(container, {
+                  data: [],colHeaders: ['Date',  'Compte', 'nom', 'Libellé', 'Quantité', 'Taux', 'Débit', 'Crédit', 'Journal'],
+                  columns: [
+                    {type: 'date', dateFormat: 'DD/MM/YYYY'},
+                    {type: 'text'},
+                    {type: 'text'},
+                    {type: 'text'},
+                    {type: 'numeric'},
+                    {type: 'numeric'},
+                    {type: 'numeric'},
+                    {type: 'numeric'},
+                    {type: 'text'}
+                  ],
+                  width: '100%',
+                  height: 'auto',
+                  minSpareRows: 1,
+                  // colHeaders: true,
+                  rowHeaders: true,
+                  colWidths: [80,100,150, 350, 80, 50, 150, 150, 120],
+                  manualColumnResize: true,
+                  autoWrapRow: true,
+                  autoWrapCol: true,
+                  licenseKey: 'non-commercial-and-evaluation'
+                });
+              </script>
+            </div>
+    </div>
+</section>
+{% endblock content %}
+>>>>>>> backDev
