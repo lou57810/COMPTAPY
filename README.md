@@ -22,6 +22,6 @@
 #### DB_HOST = (ex: 127.0.0.1)
 #### DB_PORT =  (ex: pour postgres: 5432)
 #### DB_NAME = (ex: ma_db)
-#### SECRET_KEY = (ex: dans settings.py 'django-insecure..... crée quand le projet a été créé)
+#### SECRET_KEY = (ex: dans settings.py 'django-insecure.....' crée quand le projet a été créé)
 #### DATABASE_URL = "postgresql://postgres:postgres@localhost:5431/base_de_données"
             
