@@ -102,6 +102,7 @@ DATABASES = {
         'PORT': config('DB_PORT'),
     }
 }
+print('ok:', config("DB_PASSWORD"))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -153,8 +154,8 @@ STATIC_ROOT = os.path.join(BASE_DIR / 'staticfiles')
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / "static", ]
 MEDIA_URL = '/media/'   # images téléchargées par les utilisateurs loggés
-# MEDIA_ROOT = BASE_DIR.joinpath('media/')
-MEDIA_ROOT = [BASE_DIR / "media/", ]
+MEDIA_ROOT = BASE_DIR.joinpath('media/')
+# MEDIA_ROOT = os.path.join(BASE_DIR / "media/")
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
