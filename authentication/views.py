@@ -88,8 +88,4 @@ def upload_profile_photo(request):
             form.save()
             return redirect('accueil')
     return render(request, 'authentication/upload_profile_photo.html', context={'form': form})
-<<<<<<< HEAD
 
-
-=======
->>>>>>> backDev

@@ -17,8 +17,4 @@ urlpatterns=[
     path('journal_expert_od/', views.journal_expert_od, name='journal_expert_od'),
     path('journal_reouverture/', views.journal_reouverture, name='journal_reouverture'),
     path('journal_type/', views.journal_type, name='journal_type'),
-<<<<<<< HEAD
 ]
-=======
-]
->>>>>>> backDev
