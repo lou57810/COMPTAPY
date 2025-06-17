@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+
+
+      <style>
+        body {
+            font-family: sans-serif;
+            margin: 2rem;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+        }
+        th {
+            background-color: #f3f3f3;
+        }
+        .pagination {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            width: 200px;
+        }
+        button:disabled {
+            opacity: 0.5;
+        }
+    </style>
+
+
+    <h1>Plan Comptable Général</h1>
+    <table id="pgc-table">
+        <thead>
+            <tr>
+                <th>Numéro</th>
+                <th>Libellé</th>
+                <th>Type</th>
+                <th>Origine</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="pagination">
+        <button id="prev-btn">◀️ Précédent</button>
+        <button id="next-btn">Suivant ▶️</button>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const pageSize = 20;
+        const apiUrl = "/api/comptes/";
+
+        const tbody = document.querySelector("#pgc-table tbody");
+        const prevBtn = document.getElementById("prev-btn");
+        const nextBtn = document.getElementById("next-btn");
+
+
+        function loadPage(page) {
+            fetch(`${apiUrl}?page=${page}&page_size=${pageSize}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Efface les lignes existantes
+                    tbody.innerHTML = "";
+
+                    // Ajoute les nouvelles lignes
+                    data.results.forEach(compte => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${compte.numero}</td>
+                            <td>${compte.nom}</td>
+                            <td>${compte.type_compte}</td>
+                            <td>${compte.origine}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    // Gère les boutons
+                    prevBtn.disabled = data.previous === null;
+                    nextBtn.disabled = data.next === null;
+
+                    // Met à jour la page actuelle
+                    currentPage = page;
+                })
+                .catch(error => console.error("Erreur chargement PGC:", error));
+        }
+        prevBtn.addEventListener("click", () => {
+            if (currentPage > 1) {
+                loadPage(currentPage - 1);
+            }
+        });
+
+        nextBtn.addEventListener("click", () => {
+            loadPage(currentPage + 1);
+        });
+
+        // Charge la première page au démarrage
+        loadPage(1);
+    </script>
+
+    </div>
+</section>
+{% endblock content %}

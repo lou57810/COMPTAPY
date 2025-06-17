@@ -2,7 +2,7 @@
 from django.views import View
 from . import forms
 from django.conf import settings
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate, login, logout
 from rest_framework import permissions, viewsets
 from django.shortcuts import render, redirect

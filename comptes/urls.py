@@ -3,5 +3,5 @@ from comptes.views import CompteComptableListView
 
 
 urlpatterns = [
-    path("", CompteComptableListView.as_view(), name="liste-comptes"),
+    # path("", CompteComptableListView.as_view, name="liste-comptes"),
 ]

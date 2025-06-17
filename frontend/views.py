@@ -6,12 +6,12 @@ from django.shortcuts import render
 # from rest_framework import viewsets
 # from .models import CompteComptable
 
-
+# =============== Accueil =========================
 
 def accueil(request):
     return render(request, 'frontend/accueil.html')
 
-
+# ============== Journaux ==============================
 
 def journal_achats(request):
     return render(request,'frontend/journal_achats.html')
@@ -62,4 +62,10 @@ def journal_reouverture(request):
 
 def journal_type(request):
     return render(request,'frontend/journal_type.html')
+
+
+# ========================== Comptes ===========================================
+
+def liste_compte(request):
+    return render(request, 'frontend/pgc.html')
 

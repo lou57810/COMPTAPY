@@ -25,6 +25,7 @@ class Journal(models.Model):
 
 class EcritureJournal(models.Model):
     date = models.DateField()
+    # A tester: date = models.DateTimeField(auto_now_add = True)
     compte = models.ForeignKey(CompteComptable, on_delete=models.CASCADE)  # N° compte
     nom = models.CharField(max_length=20, null=True, blank=True)
     libelle = models.CharField(max_length=255)
