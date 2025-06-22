@@ -6,6 +6,7 @@
     <div class="container">
         <h1>Journal d'achats</h1>
             <div id="hot">
+              <button id="validateBtn" class="btn btn-primary mt-3">Valider les écritures</button>
               <script>
                 const container = document.getElementById('hot');
                 const hot = new Handsontable(container, {
@@ -32,8 +33,35 @@
                   autoWrapCol: true,
                   licenseKey: 'non-commercial-and-evaluation'
                 });
-              </script>
-            </div>
+
+              document.getElementById('validateBtn').addEventListener('click', function () {
+              const data = hot.getData();
+              // Filtrer les lignes vides
+              const filteredData = data.filter(row => row.some(cell => cell !== null && cell !== ''));
+              fetch("{% url 'valider_journal_achats' %}", {
+              method: 'POST',
+              headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+              },
+              body: JSON.stringify({ lignes: filteredData })
+              })
+              .then(response => {
+              if (response.ok) {
+                alert("Écritures validées avec succès !");
+                // Optionnel : vider le tableau
+                hot.loadData([]);
+              } else {
+                alert("Erreur lors de la validation !");
+              }
+              })
+                .catch(error => {
+                console.error('Erreur :', error);
+                alert("Erreur lors de la validation !");
+                });
+              });
+            </script>
+        </div>
     </div>
 </section>
 {% endblock content %}

@@ -1,24 +1,35 @@
-from django.shortcuts import render
+# from django.shortcuts import render
 from rest_framework import generics
 from rest_framework import viewsets
 from .models import CompteComptable
 from .serializers import CompteComptableSerializer
-from django.contrib.auth.decorators import login_required  # , permission_required
+from django.db.models.functions import Substr
+# from django.contrib.auth.decorators import login_required  # , permission_required
 
 
-"""
+
 class CompteComptableViewSet(viewsets.ModelViewSet):
-    queryset = CompteComptable.objects.all()
     serializer_class = CompteComptableSerializer
+
+    # Tri numéro PGC en fonction des 3 premiers chiffres
+    def get_queryset(self):
+        return CompteComptable.objects.annotate(
+            numero_prefix=Substr('numero', 1, 3)
+        ).order_by('numero_prefix', 'numero')
 
     def perform_create(self, serializer):
         serializer.save(origine='user')
-"""
+
 
 # @login_required
 class CompteComptableListView(generics.ListAPIView):
-    queryset = CompteComptable.objects.all()
     serializer_class = CompteComptableSerializer
+
+    # Tri numéro PGC en fonction des 3 premiers chiffres
+    def get_queryset(self):
+        return CompteComptable.objects.annotate(
+            numero_prefix=Substr('numero', 1, 3)
+        ).order_by('numero_prefix', 'numero')
 
 
 class CompteComptableRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):

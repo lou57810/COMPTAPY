@@ -22,5 +22,5 @@ class CompteComptable(models.Model):
     )
     origine = models.CharField(max_length=20, choices=[('pgc', 'PCG'), ('user', 'Utilisateur')], default='pgc')
 
-    def __str__(self):
-        return f"{self.numero} - {self.nom}"
+    # def __str__(self):
+        # return f"{self.numero} - {self.nom}"

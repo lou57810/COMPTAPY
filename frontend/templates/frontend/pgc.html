@@ -4,7 +4,6 @@
 <section class="py-5">
     <div class="container">
 
-
       <style>
         body {
             font-family: sans-serif;
@@ -53,7 +52,7 @@
 
     <script>
         let currentPage = 1;
-        const pageSize = 20;
+        const pageSize = 100;
         const apiUrl = "/api/comptes/";
 
         const tbody = document.querySelector("#pgc-table tbody");
@@ -69,6 +68,7 @@
                     tbody.innerHTML = "";
 
                     // Ajoute les nouvelles lignes
+                    /*
                     data.results.forEach(compte => {
                         const row = document.createElement("tr");
                         row.innerHTML = `
@@ -79,7 +79,25 @@
                         `;
                         tbody.appendChild(row);
                     });
-
+                    */
+                    data.results
+                      .sort((a, b) => {
+                          const prefixA = a.numero.substring(0, 3);
+                          const prefixB = b.numero.substring(0, 3);
+                          const cmp = prefixA.localeCompare(prefixB, 'fr', { numeric: true });
+                          if (cmp !== 0) return cmp;
+                          return a.numero.localeCompare(b.numero, 'fr', { numeric: true });
+                      })
+                      .forEach(compte => {
+                          const row = document.createElement("tr");
+                          row.innerHTML = `
+                              <td>${compte.numero}</td>
+                              <td>${compte.nom}</td>
+                              <td>${compte.type_compte}</td>
+                              <td>${compte.origine}</td>
+                          `;
+                          tbody.appendChild(row);
+                      });
                     // Gère les boutons
                     prevBtn.disabled = data.previous === null;
                     nextBtn.disabled = data.next === null;

@@ -1,4 +1,8 @@
 from django.shortcuts import render
+from .models import EcritureJournal
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 
 
@@ -52,3 +56,33 @@ def journal_reouverture(request):
 
 def journal_type(request):
     return render(request,'journaux/journal_type.html')
+
+@csrf_exempt  # Si tu n'utilises pas {% csrf_token %}, sinon retire ça
+def valider_journal_achats(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            lignes = data.get('lignes', [])
+
+            for ligne in lignes:
+                date, compte, nom, libelle, quantite, taux, debit, credit, journal = ligne
+
+                # Exemple d'enregistrement (à adapter à ton modèle)
+                EcritureJournal.objects.create(
+                    date=date if date else None,
+                    compte=compte,
+                    nom=nom,
+                    libelle=libelle,
+                    quantite=quantite or 0,
+                    taux=taux or 0,
+                    debit=debit or 0,
+                    credit=credit or 0,
+                    journal=journal
+                )
+
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            print(e)
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)

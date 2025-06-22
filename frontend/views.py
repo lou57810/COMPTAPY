@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from comptes.models import CompteComptable
+from django.contrib.auth.decorators import login_required
+from . import forms
 
 
 # import requests
@@ -68,4 +71,49 @@ def journal_type(request):
 
 def liste_compte(request):
     return render(request, 'frontend/pgc.html')
+
+
+@login_required
+def create_compte(request):
+    compte_form = forms.CompteForm()
+    if request.method == 'POST':
+        compte_form = forms.CompteForm(request.POST)
+        if compte_form.is_valid():
+            compte_form.save()
+        # handle the POST request here
+        context = {
+            'compte_form': compte_form
+        }
+    return render(request, 'frontend/post_create_compte.html', {'compte_form': compte_form})
+
+
+def ajout_modif_compte(request):
+    numero = request.GET.get("id")  # ici "id" représente en réalité le numéro comptable
+    compte = None
+    print('numero:', numero)
+
+    if numero:
+        compte = get_object_or_404(CompteComptable, numero=numero)
+        print('compte:', compte)
+
+    return render(request, "frontend/compte_form.html", {"numero": numero})
+
+@login_required
+def update_compte(request, compte_id):
+    compte = get_object_or_404(CompteComptable, id=compte_id)
+    if request.method == "GET":
+        compte_form = forms.CompteForm(instance=compte)
+        return render(request, 'frontend/update_compte.html',
+                      context={'compte': compte, 'compte_form': compte_form})
+
+    if request.method == "POST":
+        compte_form = forms.CompteForm(request.POST,
+                                       request.FILES, instance=compte)
+        if compte_form.is_valid():
+            new_compte = compte_form.save(commit=False)
+            new_compte.user = request.user
+            new_compte.save()
+            #return redirect('update_compte')
+
+
 

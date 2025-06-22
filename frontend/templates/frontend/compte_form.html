@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+
+<section class="py-5 bg-light">
+    <div class="container">
+      <section class="wrapper">
+
+          <h1>Ajout Compte {{ numero }}</h1>
+
+          <div class="input-box">
+            <form id="compte-form">
+                <label>Numéro : <input type="text" name="numero" required></label><br>
+                <label>Nom : <input type="text" name="nom" required></label><br>
+                <label>Type de compte :
+                    <select name="type_compte" required>
+                        <option value="actif">Actif</option>
+                        <option value="passif">Passif</option>
+                        <option value="charge">Charge</option>
+                        <option value="produit">Produit</option>
+                    </select>
+                </label><br>
+                <label>Origine :
+                    <select name="origine">
+                        <option value="pgc">PGC</option>
+                        <option value="utilisateur">Utilisateur</option>
+                    </select>
+                </label><br>
+
+              {% csrf_token %}
+                  <script>
+                    function getCSRFToken() {
+                        let cookies = document.cookie.split(';');
+                        for (let cookie of cookies) {
+                            let [name, value] = cookie.trim().split('=');
+                            if (name === 'csrftoken') return value;
+                        }
+                        return '';
+                    }
+                  </script>
+                <button type="submit">Enregistrer</button>
+            </form>
+
+          </div>
+<!--          <p id="message"></p>-->
+      </section>
+    </div>
+</section>
+<script>
+              const form = document.getElementById("compte-form");
+              // Récupérer le label
+
+              // Si tu passes ?id=401 dans l'URL, on préremplit pour modifier
+              const urlParams = new URLSearchParams(window.location.search);
+              const compteNumero = urlParams.get("id");
+              console.log('compteNumero:', compteNumero, {{ numero }})
+              if (compteNumero) {
+                  fetch(`/api/comptes/${compteNumero}/`)
+                      .then(response => response.json())
+                      .then(data => {
+                      console.log('data:', data)
+                      const compteId = data['numero'];
+
+                        console.log('COMPTE:', compteId, compteNumero)
+                        if (!compteNumero) throw new Error("Compte introuvable");
+
+                          for (const field in data) {
+                              if (form.elements[field]) {
+                                  form.elements[field].value = data[field];
+                                  }
+                              }
+                            });
+                          }
+
+
+                  form.addEventListener("submit", function (e) {
+                  e.preventDefault();
+                  const formData = new FormData(form);
+
+                  const jsonData = Object.fromEntries(formData.entries());
+                  console.log('formData:', formData)
+                  const url = compteNumero ? `/api/comptes/${compteNumero}/` : "/api/comptes/";
+                  console.log('URL:', url);
+                  // const method = compteId ? "PUT" : "POST";
+                  const method = "POST";
+                  console.log(`Méthode : ${method}`);
+                  console.log('URL2:', url)
+                  fetch(url, {
+                      method: method,
+                      headers: {
+                          "Content-Type": "application/json",
+                          "X-CSRFToken": getCSRFToken()
+                      },
+                      body: JSON.stringify(jsonData)
+                  })
+                  console.log('methode2:', method)
+                  console.log('Headers:', headers)
+                  .then(response => {
+                      if (!response.ok) throw new Error("Erreur réseau");
+                      return response.json();
+                  })
+                  .then(data => {
+                      message.textContent = compte ? "Compte mis à jour ✅" : "Compte créé ✅";
+                      form.reset();
+                  })
+                  .catch(error => {
+                      console.error("Erreur :", error);
+                      message.textContent = "Erreur lors de l’enregistrement ❌";
+              })
+            });
+
+          </script>
+{% endblock %}
+
+
+
