@@ -19,12 +19,8 @@
 #### Avec git bash: ``winpty python manage.py createsuperuser``
 
 ### Préparation pour un déploiement:
-#### Création d'un fichier .env
-#### Ce fichier ne doit être accessible qu'à l'auteur du projet créé, et contient des données personnalisées.
-
-### Récupération du plan comptable pour postgresql:
-#### Dans comptes/management/commands: python ``import_pgc.py``
-
+### Création d'un fichier .env
+### Exemple (env_template):
 #### DB_USER = 
 #### DB_PASSWORD = 
 #### DB_HOST = (ex: 127.0.0.1)
@@ -32,4 +28,10 @@
 #### DB_NAME = (ex: ma_db)
 #### SECRET_KEY = (ex: dans settings.py 'django-insecure.....' crée quand le projet a été créé)
 #### DATABASE_URL = "postgresql://postgres:postgres@localhost:5431/base_de_données"
+#### Ce fichier ne doit être accessible qu'à l'auteur du projet créé, et contient des données personnalisées.
+
+### Récupération du plan comptable pour postgresql:
+#### Dans comptes/management/commands: python ``import_pgc.py``
+
+
             
