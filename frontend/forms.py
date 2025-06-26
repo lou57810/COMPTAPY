@@ -2,8 +2,17 @@ from django import forms
 
 from comptes import models
 
+class CompteSearchForm(forms.Form):
+        numero = forms.CharField(label="Numéro du compte", required=True)
 
+"""
 class CompteForm(forms.ModelForm):
     class Meta:
         model = models.CompteComptable
         fields = ['numero', 'nom', 'origine']
+"""
+
+class CompteEditForm(forms.ModelForm):
+    class Meta:
+        model = models.CompteComptable
+        fields = ['numero', 'nom']  # Les champs que tu autorises à modifier

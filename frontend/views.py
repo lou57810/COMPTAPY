@@ -1,6 +1,8 @@
-from django.shortcuts import render, get_object_or_404
-from comptes.models import CompteComptable
+from django.shortcuts import render, redirect, get_object_or_404
+# from comptes.models import CompteComptable
+from comptes import models
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from . import forms
 
 
@@ -93,27 +95,75 @@ def ajout_modif_compte(request):
     print('numero:', numero)
 
     if numero:
-        compte = get_object_or_404(CompteComptable, numero=numero)
+        compte = get_object_or_404(models.CompteComptable, numero=numero)
         print('compte:', compte)
 
-    return render(request, "frontend/compte_form.html", {"numero": numero})
+    return render(request, "frontend/compte_form.html", {"compte": compte})
 
-@login_required
-def update_compte(request, compte_id):
-    compte = get_object_or_404(CompteComptable, id=compte_id)
+
+def get_pk_from_numero(request):
+    numero = request.GET.get('numero')
+    try:
+        obj = models.CompteComptable.objects.get(numero=numero)
+        return JsonResponse({'pk': obj.pk})
+    except models.CompteComptable.DoesNotExist:
+        return JsonResponse({'error': 'Object not found'}, status=404)
+
+
+"""
+# @login_required
+def update_compte(request, compte_id=None):
+    print('compte_id:', compte_id)
+    instance_compte = CompteComptable.objects.get(pk=compte_id) if compte_id is not None else None
     if request.method == "GET":
-        compte_form = forms.CompteForm(instance=compte)
-        return render(request, 'frontend/update_compte.html',
-                      context={'compte': compte, 'compte_form': compte_form})
+        compte_form = forms.CompteForm(instance=instance_compte)
+        context = {'compte_form:': compte_form}
+        return render(request, 'frontend/post_update_compte.html', context=context)
 
     if request.method == "POST":
-        compte_form = forms.CompteForm(request.POST,
-                                       request.FILES, instance=compte)
+        compte_form = forms.CompteForm(request.POST, request.FILES, instance=instance_compte)
         if compte_form.is_valid():
-            new_compte = compte_form.save(commit=False)
-            new_compte.user = request.user
-            new_compte.save()
-            #return redirect('update_compte')
+            compte_form.save()
+            return redirect('accueil')
+"""
+
+
+def compte_num_list(request):
+    compte = None
+    comptes = models.CompteComptable.objects.none()
+    form_search = forms.CompteSearchForm(request.GET or None)
+    form_edit = None
+
+    if form_search.is_valid():
+        numero = form_search.cleaned_data.get('numero')
+        comptes = models.CompteComptable.objects.filter(numero=numero)
+        if comptes.exists():
+            compte = comptes.first()
+            form_edit = forms.CompteEditForm(request.POST or None, instance=compte)
+            if request.method == "POST" and form_edit.is_valid():
+                form_edit.save()
+                return redirect('compte_num_list')  # pour revenir proprement
+
+    return render(request, 'frontend/data_list.html', {
+        'form_search': form_search,
+        'form_edit': form_edit,
+        'comptes': comptes,
+    })
+
+
+
+
+"""
+def update_compte(request):
+    compte_form = forms.CompteForm()
+    if request.method == "POST":
+        # compte_form = forms.CompteForm(request.POST, request.FILES, instance=instance_compte)
+        compte_form = forms.CompteSearchForm(request.POST)
+        if compte_form.is_valid():
+            compte_form.save()
+    context = {'compte_form': compte_form}
+    return render(request, 'frontend/post_update_compte.html', context=context)
+"""
 
 
 

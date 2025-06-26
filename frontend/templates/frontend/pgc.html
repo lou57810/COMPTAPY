@@ -2,125 +2,105 @@
 {% load static %}
 {% block content %}
 <section class="py-5">
-    <div class="container">
+  <div class="container">
 
-      <style>
-        body {
-            font-family: sans-serif;
-            margin: 2rem;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        th, td {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-        }
-        th {
-            background-color: #f3f3f3;
-        }
-        .pagination {
-            margin-top: 1rem;
-            display: flex;
-            justify-content: space-between;
-            width: 200px;
-        }
-        button:disabled {
-            opacity: 0.5;
-        }
-    </style>
+    <h1 class="mb-4">Plan Comptable Général</h1>
 
+    <!-- BOUTONS EN HAUT -->
+    <div class="d-flex justify-content-between mb-2">
+      <button id="prev-btn-top" class="btn btn-primary">
+        ◀️ Précédent
+      </button>
+      <button id="next-btn-top" class="btn btn-primary">
+        Suivant ▶️
+      </button>
+    </div>
 
-    <h1>Plan Comptable Général</h1>
-    <table id="pgc-table">
-        <thead>
-            <tr>
-                <th>Numéro</th>
-                <th>Libellé</th>
-                <th>Type</th>
-                <th>Origine</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
+    <table id="pgc-table" class="table table-bordered table-striped">
+      <thead class="table-light">
+        <tr>
+          <th>Numéro</th>
+          <th>Libellé</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
     </table>
 
-    <div class="pagination">
-        <button id="prev-btn">◀️ Précédent</button>
-        <button id="next-btn">Suivant ▶️</button>
+    <!-- BOUTONS EN BAS -->
+    <div class="d-flex justify-content-between mt-2">
+      <button id="prev-btn" class="btn btn-primary">
+        ◀️ Précédent
+      </button>
+      <button id="next-btn" class="btn btn-primary">
+        Suivant ▶️
+      </button>
     </div>
 
     <script>
-        let currentPage = 1;
-        const pageSize = 100;
-        const apiUrl = "/api/comptes/";
+      let currentPage = 1;
+      const pageSize = 100;
+      const apiUrl = "/api/comptes/";
 
-        const tbody = document.querySelector("#pgc-table tbody");
-        const prevBtn = document.getElementById("prev-btn");
-        const nextBtn = document.getElementById("next-btn");
+      const tbody = document.querySelector("#pgc-table tbody");
+      const prevBtn = document.getElementById("prev-btn");
+      const nextBtn = document.getElementById("next-btn");
+      const prevBtnTop = document.getElementById("prev-btn-top");
+      const nextBtnTop = document.getElementById("next-btn-top");
 
+      function loadPage(page) {
+        fetch(`${apiUrl}?page=${page}&page_size=${pageSize}`)
+          .then(response => response.json())
+          .then(data => {
+            tbody.innerHTML = "";
 
-        function loadPage(page) {
-            fetch(`${apiUrl}?page=${page}&page_size=${pageSize}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Efface les lignes existantes
-                    tbody.innerHTML = "";
+            data.results
+              .sort((a, b) => {
+                const prefixA = a.numero.substring(0, 3);
+                const prefixB = b.numero.substring(0, 3);
+                const cmp = prefixA.localeCompare(prefixB, 'fr', { numeric: true });
+                if (cmp !== 0) return cmp;
+                return a.numero.localeCompare(b.numero, 'fr', { numeric: true });
+              })
+              .forEach(compte => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td>${compte.numero}</td>
+                  <td>${compte.nom}</td>
+                `;
+                tbody.appendChild(row);
+              });
 
-                    // Ajoute les nouvelles lignes
-                    /*
-                    data.results.forEach(compte => {
-                        const row = document.createElement("tr");
-                        row.innerHTML = `
-                            <td>${compte.numero}</td>
-                            <td>${compte.nom}</td>
-                            <td>${compte.type_compte}</td>
-                            <td>${compte.origine}</td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                    */
-                    data.results
-                      .sort((a, b) => {
-                          const prefixA = a.numero.substring(0, 3);
-                          const prefixB = b.numero.substring(0, 3);
-                          const cmp = prefixA.localeCompare(prefixB, 'fr', { numeric: true });
-                          if (cmp !== 0) return cmp;
-                          return a.numero.localeCompare(b.numero, 'fr', { numeric: true });
-                      })
-                      .forEach(compte => {
-                          const row = document.createElement("tr");
-                          row.innerHTML = `
-                              <td>${compte.numero}</td>
-                              <td>${compte.nom}</td>
-                              <td>${compte.type_compte}</td>
-                              <td>${compte.origine}</td>
-                          `;
-                          tbody.appendChild(row);
-                      });
-                    // Gère les boutons
-                    prevBtn.disabled = data.previous === null;
-                    nextBtn.disabled = data.next === null;
+            const disablePrev = data.previous === null;
+            const disableNext = data.next === null;
 
-                    // Met à jour la page actuelle
-                    currentPage = page;
-                })
-                .catch(error => console.error("Erreur chargement PGC:", error));
+            prevBtn.disabled = disablePrev;
+            nextBtn.disabled = disableNext;
+            prevBtnTop.disabled = disablePrev;
+            nextBtnTop.disabled = disableNext;
+
+            currentPage = page;
+          })
+          .catch(error => console.error("Erreur chargement PGC:", error));
+      }
+
+      function goPrev() {
+        if (currentPage > 1) {
+          loadPage(currentPage - 1);
         }
-        prevBtn.addEventListener("click", () => {
-            if (currentPage > 1) {
-                loadPage(currentPage - 1);
-            }
-        });
+      }
 
-        nextBtn.addEventListener("click", () => {
-            loadPage(currentPage + 1);
-        });
+      function goNext() {
+        loadPage(currentPage + 1);
+      }
 
-        // Charge la première page au démarrage
-        loadPage(1);
+      prevBtn.addEventListener("click", goPrev);
+      nextBtn.addEventListener("click", goNext);
+      prevBtnTop.addEventListener("click", goPrev);
+      nextBtnTop.addEventListener("click", goNext);
+
+      loadPage(1);
     </script>
 
-    </div>
+  </div>
 </section>
 {% endblock content %}

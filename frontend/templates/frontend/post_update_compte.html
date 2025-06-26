@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<section class="py-5">
+    <div class="container">
+      <h2>Modifier un compte</h2>
+
+      <p>{{ compte.numero }}</p>
+      <p>{{ compte.name }}</p>
+
+
+<!--        <form method="POST" action="{\% url 'update_compte' compte_id=compte_form.instance.id %}">-->
+        <!--<form method="POST" action="{\% url 'update-reviews' ticket_id=ticket_form.instance.id %}" enctype='multipart/form-data'>-->
+                {% csrf_token %}
+                {{ compte_form.as_p }}
+        <!--<button class="btn btn-secondary">Envoyer</button>-->
+        <input type="submit">
+        </form>
+
+
+
+    </div>
+</section>
+{% endblock content %}

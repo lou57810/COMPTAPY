@@ -11,6 +11,9 @@ urlpatterns = [
     path("pgc/", views.liste_compte, name="pgc"),
     path("formulaire-compte/", views.ajout_modif_compte, name="compte_form"),
     path('frontend/create/', views.create_compte, name='create_compte'),
+    # path('frontend/update/', views.update_compte, name='update_compte'),
+    # path('comptes/', views.compte_num_list, name='compte_num_list'),
+    path('frontend/list/', views.compte_num_list, name='compte_num_list'),
 ]
 
 if settings.DEBUG:

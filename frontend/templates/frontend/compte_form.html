@@ -7,7 +7,7 @@
     <div class="container">
       <section class="wrapper">
 
-          <h1>Ajout Compte {{ numero }}</h1>
+          <h1>Modifier un Compte {{ numero }}</h1>
 
           <div class="input-box">
             <form id="compte-form">
@@ -36,6 +36,7 @@
                             let [name, value] = cookie.trim().split('=');
                             if (name === 'csrftoken') return value;
                         }
+                        console.log('name:', name)
                         return '';
                     }
                   </script>
@@ -48,13 +49,20 @@
     </div>
 </section>
 <script>
-              const form = document.getElementById("compte-form");
+              // const form = document.getElementById("compte-form");
               // Récupérer le label
 
               // Si tu passes ?id=401 dans l'URL, on préremplit pour modifier
               const urlParams = new URLSearchParams(window.location.search);
-              const compteNumero = urlParams.get("id");
-              console.log('compteNumero:', compteNumero, {{ numero }})
+              // const compteNumero = urlParams.get("numero");
+              compteNumero = {{ numero }}
+              console.log('compteNumero:', compteNumero)
+              // compteNumero = '{{ numero }}'
+               //const compte = {numero: {{ numero }}};
+               //numero = {{ numero }};
+              // const p_key = getKeyByValue(compte, 'compteNumero');
+              // console.log('p_key:', p_key); // Affiche : 'pk'
+
               if (compteNumero) {
                   fetch(`/api/comptes/${compteNumero}/`)
                       .then(response => response.json())
