@@ -5,9 +5,14 @@ from .models import CompteComptable
 from .serializers import CompteComptableSerializer
 from django.db.models.functions import Substr
 # from django.contrib.auth.decorators import login_required  # , permission_required
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from . import models, serializers
 
 
 
+"""
 class CompteComptableViewSet(viewsets.ModelViewSet):
     serializer_class = CompteComptableSerializer
 
@@ -36,3 +41,6 @@ class CompteComptableRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView
     queryset = CompteComptable.objects.all()
     serializer_class = CompteComptableSerializer
     lookup_field = "pk"
+"""
+
+

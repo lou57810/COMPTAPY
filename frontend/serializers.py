@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CompteComptable
+from comptes.models import CompteComptable
 
 
 class CompteComptableSerializer(serializers.ModelSerializer):

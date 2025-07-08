@@ -87,7 +87,7 @@ urlpatterns = [
     path('api/', include('api.urls')),
     path("", include("frontend.urls")),
     path("authentication/", include("authentication.urls")),
-    path("comptes/", include("comptes.urls")),
+    # path("comptes/", include("comptes.urls")),
 ]
 
 if settings.DEBUG:
