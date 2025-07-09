@@ -4,8 +4,6 @@ let totalDebit = 0;
 let totalCredit = 0;
 document.addEventListener("DOMContentLoaded", function () {
 
-  const totals = {totalDebit, totalCredit};
-
   const container = document.getElementById('hot');
   if (!container) return;
 
@@ -76,6 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
               } else {
                 hot.setDataAtCell(row, 2, 'Compte introuvable');
               }
+              internalChange = false;
             });
           }
 
@@ -97,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // Crédit du fournisseur
             hot.setDataAtCell(row, 8, montantTTC);
 
-            // Ligne 2 : TVA
+            // Ligne 2 : TVA ###########################################
             const ligneTVA = hot.countRows();
             hot.alter('insert_row_below', ligneTVA);
             hot.setDataAtCell(ligneTVA, 0, date);
@@ -105,21 +104,35 @@ document.addEventListener("DOMContentLoaded", function () {
             hot.setDataAtCell(ligneTVA, 2, 'TVA à décaisser');
             hot.setDataAtCell(ligneTVA, 7, montantTVA);
 
-            // Ligne 3 : Charge (HT)
+            // Copie du libellé (colonne 4) depuis la ligne client
+            const libelleClient = hot.getDataAtCell(row, 3);
+            if (libelleClient) {
+              hot.setDataAtCell(ligneTVA, 3, libelleClient);
+            }
+
+            // Ligne 3 : Charge (HT) ####################################
             const ligneCharge = hot.countRows();
             hot.alter('insert_row_below', ligneCharge);
             hot.setDataAtCell(ligneCharge, 0, date);
             hot.setDataAtCell(ligneCharge, 1, '607');
             hot.setDataAtCell(ligneCharge, 2, 'Achats de marchandises');
-
             hot.setDataAtCell(ligneCharge, 7, montantHT);
 
-            // Ligne 4 : Ajout ligne de Saisie
+            // Copie du libellé (colonne 4) depuis la ligne client
+            // const libelleClient = hot.getDataAtCell(row, 3);
+            if (libelleClient) {
+              hot.setDataAtCell(ligneCharge, 3, libelleClient);
+            }
+
+            // Ligne 4 : Ajout ligne de Saisie ##########################
             const ligneSaisie = hot.countRows();
+            internalChange = true;
             hot.alter('insert_row_below', ligneSaisie);
+            internalChange = false;
           }
         }
       });
+
 
        insertOrUpdateTotalRow();
     }
@@ -139,45 +152,70 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log('Totaux:', totalDebit, totalCredit);
     }
 
-  // ############ Tableau Totaux #################
+      // ############ Tableau Totaux #################
 
-  // Date du jour
-  const dateJour = new Date();
-  today = dateJour.toLocaleDateString("fr");
+      // Date du jour
+      const dateJour = new Date();
+      today = dateJour.toLocaleDateString("fr");
 
-  var data1 = [
-      [today, 'Totaux', '', '', '', ],
-      ];
-  container1 = document.getElementById('hot-totals');
+      var data1 = [
+          [today, 'Totaux', '', '', '', ],
+          ];
+      container1 = document.getElementById('hot-totals');
 
-  const hotTotals = new Handsontable(container1, {
-    colHeaders: ['Date', '', 'Débit', 'Crédit', 'Solde',],
-    data: data1,
-    startRows: 1,
-    startCols: 6,
-    width: '100%',
-    height: 'auto',
-    colWidths: [80, 875, 80, 80, 80],
-    manualColumnResize: true,
-    autoWrapRow: true,
-    autoWrapCol: true,
-    licenseKey: 'non-commercial-and-evaluation',
+      const hotTotals = new Handsontable(container1, {
+        colHeaders: ['Date', '', 'Débit', 'Crédit', 'Solde',],
+        data: data1,
+        startRows: 1,
+        startCols: 6,
+        width: '100%',
+        height: 'auto',
+        colWidths: [80, 875, 80, 80, 80],
+        manualColumnResize: true,
+        autoWrapRow: true,
+        autoWrapCol: true,
+        licenseKey: 'non-commercial-and-evaluation',
+        });
+
+      // 🔁 Mettre à jour le 2e tableau à chaque modification :
+      function updateSecondTable() {
+        hotTotals.setDataAtCell(0, 2, totalDebit.toFixed(2));
+        hotTotals.setDataAtCell(0, 3, totalCredit.toFixed(2));
+        hotTotals.setDataAtCell(0, 4, (totalDebit - totalCredit).toFixed(2));
+        }
+
+      // Appel régulier (ou depuis afterChange) :
+      hot.addHook('afterChange', function () {
+      insertOrUpdateTotalRow();
+      updateSecondTable();
+
+  });
+  document.getElementById('validateBtn').addEventListener('click', function () {
+    const data = hot.getData();
+
+    fetch('/api/ecritures/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),  // si tu es sous Django
+      },
+      body: JSON.stringify({ lignes: data })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Erreur lors de l'enregistrement");
+      }
+      return response.json();
+    })
+    .then(result => {
+      alert("Écritures enregistrées avec succès !");
+      // Optionnel : vider le tableau ou rafraîchir
+    })
+    .catch(error => {
+      console.error("Erreur :", error);
+      alert("Une erreur est survenue !");
     });
-
-  // 🔁 Mettre à jour le 2e tableau à chaque modification :
-  function updateSecondTable() {
-    hotTotals.setDataAtCell(0, 2, totalDebit.toFixed(2));
-    hotTotals.setDataAtCell(0, 3, totalCredit.toFixed(2));
-    hotTotals.setDataAtCell(0, 4, (totalDebit - totalCredit).toFixed(2));
-    }
-
-    // Appel régulier (ou depuis afterChange) :
-    hot.addHook('afterChange', function () {
-    insertOrUpdateTotalRow();
-    updateSecondTable();
-
     });
 });
-
 
 
