@@ -1,35 +1,62 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load static %}
 
 <section class="py-5">
     <div class="container">
       <form method="get">
-  {{ form_search.as_p }}
-  <button type="submit">Rechercher</button>
-</form>
-
-{% if comptes.exists %}
-  <table border="1">
-    <tr>
-      <th>ID</th>
-      <th>Numéro</th>
-    </tr>
-    {% for compte in comptes %}
-    <tr>
-      <td>{{ compte.id }}</td>
-      <td>{{ compte.numero }}</td>
-    </tr>
-    {% endfor %}
-  </table>
-
-  <h3>Modifier le compte</h3>
-  <form method="post">
-    {% csrf_token %}
-    {{ form_edit.as_p }}
-    <button type="submit">Enregistrer les modifications</button>
-  </form>
-{% endif %}
-
+        {{ form_search.as_p }}
+        <button type="submit">Rechercher</button>
+      </form>
     </div>
 </section>
+
+<section>
+  <div class="container">
+
+    {% if comptes.exists %}
+      {% for compte in comptes %}
+        <table border="1">
+
+          <tr>
+            <th>ID</th>
+            <td>{{ compte.id }}</td>
+          </tr>
+          <tr>
+            <th>Numéro</th>
+            <td>{{ compte.numero }}</td>
+          </tr>
+          <tr>
+            <th>Nom</th>
+            <td>{{ compte.nom }}</td>
+          </tr>
+
+          {% endfor %}
+      </table>
+        <!--
+          <h3>Modifier le compte</h3>
+          <form method="post">
+            {\% csrf_token %}
+            {{ form_edit.as_p }}
+            <button type="submit">Enregistrer les modifications</button>
+          </form>
+          -->
+  </div>
+</section>
+<section>
+  <div class="container">
+      <div>journal-display</div>
+  </div>
+</section>
+      <script src="{% static 'js/compte.js' %}"></script>
+      <script>
+      const journalData = [
+        {% for c in comptes %}
+          ["{{ c.date_saisie|date:'Y-m-d H:i' }}", "{{ c.libelle }}", "{{ c.debit }}", "{{ c.credit }}"],
+        {% endfor %}
+      ];
+      </script>
+    {% endif %}
+
+
 {% endblock content %}

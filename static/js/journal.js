@@ -190,32 +190,65 @@ document.addEventListener("DOMContentLoaded", function () {
       updateSecondTable();
 
   });
-  document.getElementById('validateBtn').addEventListener('click', function () {
-    const data = hot.getData();
+    document.getElementById('validerEcritures').addEventListener('click', function () {
+    const data = hot.getData(); // Récupère toutes les lignes du tableau Handsontable
 
-    fetch('/api/ecritures/', {
+    // Filtrer les lignes vides et "TOTAL"
+    const lignesValides = data.filter(row => {
+      const isEmpty = row.every(cell => cell === null || cell === '');
+      const isTotalRow = String(row[4] || '').trim().toLowerCase() === 'total';
+      return !isEmpty && !isTotalRow;
+    });
+
+    // Structure des données à envoyer à Django
+    const payload = lignesValides.map(row => ({
+      numero: row[1],     // numéro du compte
+      nom: row[2],        // nom du compte
+      libelle: row[4],    // libellé
+      debit: row[7] || 0,
+      credit: row[8] || 0,
+    }));
+
+    fetch('/api/journaux/valider_journal_achats/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken'),  // si tu es sous Django
+        'X-CSRFToken': getCookie('csrftoken'), // si CSRF est activé
       },
-      body: JSON.stringify({ lignes: data })
+      body: JSON.stringify({ lignes: payload }),
     })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error("Erreur lors de l'enregistrement");
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erreur serveur');
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert('Écritures enregistrées avec succès ✅');
+        console.log(data);
+      })
+      .catch(error => {
+        console.error('Erreur lors de l’enregistrement :', error);
+        alert('Une erreur est survenue ❌');
+      });
+  });
+
+  // Fonction pour récupérer le token CSRF
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [key, value] = cookie.trim().split('=');
+        if (key === name) {
+          cookieValue = decodeURIComponent(value);
+          break;
+        }
       }
-      return response.json();
-    })
-    .then(result => {
-      alert("Écritures enregistrées avec succès !");
-      // Optionnel : vider le tableau ou rafraîchir
-    })
-    .catch(error => {
-      console.error("Erreur :", error);
-      alert("Une erreur est survenue !");
-    });
-    });
+    }
+    return cookieValue;
+  }
+
 });
 
 

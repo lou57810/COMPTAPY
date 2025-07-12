@@ -42,8 +42,6 @@ INSTALLED_APPS = [
     'api',
     'authentication',
     'frontend',
-    'journaux',
-    'comptes',
 ]
 
 REST_FRAMEWORK = {

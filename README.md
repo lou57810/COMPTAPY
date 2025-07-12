@@ -32,7 +32,7 @@
 
 ### Récupération du plan comptable pour postgresql:
 #### Le PGC est issu d'un fichier pgc.xlsx mais vous pouvez adapter 'import_pgc.py'
-#### pour un plan comptable différent.
+#### pour un fichier différent '***.xlsx'
 #### Ici, dans comptes/management/commands: python ``import_pgc.py``
 
 

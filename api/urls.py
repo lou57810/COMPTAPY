@@ -11,10 +11,13 @@ router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 # router.register(r'comptes', CompteComptableViewSet, basename='comptes')
 
+
 urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('comptes/numero/', views.get_compte_by_numero, name='get_compte_by_numero'),
     path("comptes/", CompteComptableViewSet.as_view({'get': 'list'}), name="liste-api-comptes"),
     path("comptes/<int:pk>/", CompteComptableRetrieveUpdateDestroy.as_view(), name="update"),
+    path('journaux/enregistrer-ecritures/', views.enregistrer_ecritures, name='enregistrer_ecritures'),
 ]
+

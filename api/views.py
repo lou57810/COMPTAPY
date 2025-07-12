@@ -4,19 +4,22 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from .models import CompteComptable
+from .serializers import CompteComptableSerializer
+from django.utils import timezone
 
 # from .models import CompteComptable
-from comptes import models, serializers
+
 # from .serializers import CompteComptableSerializer
 from django.db.models.functions import Substr
 
 
 class CompteComptableViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.CompteComptableSerializer
+    serializer_class = CompteComptableSerializer
 
     # Tri numéro PGC en fonction des 3 premiers chiffres
     def get_queryset(self):
-        return models.CompteComptable.objects.annotate(
+        return CompteComptable.objects.annotate(
             numero_prefix=Substr('numero', 1, 3)
         ).order_by('numero_prefix', 'numero')
 
@@ -26,18 +29,18 @@ class CompteComptableViewSet(viewsets.ModelViewSet):
 
 # @login_required
 class CompteComptableListView(generics.ListAPIView):
-    serializer_class = serializers.CompteComptableSerializer
+    serializer_class = CompteComptableSerializer
 
     # Tri numéro PGC en fonction des 3 premiers chiffres
     def get_queryset(self):
-        return models.CompteComptable.objects.annotate(
+        return CompteComptable.objects.annotate(
             numero_prefix=Substr('numero', 1, 3)
         ).order_by('numero_prefix', 'numero')
 
 
 class CompteComptableRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
-    queryset = models.CompteComptable.objects.all()
-    serializer_class = serializers.CompteComptableSerializer
+    queryset = CompteComptable.objects.all()
+    serializer_class = CompteComptableSerializer
     lookup_field = "pk"
 
 
@@ -49,8 +52,31 @@ def get_compte_by_numero(request):
         return Response({'error': 'Numéro manquant'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        compte = models.CompteComptable.objects.get(numero=numero)
-        serializer = serializers.CompteComptableSerializer(compte)
+        compte = CompteComptable.objects.get(numero=numero)
+        serializer = CompteComptableSerializer(compte)
         return Response(serializer.data)
-    except models.CompteComptable.DoesNotExist:
+    except CompteComptable.DoesNotExist:
         return Response({'error': 'Compte introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+def enregistrer_ecritures(request):
+    lignes = request.data.get('lignes', [])
+
+    for ligne in lignes:
+        numero = ligne.get('numero')
+        nom = ligne.get('nom')
+        libelle = ligne.get('libelle') or ''
+        debit = ligne.get('debit') or 0
+        credit = ligne.get('credit') or 0
+
+        CompteComptable.objects.create(
+            numero=numero,
+            nom=nom,
+            libelle=libelle,
+            debit=debit,
+            credit=credit,
+            date_saisie=timezone.now()
+        )
+
+    return Response({'message': 'Écritures enregistrées'}, status=status.HTTP_201_CREATED)

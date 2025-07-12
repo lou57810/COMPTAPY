@@ -1,6 +1,6 @@
 from django import forms
 
-from comptes import models
+from api import models
 
 class CompteSearchForm(forms.Form):
         numero = forms.CharField(label="Numéro du compte", required=True)

@@ -1,10 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 # from comptes.models import CompteComptable
-from comptes import models
+
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from . import forms
-
+from api.models import CompteComptable
+from api.models import EcritureJournal
+from django.utils import timezone
+from rest_framework.response import Response
+from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 # import requests
 # from PIL import Image
@@ -95,7 +101,7 @@ def ajout_modif_compte(request):
     print('numero:', numero)
 
     if numero:
-        compte = get_object_or_404(models.CompteComptable, numero=numero)
+        compte = get_object_or_404(CompteComptable, numero=numero)
         print('compte:', compte)
 
     return render(request, "frontend/compte_form.html", {"compte": compte})
@@ -104,12 +110,42 @@ def ajout_modif_compte(request):
 def get_pk_from_numero(request):
     numero = request.GET.get('numero')
     try:
-        obj = models.CompteComptable.objects.get(numero=numero)
+        obj = CompteComptable.objects.get(numero=numero)
         return JsonResponse({'pk': obj.pk})
-    except models.CompteComptable.DoesNotExist:
+    except CompteComptable.DoesNotExist:
         return JsonResponse({'error': 'Object not found'}, status=404)
 
 
+@csrf_exempt  # Si tu n'utilises pas {% csrf_token %}, sinon retire ça
+def valider_journal_achats(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            lignes = data.get('lignes', [])
+
+            for ligne in lignes:
+                date, compte, nom, libelle, quantite, pu_ht, taux, debit, credit, journal = ligne
+
+                # Exemple d'enregistrement (à adapter à ton modèle)
+                EcritureJournal.objects.create(
+                    date=date if date else None,
+                    compte=compte,
+                    nom=nom,
+                    libelle=libelle,
+                    PU=pu_ht,
+                    quantite=quantite or 0,
+                    taux=taux or 0,
+                    debit=debit or 0,
+                    credit=credit or 0,
+                    journal=journal
+                )
+
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            print(e)
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
 """
 # @login_required
 def update_compte(request, compte_id=None):
@@ -130,13 +166,13 @@ def update_compte(request, compte_id=None):
 
 def compte_num_list(request):
     compte = None
-    comptes = models.CompteComptable.objects.none()
+    comptes = CompteComptable.objects.none()
     form_search = forms.CompteSearchForm(request.GET or None)
     form_edit = None
 
     if form_search.is_valid():
         numero = form_search.cleaned_data.get('numero')
-        comptes = models.CompteComptable.objects.filter(numero=numero)
+        comptes = CompteComptable.objects.filter(numero=numero)
         if comptes.exists():
             compte = comptes.first()
             form_edit = forms.CompteEditForm(request.POST or None, instance=compte)
@@ -149,6 +185,7 @@ def compte_num_list(request):
         'form_edit': form_edit,
         'comptes': comptes,
     })
+
 
 
 
