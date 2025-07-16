@@ -1,8 +1,5 @@
 from rest_framework import serializers
-from comptes.models import CompteComptable
+from api.models import CompteComptable
 
 
-class CompteComptableSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CompteComptable
-        fields = '__all__'
+

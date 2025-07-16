@@ -1,4 +1,4 @@
-// ############# Tableau saisie ###################
+// ########################## Tableau saisie ############################
 
 let totalDebit = 0;
 let totalCredit = 0;
@@ -69,6 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
           fetch(`/api/comptes/numero/?numero=${encodeURIComponent(newValue)}`)
             .then(response => response.json())
             .then(data => {
+              console.log('data.nom', data.nom);
               if (data.nom) {
                 hot.setDataAtCell(row, 2, data.nom); // Colonne 2 = Nom
               } else {
@@ -82,7 +83,6 @@ document.addEventListener("DOMContentLoaded", function () {
           const pu_ht = parseFloat(hot.getDataAtCell(row, 4)) || 0;
           const quantite = parseFloat(hot.getDataAtCell(row, 5)) || 0;
           const taux_tva = parseFloat(hot.getDataAtCell(row, 6)) || 0;
-
                                                           //   ^^
           if (pu_ht && quantite && taux_tva != 0) {    // tva != 0  ^^ sinon les lignes s'affichent avant le choix du taux
             const montantHT = +(pu_ht * quantite).toFixed(2);
@@ -149,10 +149,9 @@ document.addEventListener("DOMContentLoaded", function () {
         totalDebit += debit;
         totalCredit += credit;
       }
-      console.log('Totaux:', totalDebit, totalCredit);
     }
 
-      // ############ Tableau Totaux #################
+// ############################### Tableau Totaux ######################################
 
       // Date du jour
       const dateJour = new Date();
@@ -188,12 +187,26 @@ document.addEventListener("DOMContentLoaded", function () {
       hot.addHook('afterChange', function () {
       insertOrUpdateTotalRow();
       updateSecondTable();
-
   });
-    document.getElementById('validerEcritures').addEventListener('click', function () {
+
+// ############################# Validation des écritures #####################################
+
+    document.getElementById('validerEcritures').addEventListener('click', function (event) {
+    event.preventDefault();
     const data = hot.getData(); // Récupère toutes les lignes du tableau Handsontable
+    console.log('data:', data);
 
     // Filtrer les lignes vides et "TOTAL"
+    const lignes = hot.getData().filter(ligne => ligne.some(cell => cell !== null && cell !== ''))
+        .map(row => ({
+        date: row[0],         // ✅ bien envoyer la date
+        numero: row[1],
+        nom: row[2],
+        libelle: row[3],
+        debit: row[7] || 0,
+        credit: row[8] || 0
+      }));
+    /*
     const lignesValides = data.filter(row => {
       const isEmpty = row.every(cell => cell === null || cell === '');
       const isTotalRow = String(row[4] || '').trim().toLowerCase() === 'total';
@@ -202,20 +215,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Structure des données à envoyer à Django
     const payload = lignesValides.map(row => ({
+      date: row[0],
       numero: row[1],     // numéro du compte
       nom: row[2],        // nom du compte
       libelle: row[4],    // libellé
       debit: row[7] || 0,
       credit: row[8] || 0,
     }));
-
-    fetch('/api/journaux/valider_journal_achats/', {
+    */
+    const urlValidation = document.getElementById('validerEcritures')?.dataset?.urlValidation;
+    console.log("URL de validation:", urlValidation);
+    console.log("✅ Données à envoyer :", lignes);
+    fetch(urlValidation, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken'), // si CSRF est activé
+        // 'X-CSRFToken': getCookie('csrftoken'), // si CSRF est activé
       },
-      body: JSON.stringify({ lignes: payload }),
+      // body: JSON.stringify({ lignes: payload }),
+      body: JSON.stringify({ lignes: lignes }),
     })
       .then(response => {
         if (!response.ok) {
@@ -225,7 +243,7 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .then(data => {
         alert('Écritures enregistrées avec succès ✅');
-        console.log(data);
+        console.log('data2', data);
       })
       .catch(error => {
         console.error('Erreur lors de l’enregistrement :', error);
@@ -248,7 +266,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     return cookieValue;
   }
-
 });
 
 

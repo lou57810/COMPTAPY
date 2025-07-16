@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+<section class="py-5">
+  <div class="container">
+    <!--      <form method="get">
+        {\{ form_search.as_p }}
+        <button type="submit">Rechercher</button>
+      </form>
+    -->
+    <!-- ✅ Formulaire toujours visible -->
+    <form method="get" action="{% url 'afficher-compte' %}">
+      <label for="numero">Numéro de compte :</label>
+      <input type="text" name="numero" id="numero" value="{{ numero }}">
+      <button type="submit">Rechercher</button>
+    </form>
+  </div>
+</section>
+
+<section class="py-3">
+  <div class="container">
+    <p> Container numero: {{ numero }}</p>
+<!--    {\% if comptes.exists %}-->
+    {% if lignes.exists %}
+      <p>Compte exist</p>
+      {% with ligne=lignes.first %}
+        <table border="1">
+          <tr>
+            <th>ID</th>
+            <td>{{ ligne.id }}</td>
+          </tr>
+          <tr>
+            <th>Numéro</th>
+            <td>{{ numero }}</td>
+          </tr>
+          <tr>
+            <th>Nom</th>
+            <td>{{ ligne.nom }}</td>
+          </tr>
+        </table>
+  </div>
+</section>
+<section>
+  <div class="container">
+        <div class="mt-4" data-compte-numero="{{ numero }}">
+          <div id="journal-display"></div>
+        </div>
+
+
+      {% endwith %}
+    {% else %}
+      <p>Aucun compte trouvé.</p>
+    {% endif %}
+  </div>
+</section>
+
+<script src="{% static 'js/compte.js' %}"></script>
+{% endblock content %}

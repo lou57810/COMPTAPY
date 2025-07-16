@@ -2,14 +2,14 @@
 
 import pandas as pd
 from django.core.management.base import BaseCommand
-from api.models import ComptePgc
+from api.models import CompteComptable
 
 class Command(BaseCommand):
     help = "Importe le plan comptable général (PGC) depuis un fichier Excel"
 
     def add_arguments(self, parser):
         # parser.add_argument('fichier', type=str, help="Chemin du fichier Excel (ex: data/pgc.xlsx)")
-        parser.add_argument('fichier', type=str, help="data/PGC.xlsx)")
+        parser.add_argument('fichier', type=str, help="data/pgc.xlsx)")
 
 
     def handle(self, *args, **options):
@@ -30,7 +30,7 @@ class Command(BaseCommand):
             if not numero or not libelle or not numero.isdigit():
                 continue  # Ignore les lignes vides ou invalides
 
-            compte, created = ComptePgc.objects.get_or_create(
+            compte, created = CompteComptable.objects.get_or_create(
                 numero=numero,
                 defaults={
                     'nom': libelle,

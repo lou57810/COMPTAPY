@@ -1,17 +1,24 @@
-# from django.shortcuts import render
+from django.shortcuts import render
 from rest_framework import generics
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import CompteComptable
-from .serializers import CompteComptableSerializer
-from django.utils import timezone
 
-# from .models import CompteComptable
+from .serializers import CompteComptableSerializer, EcritureJournalSerializer
+from django.utils import timezone
+from rest_framework.generics import ListAPIView
+
+from .models import CompteComptable, EcritureJournal
 
 # from .serializers import CompteComptableSerializer
 from django.db.models.functions import Substr
+
+"""
+class CompteComptableListView(ListAPIView):
+    queryset = CompteComptable.objects.all()
+    serializer_class = CompteComptableSerializer
+"""
 
 
 class CompteComptableViewSet(viewsets.ModelViewSet):
@@ -34,7 +41,7 @@ class CompteComptableListView(generics.ListAPIView):
     # Tri numéro PGC en fonction des 3 premiers chiffres
     def get_queryset(self):
         return CompteComptable.objects.annotate(
-            numero_prefix=Substr('numero', 1, 3)
+            numero_prefix=Substr('numero', 1, 6)
         ).order_by('numero_prefix', 'numero')
 
 
@@ -80,3 +87,40 @@ def enregistrer_ecritures(request):
         )
 
     return Response({'message': 'Écritures enregistrées'}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+def get_ecritures_par_compte(request):
+    numero = request.GET.get('numero')
+
+    if numero:
+        ecritures = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
+
+        data = [
+            {
+                'date': ecriture.date.strftime('%d/%m/%Y'),
+                'numero': ecriture.compte.numero,
+                'nom': ecriture.nom,
+                'libelle': ecriture.libelle,
+                'debit': ecriture.debit,
+                'credit': ecriture.credit
+            }
+            for ecriture in ecritures
+        ]
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    return Response({'message': 'Numéro de compte manquant'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def ecritures_par_compte(request):
+    numero = request.GET.get('numero')
+    if numero:
+        ecritures = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
+        serializer = EcritureJournalSerializer(ecritures, many=True)
+        return Response(serializer.data)
+    return Response({'error': 'Numéro de compte requis'}, status=400)
+
+
+

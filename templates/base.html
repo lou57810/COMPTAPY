@@ -44,26 +44,22 @@
                                 <a href="{% url 'accueil' %}" class="nav-link text-light px-3">Accueil COMPTAPY</a>
                             </li>
 
-
-
-
-
                             {% if user.is_authenticated %}
                             <li>
                               <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Api</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                      <li><a class="dropdown-item" href="#">Accueil Api</a></li>
                                      <li><a class="dropdown-item" href="#">Todo</a></li>
-                                     <li><a class="dropdown-item" href="{% url 'liste-api-comptes' %}">Afficher le PGC</a></li>
+                                     <li><a class="dropdown-item" href="{% url 'compte_list' %}">Afficher le PGC</a></li>
                                      <li><a class="dropdown-item" href="{% url 'update' 1 %}">Afficher un compte</a></li>
                                 </ul>
                             </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des Comptes</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <li><a class="dropdown-item" href="{% url 'compte_num_list' %}">Afficher un compte</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'display-compte-view' %}">Afficher un compte</a></li>
                                     <li><a class="dropdown-item" href="{% url 'create_compte' %}">Ajouter un compte</a></li>
-<!--                                    <li><a class="dropdown-item" href="{\% url 'update_compte' %}">Update compte</a></li>-->
+                                    <li><a class="dropdown-item" href="{% url 'update_compte' %}">Modifier un compte</a></li>
                                     <li><a class="dropdown-item" href="{% url 'pgc' %}">Afficher le pgc</a></li>
                                 </ul>
                             </li>
@@ -143,7 +139,7 @@
                 <div class="row gy-4 align-items-center">
                     <div class="col-12 col-md-4">
                         <a class="navbar-brand text-dark text-uppercase fw-bold" href="#">
-                            <span class="bg-primary bg-gradient p-1 rounded-3 text-light">COMPTAPY</span>User
+                            <span class="bg-primary bg-gradient p-1 rounded-3 text-light">COMPTAPY</span>User : {{ user }}
                         </a>
                     </div>
                     <div class="col-12 col-md-4 text-md-center">

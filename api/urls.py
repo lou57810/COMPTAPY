@@ -2,7 +2,7 @@ from django.urls import path, include
 from . import views
 from rest_framework import routers, serializers, viewsets
 from django.contrib.auth import get_user_model
-from .views import CompteComptableRetrieveUpdateDestroy, CompteComptableViewSet # CompteComptableListView,
+from .views import CompteComptableRetrieveUpdateDestroy, CompteComptableListView, get_ecritures_par_compte, ecritures_par_compte
 from authentication.views import UserViewSet
 
 User = get_user_model()
@@ -16,8 +16,10 @@ urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('comptes/numero/', views.get_compte_by_numero, name='get_compte_by_numero'),
-    path("comptes/", CompteComptableViewSet.as_view({'get': 'list'}), name="liste-api-comptes"),
+    # path("comptes/", CompteComptableListView.as_view(), name="liste-api-comptes"),  ### test
+    path("comptes/", CompteComptableListView.as_view(), name="compte_list"),
+    # path("comptes/", CompteComptableViewSet.as_view(), name="compte_list"),
     path("comptes/<int:pk>/", CompteComptableRetrieveUpdateDestroy.as_view(), name="update"),
-    path('journaux/enregistrer-ecritures/', views.enregistrer_ecritures, name='enregistrer_ecritures'),
-]
-
+    path('comptes/numero/', get_ecritures_par_compte, name='get_ecritures_par_compte'),
+    path('ecritures/', ecritures_par_compte, name='ecritures_par_compte'),
+    ]

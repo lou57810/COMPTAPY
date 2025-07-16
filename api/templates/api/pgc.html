@@ -35,7 +35,6 @@
 
     <script>
         fetch("/api/comptes/")
-            .then(response=>console.log('Retour:', response))
             .then(response => response.json())
             .then(data => {
                 const tbody = document.querySelector("#pgc-table tbody");

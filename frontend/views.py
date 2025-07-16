@@ -1,9 +1,10 @@
+from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
-# from comptes.models import CompteComptable
+
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from . import forms
+from api import forms
 from api.models import CompteComptable
 from api.models import EcritureJournal
 from django.utils import timezone
@@ -15,7 +16,7 @@ import json
 # import requests
 # from PIL import Image
 # from rest_framework import viewsets
-# from .models import CompteComptable
+
 
 # =============== Accueil =========================
 
@@ -92,20 +93,53 @@ def create_compte(request):
         context = {
             'compte_form': compte_form
         }
-    return render(request, 'frontend/post_create_compte.html', {'compte_form': compte_form})
+    return render(request, 'frontend/create_compte.html', {'compte_form': compte_form})
 
 
-def ajout_modif_compte(request):
-    numero = request.GET.get("id")  # ici "id" représente en réalité le numéro comptable
+def display_compte(request):
     compte = None
-    print('numero:', numero)
+    comptes = CompteComptable.objects.none()
+    form_search = forms.CompteSearchForm(request.GET or None)
+    form_edit = None
 
-    if numero:
-        compte = get_object_or_404(CompteComptable, numero=numero)
-        print('compte:', compte)
+    if form_search.is_valid():
+        numero = form_search.cleaned_data.get('numero')
+        comptes = CompteComptable.objects.filter(numero=numero)
+        if comptes.exists():
+            compte = comptes.first()
+            form_edit = forms.CompteEditForm(request.POST or None, instance=compte)
+            if request.method == "POST" and form_edit.is_valid():
+                form_edit.save()
+                return redirect('display_compte')  # pour revenir proprement
 
-    return render(request, "frontend/compte_form.html", {"compte": compte})
+    return render(request, 'frontend/display_compte.html', {
+        'form_search': form_search,
+        'form_edit': form_edit,
+        'comptes': comptes,
+    })
 
+
+def update_compte(request):
+    compte = None
+    comptes = CompteComptable.objects.none()
+    form_search = forms.CompteSearchForm(request.GET or None)
+    form_edit = None
+
+    if form_search.is_valid():
+        numero = form_search.cleaned_data.get('numero')
+        comptes = CompteComptable.objects.filter(numero=numero)
+        if comptes.exists():
+            compte = comptes.first()
+            form_edit = forms.UpdateCompteForm(request.POST, request.FILES, instance=compte)
+            if request.method == "POST" and form_edit.is_valid():
+                form_edit.save()
+                return redirect('update_compte')  # pour revenir proprement
+
+    return render(request, 'frontend/update_compte.html', {
+        'form_search': form_search,
+        'form_edit': form_edit,
+        'comptes': comptes,
+    })
 
 def get_pk_from_numero(request):
     numero = request.GET.get('numero')
@@ -124,83 +158,108 @@ def valider_journal_achats(request):
             lignes = data.get('lignes', [])
 
             for ligne in lignes:
-                date, compte, nom, libelle, quantite, pu_ht, taux, debit, credit, journal = ligne
+                # On récupère chaque champ par clé
+                date_str = ligne.get('date')
+                if date_str:
+                    date = datetime.strptime(date_str, "%d/%m/%Y").date()  # ou %Y-%m-%d selon format reçu
+                numero = ligne.get('numero')
+                nom = ligne.get('nom')
+                libelle = ligne.get('libelle')
+                debit = ligne.get('debit', 0)
+                credit = ligne.get('credit', 0)
 
-                # Exemple d'enregistrement (à adapter à ton modèle)
-                EcritureJournal.objects.create(
-                    date=date if date else None,
-                    compte=compte,
+                print("👉 Ligne reçue :", ligne)
+                print("📅 Date extraite :", date)
+
+                # ✅ On récupère l’instance du compte correspondant
+                compte = CompteComptable.objects.filter(numero=numero).first()
+
+                if not compte:
+                    # Tu peux aussi lever une exception ou juste passer
+                    print(f"⚠️ Compte non trouvé pour numéro {numero}")
+                    continue
+
+                # ✅ Enregistrement correct
+                ecriture = EcritureJournal.objects.create(
+                    date=date,
+                    compte=compte,  # ici une vraie instance
                     nom=nom,
                     libelle=libelle,
-                    PU=pu_ht,
-                    quantite=quantite or 0,
-                    taux=taux or 0,
-                    debit=debit or 0,
-                    credit=credit or 0,
-                    journal=journal
-                )
+                    debit=debit,
+                    credit=credit,
 
+                    # journal="achats"
+                )
+                print('Ecritures enregistrées:', ecriture)
             return JsonResponse({'status': 'success'})
         except Exception as e:
-            print(e)
+            print("❌ ERREUR:", e)
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
+
+
+def ecritures_par_compte(numero):
+    ecritures = EcritureJournal.objects.filter(compte=numero).values(
+        'date', 'libelle', 'debit', 'credit'
+    )
+    return JsonResponse(list(ecritures), safe=False)
+
+
+def display_compte_view(request):
+    comptes = None
+    form_search = forms.CompteSearchForm(request.GET or None)
+
+    if form_search.is_valid():
+        numero_recherche = form_search.cleaned_data.get('numero')
+        comptes = CompteComptable.objects.filter(numero=numero_recherche).first()
+
+    return render(request, 'frontend/display_compte.html', {
+        'comptes': comptes,
+        'form_search': form_search,
+    })
+
+def afficher_compte(request):
+    numero = request.GET.get('numero')
+    lignes = []
+
+    if numero:
+        lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
+
+    return render(request, 'frontend/display_compte.html', {'lignes': lignes, 'numero': numero})
+
+
+
+
+
 """
 # @login_required
-def update_compte(request, compte_id=None):
+def update_data_compte(request, compte_id=None):
     print('compte_id:', compte_id)
     instance_compte = CompteComptable.objects.get(pk=compte_id) if compte_id is not None else None
     if request.method == "GET":
         compte_form = forms.CompteForm(instance=instance_compte)
         context = {'compte_form:': compte_form}
-        return render(request, 'frontend/post_update_compte.html', context=context)
+        return render(request, 'frontend/update_compte.html', context=context)
 
     if request.method == "POST":
         compte_form = forms.CompteForm(request.POST, request.FILES, instance=instance_compte)
         if compte_form.is_valid():
             compte_form.save()
             return redirect('accueil')
-"""
 
-
-def compte_num_list(request):
+def ajout_modif_compte(request):
+    numero = request.GET.get("id")  # ici "id" représente en réalité le numéro comptable
     compte = None
-    comptes = CompteComptable.objects.none()
-    form_search = forms.CompteSearchForm(request.GET or None)
-    form_edit = None
+    print('numero:', numero)
 
-    if form_search.is_valid():
-        numero = form_search.cleaned_data.get('numero')
-        comptes = CompteComptable.objects.filter(numero=numero)
-        if comptes.exists():
-            compte = comptes.first()
-            form_edit = forms.CompteEditForm(request.POST or None, instance=compte)
-            if request.method == "POST" and form_edit.is_valid():
-                form_edit.save()
-                return redirect('compte_num_list')  # pour revenir proprement
+    if numero:
+        compte = get_object_or_404(CompteComptable, numero=numero)
+        print('compte:', compte)
 
-    return render(request, 'frontend/data_list.html', {
-        'form_search': form_search,
-        'form_edit': form_edit,
-        'comptes': comptes,
-    })
-
-
-
-
-
+    return render(request, "frontend/compte_form.html", {"compte": compte})
 """
-def update_compte(request):
-    compte_form = forms.CompteForm()
-    if request.method == "POST":
-        # compte_form = forms.CompteForm(request.POST, request.FILES, instance=instance_compte)
-        compte_form = forms.CompteSearchForm(request.POST)
-        if compte_form.is_valid():
-            compte_form.save()
-    context = {'compte_form': compte_form}
-    return render(request, 'frontend/post_update_compte.html', context=context)
-"""
+
 
 
 

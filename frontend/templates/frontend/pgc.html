@@ -39,6 +39,8 @@
     <script>
       let currentPage = 1;
       const pageSize = 100;
+      // const apiUrl = "/api/comptes/";
+
       const apiUrl = "/api/comptes/";
 
       const tbody = document.querySelector("#pgc-table tbody");
@@ -99,6 +101,7 @@
       nextBtnTop.addEventListener("click", goNext);
 
       loadPage(1);
+
     </script>
   </div>
 </section>
