@@ -60,6 +60,7 @@ class EcritureJournal(models.Model):
     # A tester: date = models.DateTimeField(auto_now_add = True)
     compte = models.ForeignKey(CompteComptable, on_delete=models.CASCADE)  # N° compte
     nom = models.CharField(max_length=100, null=True, blank=True)
+    numero_piece = models.CharField(max_length=50, blank=True, null=True, unique=True)
     libelle = models.CharField(max_length=255, null=True, blank=True)
     pu_ht = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     quantite = models.DecimalField(max_digits=12, decimal_places=2, default=0)

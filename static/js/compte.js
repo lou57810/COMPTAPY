@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
             solde += (parseFloat(ligne.debit) || 0) - (parseFloat(ligne.credit) || 0);
         return [
               ligne.date,
+              ligne.numero_piece,
               ligne.libelle,
               ligne.debit,
               ligne.credit,
@@ -26,8 +27,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         new Handsontable(container, {
             data: journalData,
-            colHeaders: ['Date', 'Libellé', 'Débit', 'Crédit', 'Solde'],
+            colHeaders: ['Date', 'N° Pièce', 'Libellé', 'Débit', 'Crédit', 'Solde'],
             columns: [
+              { type: 'text', readOnly: true },
               { type: 'text', readOnly: true },
               { type: 'text', readOnly: true },
               { type: 'numeric', numericFormat: { pattern: '0.00' }, readOnly: true },
@@ -37,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
             width: '100%',
             height: 'auto',
             rowHeaders: true,
-            colWidths: [80, 300, 100, 100, 100],
+            colWidths: [80, 80, 300, 100, 100, 100],
             manualColumnResize: true,
             autoWrapRow: true,
             autoWrapCol: true,

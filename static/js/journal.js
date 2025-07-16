@@ -12,14 +12,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Données initiales : 1 ligne de saisie + 1 ligne TOTAL
   const initialData = [
-    ['', '', '', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '', '', '', ''],
   ];
 
   const hot = new Handsontable(container, {
     data: initialData,
-    colHeaders: ['Date', 'Compte', 'Nom', 'Libellé', 'PU ht', 'Quantité', 'Taux Tva', 'Débit', 'Crédit', 'Solde'],
+    colHeaders: ['Date', 'N° pièce', 'Compte', 'Nom', 'Libellé', 'PU ht', 'Quantité', 'Taux Tva', 'Débit', 'Crédit', 'Solde'],
     columns: [
       { type: 'date', dateFormat: 'DD/MM/YYYY' }, // 0 - Date
+      { type: 'text' },  // N° pièce
       { type: 'text' },                           // 1 - Compte
       { type: 'text', readOnly: true },           // 2 - nom
       { type: 'text' },                           // 3 - Libellé
@@ -53,7 +54,7 @@ document.addEventListener("DOMContentLoaded", function () {
     width: '100%',
     height: 'auto',
     rowHeaders: true,
-    colWidths: [80, 80, 200, 300, 80, 80, 80, 80, 80, 80],
+    colWidths: [80, 80, 80, 200, 300, 80, 80, 80, 80, 80, 80],
     manualColumnResize: true,
     // minSpareRows: 1,
     autoWrapRow: true,
@@ -79,10 +80,10 @@ document.addEventListener("DOMContentLoaded", function () {
             });
           }
 
-        if (['4', '5', '6'].includes(String(prop))) {
-          const pu_ht = parseFloat(hot.getDataAtCell(row, 4)) || 0;
-          const quantite = parseFloat(hot.getDataAtCell(row, 5)) || 0;
-          const taux_tva = parseFloat(hot.getDataAtCell(row, 6)) || 0;
+        if (['5', '6', '7'].includes(String(prop))) {
+          const pu_ht = parseFloat(hot.getDataAtCell(row, 5)) || 0;
+          const quantite = parseFloat(hot.getDataAtCell(row, 6)) || 0;
+          const taux_tva = parseFloat(hot.getDataAtCell(row, 7)) || 0;
                                                           //   ^^
           if (pu_ht && quantite && taux_tva != 0) {    // tva != 0  ^^ sinon les lignes s'affichent avant le choix du taux
             const montantHT = +(pu_ht * quantite).toFixed(2);
@@ -94,7 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // 🔹 Calcul automatique après modification PU HT, Quantité, TVA
             // Crédit du fournisseur
-            hot.setDataAtCell(row, 8, montantTTC);
+            hot.setDataAtCell(row, 9, montantTTC);
 
             // Ligne 2 : TVA ###########################################
             const ligneTVA = hot.countRows();
@@ -102,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
             hot.setDataAtCell(ligneTVA, 0, date);
             hot.setDataAtCell(ligneTVA, 1, '44551');
             hot.setDataAtCell(ligneTVA, 2, 'TVA à décaisser');
-            hot.setDataAtCell(ligneTVA, 7, montantTVA);
+            hot.setDataAtCell(ligneTVA, 8, montantTVA);
 
             // Copie du libellé (colonne 4) depuis la ligne client
             const libelleClient = hot.getDataAtCell(row, 3);
@@ -116,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function () {
             hot.setDataAtCell(ligneCharge, 0, date);
             hot.setDataAtCell(ligneCharge, 1, '607');
             hot.setDataAtCell(ligneCharge, 2, 'Achats de marchandises');
-            hot.setDataAtCell(ligneCharge, 7, montantHT);
+            hot.setDataAtCell(ligneCharge, 8, montantHT);
 
             // Copie du libellé (colonne 4) depuis la ligne client
             // const libelleClient = hot.getDataAtCell(row, 3);
@@ -144,8 +145,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const s_rows = hot.countRows();
       for (let row = 0; row < s_rows; row++) {
-        const debit = parseFloat(hot.getDataAtCell(row, 7)) || 0;
-        const credit = parseFloat(hot.getDataAtCell(row, 8)) || 0;
+        const debit = parseFloat(hot.getDataAtCell(row, 8)) || 0;
+        const credit = parseFloat(hot.getDataAtCell(row, 9)) || 0;
         totalDebit += debit;
         totalCredit += credit;
       }
