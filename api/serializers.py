@@ -10,10 +10,10 @@ class CompteComptableSerializer(serializers.ModelSerializer):
 
 
 class EcritureJournalSerializer(serializers.ModelSerializer):
-    numero = serializers.CharField(source='compte.numero')
-    nom = serializers.CharField(source='compte.nom')
+    # numero = serializers.CharField(source='compte.numero')
+    # nom = serializers.CharField(source='compte.nom')
 
     class Meta:
         model = EcritureJournal
-        fields = ['date', 'numero', 'nom', 'libelle', 'debit', 'credit']
+        fields = ['date', 'numero_piece', 'libelle', 'debit', 'credit']
 

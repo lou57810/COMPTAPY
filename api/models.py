@@ -3,7 +3,6 @@ from django.utils import timezone
 
 
 
-
 class CompteComptable(models.Model):
     numero = models.CharField(max_length=100, unique=True)  # Exemple : '401', '512'
     nom = models.CharField(max_length=255)  # Exemple : 'Fournisseurs', 'Banque'

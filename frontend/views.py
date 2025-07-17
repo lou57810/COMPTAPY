@@ -164,6 +164,7 @@ def valider_journal_achats(request):
                     date = datetime.strptime(date_str, "%d/%m/%Y").date()  # ou %Y-%m-%d selon format reçu
                 numero = ligne.get('numero')
                 nom = ligne.get('nom')
+                numero_piece = ligne.get('numero_piece')
                 libelle = ligne.get('libelle')
                 debit = ligne.get('debit', 0)
                 credit = ligne.get('credit', 0)
@@ -184,6 +185,7 @@ def valider_journal_achats(request):
                     date=date,
                     compte=compte,  # ici une vraie instance
                     nom=nom,
+                    numero_piece=numero_piece,
                     libelle=libelle,
                     debit=debit,
                     credit=credit,
@@ -201,7 +203,7 @@ def valider_journal_achats(request):
 
 def ecritures_par_compte(numero):
     ecritures = EcritureJournal.objects.filter(compte=numero).values(
-        'date', 'libelle', 'debit', 'credit'
+        'date', 'numero_piece', 'libelle', 'debit', 'credit'
     )
     return JsonResponse(list(ecritures), safe=False)
 

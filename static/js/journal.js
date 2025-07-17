@@ -17,39 +17,44 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const hot = new Handsontable(container, {
     data: initialData,
-    colHeaders: ['Date', 'N° pièce', 'Compte', 'Nom', 'Libellé', 'PU ht', 'Quantité', 'Taux Tva', 'Débit', 'Crédit', 'Solde'],
+    colHeaders: ['Date', 'N° Compte', 'Nom', 'N° pièce', 'Libellé', 'PU ht', 'Quantité', 'Taux Tva', 'Débit', 'Crédit', 'Solde'],
     columns: [
       { type: 'date', dateFormat: 'DD/MM/YYYY' }, // 0 - Date
-      { type: 'text' },  // N° pièce
       { type: 'text' },                           // 1 - Compte
-      { type: 'text', readOnly: true },           // 2 - nom
-      { type: 'text' },                           // 3 - Libellé
-      { type: 'numeric',
+      { type: 'text' , readOnly: true },          // 2 - nom
+      { type: 'text'},                            // 3 -N° Pièce
+      { type: 'text' },                           // 4 - Libellé
+      { type: 'numeric',                          // 5 - Prix unitaire Ht
         numericFormat: {
         pattern: '0.00', // 👉 toujours 2 décimales
         culture: 'fr-FR' // optionnel, pour gérer la virgule décimale si besoin
         }
       },                        // 4 - PU ht
-      { type: 'numeric' },                        // 5 - Quantité
-      { type: 'numeric' },                        // 6 - Tva
+      { type: 'numeric' },                        // 6 - Quantité
       { type: 'numeric',
+        numericFormat: {
+        pattern: '0.00',
+        culture: 'fr-FR'
+        }
+       },                        // 7 - Tva
+      { type: 'numeric',                          // 8 - Débit
         numericFormat: {
         pattern: '0.00', // 👉 toujours 2 décimales
         culture: 'fr-FR' // optionnel, pour gérer la virgule décimale si besoin
         }
-      },                        // 7 - Débit
-      { type: 'numeric',
+      },
+      { type: 'numeric',                            // 9 - Crédit
         numericFormat: {
         pattern: '0.00', // 👉 toujours 2 décimales
         culture: 'fr-FR' // optionnel, pour gérer la virgule décimale si besoin
         }
-      },                        // 8 - Crédit
-      { type: 'numeric',
+      },
+      { type: 'numeric',                             // 10 - Solde
         numericFormat: {
         pattern: '0.00', // 👉 toujours 2 décimales
         culture: 'fr-FR' // optionnel, pour gérer la virgule décimale si besoin
         }
-      },                        // 9 - Solde
+      },
     ],
     width: '100%',
     height: 'auto',
@@ -203,29 +208,14 @@ document.addEventListener("DOMContentLoaded", function () {
         date: row[0],         // ✅ bien envoyer la date
         numero: row[1],
         nom: row[2],
-        libelle: row[3],
-        debit: row[7] || 0,
-        credit: row[8] || 0
+        numero_piece: row[3],
+        libelle: row[4],
+        debit: row[8] || 0,
+        credit: row[9] || 0
       }));
-    /*
-    const lignesValides = data.filter(row => {
-      const isEmpty = row.every(cell => cell === null || cell === '');
-      const isTotalRow = String(row[4] || '').trim().toLowerCase() === 'total';
-      return !isEmpty && !isTotalRow;
-    });
+      console.log('Lignes à la validation: ', lignes)
 
-    // Structure des données à envoyer à Django
-    const payload = lignesValides.map(row => ({
-      date: row[0],
-      numero: row[1],     // numéro du compte
-      nom: row[2],        // nom du compte
-      libelle: row[4],    // libellé
-      debit: row[7] || 0,
-      credit: row[8] || 0,
-    }));
-    */
     const urlValidation = document.getElementById('validerEcritures')?.dataset?.urlValidation;
-    console.log("URL de validation:", urlValidation);
     console.log("✅ Données à envoyer :", lignes);
     fetch(urlValidation, {
       method: 'POST',
@@ -244,7 +234,6 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .then(data => {
         alert('Écritures enregistrées avec succès ✅');
-        console.log('data2', data);
       })
       .catch(error => {
         console.error('Erreur lors de l’enregistrement :', error);

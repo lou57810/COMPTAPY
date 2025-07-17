@@ -73,6 +73,7 @@ def enregistrer_ecritures(request):
     for ligne in lignes:
         numero = ligne.get('numero')
         nom = ligne.get('nom')
+        numero_piece = ligne.get('numero_piece')
         libelle = ligne.get('libelle') or ''
         debit = ligne.get('debit') or 0
         credit = ligne.get('credit') or 0
@@ -80,6 +81,7 @@ def enregistrer_ecritures(request):
         CompteComptable.objects.create(
             numero=numero,
             nom=nom,
+            numero_piece=numero_piece,
             libelle=libelle,
             debit=debit,
             credit=credit,
@@ -101,6 +103,7 @@ def get_ecritures_par_compte(request):
                 'date': ecriture.date.strftime('%d/%m/%Y'),
                 'numero': ecriture.compte.numero,
                 'nom': ecriture.nom,
+                'numero_piece': ecriture.numero_piece,
                 'libelle': ecriture.libelle,
                 'debit': ecriture.debit,
                 'credit': ecriture.credit
