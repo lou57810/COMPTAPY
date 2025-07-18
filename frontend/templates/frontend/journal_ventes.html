@@ -7,6 +7,10 @@
     <div class="container">
         <h1>Journal de ventes</h1>
             <div id="hot" data-journal-type="ventes"></div>
+            <button id="validerEcritures" class="btn btn-primary mt-3" data-url-validation="{% url 'valider-journal-achats' %}">Valider les écritures</button>
+            <div>
+              <br/>
+            </div>
     </div>
 </section>
 <script src="{% static 'js/journal.js' %}"></script>

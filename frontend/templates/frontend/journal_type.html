@@ -4,11 +4,29 @@
 
 
 <section class="py-5">
+    <div class="container0">
+      <form method="get" id="form-choix-journal" class="mb-4">
+        <label for="journal">Choisir un journal :</label>
+        <select name="type" id="journal" onchange="this.form.submit()">
+          <option value="type" {% if journal_type == 'type' %}selected{% endif %}>Journal Type</option>
+          <option value="achats" {% if journal_type == 'achats' %}selected{% endif %}>Journal Achats</option>
+          <option value="ventes" {% if journal_type == 'ventes' %}selected{% endif %}>Journal Ventes</option>
+          <option value="od" {% if journal_type == 'od' %}selected{% endif %}>Journal OD</option>
+          <!-- Ajoute d'autres si besoin -->
+        </select>
+      </form>
+    </div>
     <div class="container">
-        <h1>Journal_type</h1>
-            <div id="hot">
+        <h1>Journal {{ journal_type }}</h1>
+        <div id="hot" data-journal-type="{{ journal_type }}"></div>
+<!--        <button id="validerEcritures" data-journal-type="{{ type_journal }}">Valider</button>-->
+            <p> Journal: {{ journal_type }}</p>
+            <button id="validerEcritures" class="btn btn-primary mt-3" data-url-validation="/valider/{{ journal_type }}/">Valider les écritures</button>
+    </div>
 
-            </div>
+    <div class="container">
+      <h3>Totaux</h3>
+            <div id="hot-totals" class="hot handsontable htColumnHeaders"></div>
     </div>
 </section>
 <script src="{% static 'js/journal.js' %}"></script>

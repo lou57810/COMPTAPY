@@ -5,10 +5,18 @@ let totalCredit = 0;
 document.addEventListener("DOMContentLoaded", function () {
 
   const container = document.getElementById('hot');
-  if (!container) return;
+  console.log('container:', container)
 
-  // const journalType = container.dataset.journalType || 'autre';
+  if (!container) return;
+  const journalType = container.dataset.journalType || 'autre';
+  console.log('journalType:', journalType)
   let internalChange = false;
+
+  const urlValidation = `/valider/${journalType}/`;
+  console.log('urlValidation:', urlValidation);
+
+
+
 
   // Données initiales : 1 ligne de saisie + 1 ligne TOTAL
   const initialData = [
@@ -16,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
   ];
 
   const hot = new Handsontable(container, {
+
     data: initialData,
     colHeaders: ['Date', 'N° Compte', 'Nom', 'N° pièce', 'Libellé', 'PU ht', 'Quantité', 'Taux Tva', 'Débit', 'Crédit', 'Solde'],
     columns: [
@@ -139,7 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
-
+// ############################### Tableau Totaux ######################################
        insertOrUpdateTotalRow();
     }
   });
@@ -156,8 +165,6 @@ document.addEventListener("DOMContentLoaded", function () {
         totalCredit += credit;
       }
     }
-
-// ############################### Tableau Totaux ######################################
 
       // Date du jour
       const dateJour = new Date();
@@ -216,6 +223,7 @@ document.addEventListener("DOMContentLoaded", function () {
       console.log('Lignes à la validation: ', lignes)
 
     const urlValidation = document.getElementById('validerEcritures')?.dataset?.urlValidation;
+    console.log('URLVALID:', urlValidation);
     console.log("✅ Données à envoyer :", lignes);
     fetch(urlValidation, {
       method: 'POST',

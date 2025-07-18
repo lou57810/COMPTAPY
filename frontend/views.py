@@ -72,8 +72,13 @@ def journal_expert_od(request):
 def journal_reouverture(request):
     return render(request,'frontend/journal_reouverture.html')
 
-def journal_type(request):
-    return render(request,'frontend/journal_type.html')
+# def journal_type(request):
+def afficher_journal(request):
+    journal_type = request.GET.get('type', 'achats')  # Par défaut : journal achats
+    context = {
+        'journal_type': journal_type,
+    }
+    return render(request,'frontend/journal_type.html', context)
 
 
 # ========================== Comptes ===========================================
@@ -151,7 +156,8 @@ def get_pk_from_numero(request):
 
 
 @csrf_exempt  # Si tu n'utilises pas {% csrf_token %}, sinon retire ça
-def valider_journal_achats(request):
+def valider_journal(request, journal_type):
+
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -189,7 +195,7 @@ def valider_journal_achats(request):
                     libelle=libelle,
                     debit=debit,
                     credit=credit,
-
+                    journal=journal_type  # Achats, Ventes, OD ...
                     # journal="achats"
                 )
                 print('Ecritures enregistrées:', ecriture)
@@ -229,6 +235,7 @@ def afficher_compte(request):
         lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
 
     return render(request, 'frontend/display_compte.html', {'lignes': lignes, 'numero': numero})
+
 
 
 

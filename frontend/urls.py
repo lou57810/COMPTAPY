@@ -28,9 +28,10 @@ urlpatterns = [
     path('journal_cloture/', views.journal_cloture, name='journal_cloture'),
     path('journal_expert_od/', views.journal_expert_od, name='journal_expert_od'),
     path('journal_reouverture/', views.journal_reouverture, name='journal_reouverture'),
-    path('journal_type/', views.journal_type, name='journal_type'),
+    path('afficher_journal/', views.afficher_journal, name='afficher-journal'),
     path('display_compte_view/', views.display_compte_view, name='display-compte-view'),
-    path('valider_journal_achats/', views.valider_journal_achats, name='valider-journal-achats'),
+    # path('valider_journal_achats/', views.valider_journal_achats, name='valider-journal-achats'),
+    path('valider/<str:journal_type>/', views.valider_journal, name='valider-journal'),
     path('list/', views.afficher_compte, name='afficher-compte'),
 ]
 
