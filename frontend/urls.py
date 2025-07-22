@@ -16,10 +16,10 @@ urlpatterns = [
     # path('compte/<str:numero>/ecritures/', views.ecritures_par_compte, name='ecritures-par-compte'),
 
     path('saisie_journal/', views.saisie_journal, name='saisie-journal'),
-    path('display_compte_view/', views.display_compte_view, name='display-compte-view'),
+    # path('display_compte_view/', views.display_compte_view, name='display-compte-view'),
     # path('valider_journal_achats/', views.valider_journal_achats, name='valider-journal-achats'),
     path('valider/<str:type_journal>/', views.valider_journal, name='valider-journal'),
-    path('list/', views.afficher_compte, name='afficher-compte'),
+    path('afficher_compte/', views.afficher_compte, name='afficher-compte'),
 ]
 
 if settings.DEBUG:

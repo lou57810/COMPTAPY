@@ -81,7 +81,6 @@ function initHandsontable(container, config) {
             });
           }
 
-
       // changes.forEach(([row, prop, oldValue, newValue]) => {
         if (['5', '6', '7'].includes(String(prop))) {
           const pu_ht = parseFloat(this.getDataAtCell(row, 5)) || 0;
@@ -93,11 +92,11 @@ function initHandsontable(container, config) {
             const montantTVA = +(montantHT * taux_tva / 100).toFixed(2);
             const montantTTC = montantHT + montantTVA;
 
-            this.setDataAtCell(row, 9, montantTTC); // crédit
-
             const date = this.getDataAtCell(row, 0);
             const libelle = this.getDataAtCell(row, 4);
             const numeroPiece = this.getDataAtCell(row, 3);
+
+            this.setDataAtCell(row, 9, montantTTC); // crédit
 
             // ✅ Ligne TVA
             const ligneTVA = this.countRows();

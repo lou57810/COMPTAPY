@@ -212,7 +212,7 @@ def ecritures_par_compte(numero):
     )
     return JsonResponse(list(ecritures), safe=False)
 
-
+"""
 def display_compte_view(request):
     comptes = None
     form_search = forms.CompteSearchForm(request.GET or None)
@@ -225,15 +225,23 @@ def display_compte_view(request):
         'comptes': comptes,
         'form_search': form_search,
     })
+"""
+
 
 def afficher_compte(request):
     numero = request.GET.get('numero')
+    nom = []
     lignes = []
 
     if numero:
+        compte = get_object_or_404(CompteComptable, numero=numero)
+        nom = compte.nom
+        print('compte:', nom)
+
         lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
 
-    return render(request, 'frontend/display_compte.html', {'lignes': lignes, 'numero': numero})
+
+    return render(request, 'frontend/afficher_compte.html', {'lignes': lignes, 'numero': numero, 'nom': nom})
 
 
 
