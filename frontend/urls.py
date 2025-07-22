@@ -15,23 +15,10 @@ urlpatterns = [
 
     # path('compte/<str:numero>/ecritures/', views.ecritures_par_compte, name='ecritures-par-compte'),
 
-    path('journal_achats/', views.journal_achats, name='journal_achats'),
-    path('journal_ventes/', views.journal_ventes, name='journal_ventes'),
-    path('journal_od/', views.journal_od, name='journal_od'),
-    path('journal_banque/', views.journal_banque, name='journal_banque'),
-    path('journal_caisse/', views.journal_caisse, name='journal_caisse'),
-    path('journal_banque/', views.journal_banque, name='journal_banque'),
-    path('journal_cpte_cheques_postaux/', views.journal_cpte_cheques_postaux, name='journal_cpte_cheques_postaux'),
-    path('journal_effets_a_recevoir/', views.journal_effets_a_recevoir, name='journal_effets_a_recevoir'),
-    path('journal_effets_a_payer/', views.journal_effets_a_payer, name='journal_effets_a_payer'),
-    path('journal_report_nouveau/', views.journal_report_nouveau, name='journal_report_nouveau'),
-    path('journal_cloture/', views.journal_cloture, name='journal_cloture'),
-    path('journal_expert_od/', views.journal_expert_od, name='journal_expert_od'),
-    path('journal_reouverture/', views.journal_reouverture, name='journal_reouverture'),
-    path('afficher_journal/', views.afficher_journal, name='afficher-journal'),
+    path('saisie_journal/', views.saisie_journal, name='saisie-journal'),
     path('display_compte_view/', views.display_compte_view, name='display-compte-view'),
     # path('valider_journal_achats/', views.valider_journal_achats, name='valider-journal-achats'),
-    path('valider/<str:journal_type>/', views.valider_journal, name='valider-journal'),
+    path('valider/<str:type_journal>/', views.valider_journal, name='valider-journal'),
     path('list/', views.afficher_compte, name='afficher-compte'),
 ]
 

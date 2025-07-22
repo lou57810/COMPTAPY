@@ -24,7 +24,7 @@ def accueil(request):
     return render(request, 'frontend/accueil.html')
 
 # ============== Journaux ==============================
-
+"""
 def journal_achats(request):
     return render(request,'frontend/journal_achats.html')
 
@@ -71,12 +71,12 @@ def journal_expert_od(request):
 
 def journal_reouverture(request):
     return render(request,'frontend/journal_reouverture.html')
-
+"""
 # def journal_type(request):
-def afficher_journal(request):
-    journal_type = request.GET.get('type', 'achats')  # Par défaut : journal achats
+def saisie_journal(request):
+    type_journal = request.GET.get('type', '')  # Par défaut : journal achats
     context = {
-        'journal_type': journal_type,
+        'type_journal': type_journal,
     }
     return render(request,'frontend/journal_type.html', context)
 
@@ -156,7 +156,7 @@ def get_pk_from_numero(request):
 
 
 @csrf_exempt  # Si tu n'utilises pas {% csrf_token %}, sinon retire ça
-def valider_journal(request, journal_type):
+def valider_journal(request, type_journal):
 
     if request.method == 'POST':
         try:
@@ -195,8 +195,7 @@ def valider_journal(request, journal_type):
                     libelle=libelle,
                     debit=debit,
                     credit=credit,
-                    journal=journal_type  # Achats, Ventes, OD ...
-                    # journal="achats"
+                    journal=type_journal  # Achats, Ventes, OD ...
                 )
                 print('Ecritures enregistrées:', ecriture)
             return JsonResponse({'status': 'success'})

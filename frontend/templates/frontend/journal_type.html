@@ -4,24 +4,33 @@
 
 
 <section class="py-5">
-    <div class="container0">
-      <form method="get" id="form-choix-journal" class="mb-4">
+    <div class="container">
+      <form method="get" class="mb-4">
         <label for="journal">Choisir un journal :</label>
-        <select name="type" id="journal" onchange="this.form.submit()">
-          <option value="type" {% if journal_type == 'type' %}selected{% endif %}>Journal Type</option>
-          <option value="achats" {% if journal_type == 'achats' %}selected{% endif %}>Journal Achats</option>
-          <option value="ventes" {% if journal_type == 'ventes' %}selected{% endif %}>Journal Ventes</option>
-          <option value="od" {% if journal_type == 'od' %}selected{% endif %}>Journal OD</option>
-          <!-- Ajoute d'autres si besoin -->
-        </select>
+          <select name="type" id="journal" onchange="this.form.submit()">
+<!--            <option value="type" {% if type_journal == 'type' %}selected{% endif %}>Journal Type</option>-->
+            <option value="" disabled {% if not type_journal %}selected{% endif %}>Choisir un journal</option>
+            <option value="achats" {% if type_journal == 'achats' %}selected{% endif %}>Journal d'achats</option>
+            <option value="ventes" {% if type_journal == 'ventes' %}selected{% endif %}>Journal de ventes</option>
+            <option value="banque" {% if type_journal == 'banque' %}selected{% endif %}>Journal de banque</option>
+            <option value="caisse" {% if type_journal == 'caisse' %}selected{% endif %}>Journal de caisse</option>
+            <option value="cheques_postaux" {% if type_journal == 'cheques_postaux' %}selected{% endif %}>Journal de cheques postaux</option>
+            <option value="cloture" {% if type_journal == 'cloture' %}selected{% endif %}>Journal de cloture</option>
+            <option value="effets_a_payer" {% if type_journal == 'effets_a_payer' %}selected{% endif %}>Journal d'effets à payer</option>
+            <option value="effets_a_recevoir" {% if type_journal == 'effets_a_recevoir' %}selected{% endif %}>Journal d'effets à recevoir</option>
+            <option value="expert_od" {% if type_journal == 'expert_od' %}selected{% endif %}>Journal d'expert OD</option>
+            <option value="reouverture" {% if type_journal == 'reouverture' %}selected{% endif %}>Journal de réouverture</option>
+            <option value="report_a_nouveau" {% if type_journal == 'report_a_nouveau' %}selected{% endif %}>Journal de report à nouveau</option>
+            <!-- Ajoute d'autres si besoin -->
+          </select>
       </form>
     </div>
     <div class="container">
-        <h1>Journal {{ journal_type }}</h1>
-        <div id="hot" data-journal-type="{{ journal_type }}"></div>
-<!--        <button id="validerEcritures" data-journal-type="{{ type_journal }}">Valider</button>-->
-            <p> Journal: {{ journal_type }}</p>
-            <button id="validerEcritures" class="btn btn-primary mt-3" data-url-validation="/valider/{{ journal_type }}/">Valider les écritures</button>
+        <h1>Journal {{ type_journal }}</h1>
+
+        <div id="hot"></div>
+        <div id="journal_display"></div>
+            <button id="validerEcritures" class="btn btn-primary mt-3" data-url-validation="/valider/{{ type_journal }}/">Valider les écritures</button>
     </div>
 
     <div class="container">
@@ -29,6 +38,7 @@
             <div id="hot-totals" class="hot handsontable htColumnHeaders"></div>
     </div>
 </section>
-<script src="{% static 'js/journal.js' %}"></script>
+
+<script type="module" src="{% static 'js/journal.js' %}"></script>
 {% endblock content %}
 

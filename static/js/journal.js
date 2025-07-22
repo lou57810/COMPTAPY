@@ -1,30 +1,19 @@
-// ########################## Tableau saisie ############################
-
+// journal.js (doit être chargé comme type="module")
+// Initialisation
 let totalDebit = 0;
 let totalCredit = 0;
-document.addEventListener("DOMContentLoaded", function () {
+let ligneSaisie = 0;
 
-  const container = document.getElementById('hot');
-  console.log('container:', container)
+// Main fct
 
-  if (!container) return;
-  const journalType = container.dataset.journalType || 'autre';
-  console.log('journalType:', journalType)
+// ✅ ################ Fonction d'initialisation du tableau Handsontable #######################
+function initHandsontable(container, config) {
   let internalChange = false;
-
-  const urlValidation = `/valider/${journalType}/`;
-  console.log('urlValidation:', urlValidation);
-
-
-
-
   // Données initiales : 1 ligne de saisie + 1 ligne TOTAL
   const initialData = [
-    ['', '', '', '', '', '', '', '', '', '', ''],
-  ];
-
-  const hot = new Handsontable(container, {
-
+                      ['', '', '', '', '', '', '', '', '', '', ''],
+                      ];
+  let hot = new Handsontable(container, {
     data: initialData,
     colHeaders: ['Date', 'N° Compte', 'Nom', 'N° pièce', 'Libellé', 'PU ht', 'Quantité', 'Taux Tva', 'Débit', 'Crédit', 'Solde'],
     columns: [
@@ -68,15 +57,14 @@ document.addEventListener("DOMContentLoaded", function () {
     width: '100%',
     height: 'auto',
     rowHeaders: true,
-    colWidths: [80, 80, 80, 200, 300, 80, 80, 80, 80, 80, 80],
+    colWidths: [80, 80, 200, 58, 300, 80, 80, 80, 80, 80, 80],
     manualColumnResize: true,
-    // minSpareRows: 1,
     autoWrapRow: true,
     autoWrapCol: true,
     licenseKey: 'non-commercial-and-evaluation',
 
-    afterChange: function (changes, source) {
-      if (internalChange || source !== 'edit') return;
+    afterChange(changes, source) {
+      if (!changes || source !== 'edit') return;
 
       changes.forEach(([row, prop, oldValue, newValue]) => {
         // 🔹 Auto-complétion nom du compte fournisseur
@@ -84,76 +72,68 @@ document.addEventListener("DOMContentLoaded", function () {
           fetch(`/api/comptes/numero/?numero=${encodeURIComponent(newValue)}`)
             .then(response => response.json())
             .then(data => {
-              console.log('data.nom', data.nom);
               if (data.nom) {
-                hot.setDataAtCell(row, 2, data.nom); // Colonne 2 = Nom
+                this.setDataAtCell(row, 2, data.nom); // Colonne 2 = Nom
               } else {
-                hot.setDataAtCell(row, 2, 'Compte introuvable');
+                this.setDataAtCell(row, 2, 'Compte introuvable');
               }
               internalChange = false;
             });
           }
 
+
+      // changes.forEach(([row, prop, oldValue, newValue]) => {
         if (['5', '6', '7'].includes(String(prop))) {
-          const pu_ht = parseFloat(hot.getDataAtCell(row, 5)) || 0;
-          const quantite = parseFloat(hot.getDataAtCell(row, 6)) || 0;
-          const taux_tva = parseFloat(hot.getDataAtCell(row, 7)) || 0;
-                                                          //   ^^
-          if (pu_ht && quantite && taux_tva != 0) {    // tva != 0  ^^ sinon les lignes s'affichent avant le choix du taux
+          const pu_ht = parseFloat(this.getDataAtCell(row, 5)) || 0;
+          const quantite = parseFloat(this.getDataAtCell(row, 6)) || 0;
+          const taux_tva = parseFloat(this.getDataAtCell(row, 7)) || 0;
+          // tva != 0 sinon les lignes s'affichent avant le choix du taux et s'affichent 3 X (9 lignes au lieu de 3)
+          if (pu_ht && quantite && taux_tva != 0) {
             const montantHT = +(pu_ht * quantite).toFixed(2);
             const montantTVA = +(montantHT * taux_tva / 100).toFixed(2);
-            const montantTTC = +(montantHT * (1 + taux_tva / 100)).toFixed(2);
+            const montantTTC = montantHT + montantTVA;
 
-            const date = hot.getDataAtCell(row, 0);
-            internalChange = true;
+            this.setDataAtCell(row, 9, montantTTC); // crédit
 
-            // 🔹 Calcul automatique après modification PU HT, Quantité, TVA
-            // Crédit du fournisseur
-            hot.setDataAtCell(row, 9, montantTTC);
+            const date = this.getDataAtCell(row, 0);
+            const libelle = this.getDataAtCell(row, 4);
+            const numeroPiece = this.getDataAtCell(row, 3);
 
-            // Ligne 2 : TVA ###########################################
-            const ligneTVA = hot.countRows();
-            hot.alter('insert_row_below', ligneTVA);
-            hot.setDataAtCell(ligneTVA, 0, date);
-            hot.setDataAtCell(ligneTVA, 1, '44551');
-            hot.setDataAtCell(ligneTVA, 2, 'TVA à décaisser');
-            hot.setDataAtCell(ligneTVA, 8, montantTVA);
+            // ✅ Ligne TVA
+            const ligneTVA = this.countRows();
+            this.alter('insert_row_below', ligneTVA);
+            this.setDataAtCell(ligneTVA, 0, date);
+            this.setDataAtCell(ligneTVA, 1, config.comptesTVA[0].numero);
+            this.setDataAtCell(ligneTVA, 2, config.comptesTVA[0].nom);
+            this.setDataAtCell(ligneTVA, 3, numeroPiece);
+            this.setDataAtCell(ligneTVA, 4, libelle);
+            this.setDataAtCell(ligneTVA, 8, montantTVA); // débit TVA
 
-            // Copie du libellé (colonne 4) depuis la ligne client
-            const libelleClient = hot.getDataAtCell(row, 3);
-            if (libelleClient) {
-              hot.setDataAtCell(ligneTVA, 3, libelleClient);
-            }
-
-            // Ligne 3 : Charge (HT) ####################################
-            const ligneCharge = hot.countRows();
-            hot.alter('insert_row_below', ligneCharge);
-            hot.setDataAtCell(ligneCharge, 0, date);
-            hot.setDataAtCell(ligneCharge, 1, '607');
-            hot.setDataAtCell(ligneCharge, 2, 'Achats de marchandises');
-            hot.setDataAtCell(ligneCharge, 8, montantHT);
-
-            // Copie du libellé (colonne 4) depuis la ligne client
-            // const libelleClient = hot.getDataAtCell(row, 3);
-            if (libelleClient) {
-              hot.setDataAtCell(ligneCharge, 3, libelleClient);
-            }
+            // ✅ Ligne charge
+            const ligneCharge = this.countRows();
+            this.alter('insert_row_below', ligneCharge);
+            this.setDataAtCell(ligneCharge, 0, date);
+            this.setDataAtCell(ligneCharge, 1, config.comptesCharges[0].numero);
+            this.setDataAtCell(ligneCharge, 2, config.comptesCharges[0].nom);
+            this.setDataAtCell(ligneCharge, 3, numeroPiece);
+            this.setDataAtCell(ligneCharge, 4, libelle);
+            this.setDataAtCell(ligneCharge, 8, montantHT); // débit charges
 
             // Ligne 4 : Ajout ligne de Saisie ##########################
-            const ligneSaisie = hot.countRows();
+            let ligneSaisie = this.countRows();
             internalChange = true;
-            hot.alter('insert_row_below', ligneSaisie);
-            internalChange = false;
+            this.alter('insert_row_below', ligneSaisie);
           }
         }
       });
-
-// ############################### Tableau Totaux ######################################
-       insertOrUpdateTotalRow();
     }
   });
+  return hot;
+}
 
-    function insertOrUpdateTotalRow() {
+// ############### Fonction tableau totaux ###################
+
+function insertOrUpdateTotalRow(hot) {
       totalDebit = 0;
       totalCredit = 0;
 
@@ -164,43 +144,99 @@ document.addEventListener("DOMContentLoaded", function () {
         totalDebit += debit;
         totalCredit += credit;
       }
+      return { totalDebit, totalCredit };
     }
 
-      // Date du jour
-      const dateJour = new Date();
-      today = dateJour.toLocaleDateString("fr");
+// 🔁 Mettre à jour le tableau Totaux à chaque modification :
+function updateTotalTable(hotTotals, totalDebit, totalCredit) {
+  hotTotals.setDataAtCell(0, 2, totalDebit.toFixed(2));
+  hotTotals.setDataAtCell(0, 3, totalCredit.toFixed(2));
+  hotTotals.setDataAtCell(0, 4, (totalDebit - totalCredit).toFixed(2));
+  }
 
-      var data1 = [
-          [today, 'Totaux', '', '', '', ],
-          ];
-      container1 = document.getElementById('hot-totals');
-
-      const hotTotals = new Handsontable(container1, {
-        colHeaders: ['Date', '', 'Débit', 'Crédit', 'Solde',],
-        data: data1,
-        startRows: 1,
-        startCols: 6,
-        width: '100%',
-        height: 'auto',
-        colWidths: [80, 875, 80, 80, 80],
-        manualColumnResize: true,
-        autoWrapRow: true,
-        autoWrapCol: true,
-        licenseKey: 'non-commercial-and-evaluation',
-        });
-
-      // 🔁 Mettre à jour le 2e tableau à chaque modification :
-      function updateSecondTable() {
-        hotTotals.setDataAtCell(0, 2, totalDebit.toFixed(2));
-        hotTotals.setDataAtCell(0, 3, totalCredit.toFixed(2));
-        hotTotals.setDataAtCell(0, 4, (totalDebit - totalCredit).toFixed(2));
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [key, value] = cookie.trim().split('=');
+        if (key === name) {
+          cookieValue = decodeURIComponent(value);
+          break;
         }
+      }
+    }
+    return cookieValue;
+  }
 
-      // Appel régulier (ou depuis afterChange) :
+// ############################# Bloc Page #############################
+
+document.addEventListener('DOMContentLoaded', async function () {
+  let typeJournal = document.getElementById('journal')?.value;
+
+// ########################## Tableau saisie ###########################
+
+  const container = document.getElementById('hot');
+  if (!container) return;
+
+  let hot = null;
+
+  try {
+      // ✅ Chargement dynamique du bon snippet
+      const snippetModule = await import(`/static/js/snippets/${typeJournal}.js`);
+      const config = snippetModule.configJournal();
+
+      // ✅ Appel Fonction d'initialisation du tableau avec les règles spécifiques
+      // 🔄 Stocker l'instance de Handsontable retournée par initHandsontable
+      hot = initHandsontable(container, config);
+      } catch (error) {
+        console.error(`❌ Erreur de chargement du snippet "${typeJournal}" :`, error);
+      }
+
+  // ######################## Tableau Totaux #############################
+
+  // ######## Récupération date du jour #####################
+     let options = {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      };
+    const dateJour = new Date();
+    let today = dateJour.toLocaleDateString("fr-FR", options);
+  // #########################################################
+
+
+  var data1 = [
+            [today, 'Totaux', '', '', '', ],
+            ];
+  const container_totaux = document.getElementById('hot-totals');
+  if (!container_totaux) return;
+
+  const hotTotals = new Handsontable(container_totaux, {
+          colHeaders: ['Date', '', 'Débit', 'Crédit', 'Solde',],
+          data: data1,
+          startRows: 1,
+          startCols: 6,
+          width: '100%',
+          height: 'auto',
+          colWidths: [80, 930, 80, 80, 80],
+          manualColumnResize: true,
+          autoWrapRow: true,
+          autoWrapCol: true,
+          licenseKey: 'non-commercial-and-evaluation',
+          });
+
+  if (hot) {
       hot.addHook('afterChange', function () {
-      insertOrUpdateTotalRow();
-      updateSecondTable();
-  });
+      const { totalDebit, totalCredit } = insertOrUpdateTotalRow(hot);
+      updateTotalTable(hotTotals, totalDebit, totalCredit);
+    });
+
+    // ✅ Appel initial
+    const { totalDebit, totalCredit } = insertOrUpdateTotalRow(hot);
+    updateTotalTable(hotTotals, totalDebit, totalCredit);
+  }
+
 
 // ############################# Validation des écritures #####################################
 
@@ -249,21 +285,9 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 
-  // Fonction pour récupérer le token CSRF
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let cookie of cookies) {
-        const [key, value] = cookie.trim().split('=');
-        if (key === name) {
-          cookieValue = decodeURIComponent(value);
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
+// ############## Fin document.addEventListener('DOMContentLoaded', async function () ##########
 });
+// #############################################################################################
+
 
 
