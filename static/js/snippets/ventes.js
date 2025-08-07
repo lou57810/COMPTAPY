@@ -1,15 +1,9 @@
 // Journal Achats – logique spécifique
-export function configJournal(hotInstance) {
+export function configJournal() {
   return {
-    comptesTVA: [
-      { numero: '44571', nom: 'TVA collectée' },
-      { numero: '44562', nom: 'TVA sur immobilisations' },
-    ],
-    comptesCharges: [
-      { numero: '701', nom: 'Ventes de produits finis' },
-      { numero: '7012', nom: 'Produits finis (ou groupe) B' },
-    ],
-    defaultNomTVA: 'TVA déductible',
-    defaultNomCharge: 'Ventes',
+    // compteContrepartie: { numero: '411000', nom: 'Client' },
+    comptesTVA: [{ numero: '445700', nom: 'TVA collectée' }],
+    comptesVentilation: [{ numero: '706000', nom: 'Ventes Marchandises' }],
+    sens: 'ventes',
   };
 }

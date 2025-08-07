@@ -3,19 +3,25 @@
 let totalDebit = 0;
 let totalCredit = 0;
 let ligneSaisie = 0;
+let cell = 0;
+let row_base = 0;
+let row = 0;
+let internalChange = false;
+let col = 0;
 
-// Main fct
+
 
 // ✅ ################ Fonction d'initialisation du tableau Handsontable #######################
 function initHandsontable(container, config) {
-  let internalChange = false;
-  // Données initiales : 1 ligne de saisie + 1 ligne TOTAL
+
+  let cell = 0;
+
   const initialData = [
-                      ['', '', '', '', '', '', '', '', '', '', ''],
+                      ['', '', '', '', '', '', '', '', '', ''],
                       ];
   let hot = new Handsontable(container, {
     data: initialData,
-    colHeaders: ['Date', 'N° Compte', 'Nom', 'N° pièce', 'Libellé', 'PU ht', 'Quantité', 'Taux Tva', 'Débit', 'Crédit', 'Solde'],
+    colHeaders: ['Date', 'N° Compte', 'Nom', 'N° pièce', 'Libellé', 'PU ht', 'Quantité', 'Taux Tva', 'Débit', 'Crédit'],
     columns: [
       { type: 'date', dateFormat: 'DD/MM/YYYY' }, // 0 - Date
       { type: 'text' },                           // 1 - Compte
@@ -29,12 +35,12 @@ function initHandsontable(container, config) {
         }
       },                        // 4 - PU ht
       { type: 'numeric' },                        // 6 - Quantité
-      { type: 'numeric',
+      { type: 'numeric',                          // 7 - Tva
         numericFormat: {
         pattern: '0.00',
         culture: 'fr-FR'
         }
-       },                        // 7 - Tva
+       },
       { type: 'numeric',                          // 8 - Débit
         numericFormat: {
         pattern: '0.00', // 👉 toujours 2 décimales
@@ -47,88 +53,116 @@ function initHandsontable(container, config) {
         culture: 'fr-FR' // optionnel, pour gérer la virgule décimale si besoin
         }
       },
-      { type: 'numeric',                             // 10 - Solde
-        numericFormat: {
-        pattern: '0.00', // 👉 toujours 2 décimales
-        culture: 'fr-FR' // optionnel, pour gérer la virgule décimale si besoin
-        }
-      },
     ],
     width: '100%',
     height: 'auto',
     rowHeaders: true,
-    colWidths: [80, 80, 200, 58, 300, 80, 80, 80, 80, 80, 80],
+    colWidths: [80, 80, 200, 58, 300, 80, 80, 80, 80, 80],
     manualColumnResize: true,
     autoWrapRow: true,
     autoWrapCol: true,
     licenseKey: 'non-commercial-and-evaluation',
-
-    afterChange(changes, source) {
-      if (!changes || source !== 'edit') return;
-
-      changes.forEach(([row, prop, oldValue, newValue]) => {
-        // 🔹 Auto-complétion nom du compte fournisseur
-        if (String(prop) === '1' && newValue !== oldValue) {
-          fetch(`/api/comptes/numero/?numero=${encodeURIComponent(newValue)}`)
-            .then(response => response.json())
-            .then(data => {
-              if (data.nom) {
-                this.setDataAtCell(row, 2, data.nom); // Colonne 2 = Nom
-              } else {
-                this.setDataAtCell(row, 2, 'Compte introuvable');
-              }
-              internalChange = false;
-            });
-          }
-
-      // changes.forEach(([row, prop, oldValue, newValue]) => {
-        if (['5', '6', '7'].includes(String(prop))) {
-          const pu_ht = parseFloat(this.getDataAtCell(row, 5)) || 0;
-          const quantite = parseFloat(this.getDataAtCell(row, 6)) || 0;
-          const taux_tva = parseFloat(this.getDataAtCell(row, 7)) || 0;
-          // tva != 0 sinon les lignes s'affichent avant le choix du taux et s'affichent 3 X (9 lignes au lieu de 3)
-          if (pu_ht && quantite && taux_tva != 0) {
-            const montantHT = +(pu_ht * quantite).toFixed(2);
-            const montantTVA = +(montantHT * taux_tva / 100).toFixed(2);
-            const montantTTC = montantHT + montantTVA;
-
-            const date = this.getDataAtCell(row, 0);
-            const libelle = this.getDataAtCell(row, 4);
-            const numeroPiece = this.getDataAtCell(row, 3);
-
-            this.setDataAtCell(row, 9, montantTTC); // crédit
-
-            // ✅ Ligne TVA
-            const ligneTVA = this.countRows();
-            this.alter('insert_row_below', ligneTVA);
-            this.setDataAtCell(ligneTVA, 0, date);
-            this.setDataAtCell(ligneTVA, 1, config.comptesTVA[0].numero);
-            this.setDataAtCell(ligneTVA, 2, config.comptesTVA[0].nom);
-            this.setDataAtCell(ligneTVA, 3, numeroPiece);
-            this.setDataAtCell(ligneTVA, 4, libelle);
-            this.setDataAtCell(ligneTVA, 8, montantTVA); // débit TVA
-
-            // ✅ Ligne charge
-            const ligneCharge = this.countRows();
-            this.alter('insert_row_below', ligneCharge);
-            this.setDataAtCell(ligneCharge, 0, date);
-            this.setDataAtCell(ligneCharge, 1, config.comptesCharges[0].numero);
-            this.setDataAtCell(ligneCharge, 2, config.comptesCharges[0].nom);
-            this.setDataAtCell(ligneCharge, 3, numeroPiece);
-            this.setDataAtCell(ligneCharge, 4, libelle);
-            this.setDataAtCell(ligneCharge, 8, montantHT); // débit charges
-
-            // Ligne 4 : Ajout ligne de Saisie ##########################
-            let ligneSaisie = this.countRows();
-            internalChange = true;
-            this.alter('insert_row_below', ligneSaisie);
-          }
-        }
-      });
-    }
   });
-  return hot;
+
+
+  hot.addHook('afterChange', function (changes, source) {
+  if (internalChange || !changes || source !== 'edit') return;
+
+  const [row, prop, oldValue, newValue] = changes[0];
+
+  // ⛔ Ignorer les changements sur les colonnes calculées (débit, crédit)
+  const colonnesTTC = ['8', '9'];
+  if (colonnesTTC.includes(String(prop))) return;
+
+  // Auto-complétion du nom du compte
+  if (String(prop) === '1' && newValue !== oldValue) {
+    internalChange = true;
+    fetch(`/api/comptes/numero/?numero=${encodeURIComponent(newValue)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.nom) {
+          hot.setDataAtCell(row, 2, data.nom);
+        } else {
+          hot.setDataAtCell(row, 2, 'Compte introuvable');
+        }
+        internalChange = false;
+      });
+    return; // Ne continue pas plus loin
+  }
+
+  // Récupération des valeurs nécessaires
+  const date = hot.getDataAtCell(row, 0);
+  const numeroPiece = hot.getDataAtCell(row, 3);
+  const libelle = hot.getDataAtCell(row, 4);
+  const pu_ht = parseFloat(hot.getDataAtCell(row, 5));
+  const quantite = parseFloat(hot.getDataAtCell(row, 6));
+  const taux_tva = parseFloat(hot.getDataAtCell(row, 7));
+
+  const ligneEstComplete = date && numeroPiece && libelle && !isNaN(pu_ht) && !isNaN(quantite) && !isNaN(taux_tva);
+  if (!ligneEstComplete) return;
+
+  const montantHT = +(pu_ht * quantite).toFixed(2);
+  const montantTVA = +(montantHT * taux_tva / 100).toFixed(2);
+  const montantTTC = +(montantHT + montantTVA).toFixed(2);
+
+  internalChange = true;
+  if (config.sens === 'achats') {
+    hot.setDataAtCell(row, 9, montantTTC); // Crédit
+    hot.setDataAtCell(row, 8, '');         // Vide le débit
+    col = 8;
+    ajouterEcrituresAutomatiques(hot, config, row, col, date, numeroPiece, libelle, pu_ht, quantite, taux_tva, montantHT, montantTVA);
+  } else if (config.sens === 'ventes') {
+    hot.setDataAtCell(row, 8, montantTTC); // Débit
+    hot.setDataAtCell(row, 9, '');         // Vide le crédit
+    col = 9;
+    ajouterEcrituresAutomatiques(hot, config, row, col, date, numeroPiece, libelle, pu_ht, quantite, taux_tva, montantHT, montantTVA);
+  }
+
+  // Ligne 4 : Ajout ligne de Saisie à la fin ##########################
+    let ligneFin = hot.countRows();
+    hot.alter('insert_row_below', ligneFin);
+  
+
+    internalChange = false;
+});
 }
+
+function ajouterEcrituresAutomatiques(hot, config, row, col, date, numeroPiece, libelle, pu_ht, quantite, taux_tva, montantHT, montantTVA) {
+      console.log('ROW', row);
+      console.log('col:', col);
+
+      // 🔸 Ligne TVA
+      const ligneTVA = hot.countRows(); // ⚠️ attention ici, il compte AVANT d'ajouter la ligne
+      console.log('LigneTVAbefore:', ligneTVA);
+
+
+      hot.setDataAtCell(ligneTVA, 0, date);
+      hot.setDataAtCell(ligneTVA, 1, config.comptesTVA[0].numero);
+      hot.setDataAtCell(ligneTVA, 2, config.comptesTVA[0].nom);
+      hot.setDataAtCell(ligneTVA, 3, numeroPiece);
+      hot.setDataAtCell(ligneTVA, 4, libelle);
+      console.log('LigneTVAafter:', ligneTVA);
+
+      // 🔸 row : crédit (ventes) ou débit (achats)
+      hot.setDataAtCell(ligneTVA, col, montantTVA);// config.sens === 'achats' ? montantTVA : ''); // Crédit
+      // hot.setDataAtCell(ligneTVA, 9, config.sens === 'ventes' ? montantTVA : '');  // Débit
+      // console.log('LigneTVA2:', ligneTVA);
+
+      // ✅ Ligne charge ou produit
+      const ligneVentilation = hot.countRows();
+      console.log('ligneVentilation:', ligneVentilation);
+
+      hot.setDataAtCell(ligneVentilation, 0, date);
+      hot.setDataAtCell(ligneVentilation, 1, config.comptesVentilation[0].numero);
+      hot.setDataAtCell(ligneVentilation, 2, config.comptesVentilation[0].nom);
+      hot.setDataAtCell(ligneVentilation, 3, numeroPiece);
+      hot.setDataAtCell(ligneVentilation, 4, libelle);
+
+      // 🔸 row : crédit (ventes) ou débit (achats)
+      hot.setDataAtCell(ligneVentilation, col, montantHT);// config.sens === 'achats' ? montantHT : ''); // Crédit
+      // hot.setDataAtCell(row, 9, col, montantHT// config.sens === 'ventes' ? montantHT : '');  // Débit
+
+};
 
 // ############### Fonction tableau totaux ###################
 
@@ -173,6 +207,7 @@ function getCookie(name) {
 document.addEventListener('DOMContentLoaded', async function () {
   let typeJournal = document.getElementById('journal')?.value;
 
+
 // ########################## Tableau saisie ###########################
 
   const container = document.getElementById('hot');
@@ -182,18 +217,21 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   try {
       // ✅ Chargement dynamique du bon snippet
+      console.log('typeJournal:', typeJournal);
       const snippetModule = await import(`/static/js/snippets/${typeJournal}.js`);
       const config = snippetModule.configJournal();
+
 
       // ✅ Appel Fonction d'initialisation du tableau avec les règles spécifiques
       // 🔄 Stocker l'instance de Handsontable retournée par initHandsontable
       hot = initHandsontable(container, config);
+
       } catch (error) {
         console.error(`❌ Erreur de chargement du snippet "${typeJournal}" :`, error);
       }
 
   // ######################## Tableau Totaux #############################
-
+  /*
   // ######## Récupération date du jour #####################
      let options = {
       year: "numeric",
@@ -234,7 +272,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // ✅ Appel initial
     const { totalDebit, totalCredit } = insertOrUpdateTotalRow(hot);
     updateTotalTable(hotTotals, totalDebit, totalCredit);
-  }
+  }*/
 
 
 // ############################# Validation des écritures #####################################
@@ -287,6 +325,52 @@ document.addEventListener('DOMContentLoaded', async function () {
 // ############## Fin document.addEventListener('DOMContentLoaded', async function () ##########
 });
 // #############################################################################################
+/*if (['5', '6', '7'].includes(String(prop))) {
+          const pu_ht = parseFloat(this.getDataAtCell(row, 5)) || 0;
+          const quantite = parseFloat(this.getDataAtCell(row, 6)) || 0;
+          const taux_tva = parseFloat(this.getDataAtCell(row, 7)) || 0;
+
+          // tva != 0 sinon les lignes s'affichent avant le choix du taux et s'affichent 3 X (9 lignes au lieu de 3)
+
+          if (pu_ht && quantite && taux_tva != 0) {
+            const montantHT = +(pu_ht * quantite).toFixed(2);
+            const montantTVA = +(montantHT * taux_tva / 100).toFixed(2);
+            const montantTTC = montantHT + montantTVA;
+
+            const date = this.getDataAtCell(row, 0);
+            const libelle = this.getDataAtCell(row, 4);
+            const numeroPiece = this.getDataAtCell(row, 3);
+
+            this.setDataAtCell(row, 9, montantTTC); // crédit
+
+            // ✅ Ligne TVA
+            const ligneTVA = this.countRows();
+            this.alter('insert_row_below', ligneTVA);
+            this.setDataAtCell(ligneTVA, 0, date);
+            this.setDataAtCell(ligneTVA, 1, config.comptesTVA[0].numero);
+            this.setDataAtCell(ligneTVA, 2, config.comptesTVA[0].nom);
+            this.setDataAtCell(ligneTVA, 3, numeroPiece);
+            this.setDataAtCell(ligneTVA, 4, libelle);
+            this.setDataAtCell(ligneTVA, 8, montantTVA); // débit TVA
+
+            // ✅ Ligne charge
+            const ligneCharge = this.countRows();
+            this.alter('insert_row_below', ligneCharge);
+            this.setDataAtCell(ligneCharge, 0, date);
+            this.setDataAtCell(ligneCharge, 1, config.comptesCharges[0].numero);
+            this.setDataAtCell(ligneCharge, 2, config.comptesCharges[0].nom);
+            this.setDataAtCell(ligneCharge, 3, numeroPiece);
+            this.setDataAtCell(ligneCharge, 4, libelle);
+            this.setDataAtCell(ligneCharge, 8, montantHT); // débit charges
+
+            // Ligne 4 : Ajout ligne de Saisie à la fin ##########################
+            let ligneFin = this.countRows();
+            this.alter('insert_row_below', ligneFin);
+          }
+
+          console.log('n°Piece,:', numeroPiece, 'compte:', compte, 'nom:', nom, 'libelle:', libelle, 'pu_ht:', pu_ht, 'quantite:', quantite, 'taux_tva:', taux_tva);
+        */
+
 
 
 
