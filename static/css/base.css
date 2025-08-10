@@ -12,15 +12,19 @@ h3 {
     text-align: center;
 }
 
-container{
+.container {
+    text-align: center;
+}
+
+.container_totaux {
     text-align: center;
 }
 
 #logo {
     display: block;
-  margin-left: auto;
-  margin-right: auto;
-  height: 5em;
+    margin-left: auto;
+    margin-right: auto;
+    height: 5em;
 }
 
 .header_title {
