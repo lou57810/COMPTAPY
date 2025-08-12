@@ -1,7 +1,31 @@
-DB_USER =
-DB_PASSWORD =
-DB_HOST = 127.0.0.1
+# --- Base de données ---
+
+# =========================
+# CONFIGURATION DE L'APPLICATION
+# =========================
+
+# Clé secrète Django (à générer pour chaque installation)
+SECRET_KEY = votre_cle_secrete
+
+# =========================
+# BASE DE DONNÉES POSTGRES
+# =========================
+# Option 1 : Remplir les champs séparés
+DB_USER = postgres
+DB_PASSWORD = mot_de_passe
+DB_HOST = localhost
 DB_PORT = 5432
-DB_NAME =
-SECRET_KEY =
-DATABASE_URL = # "postgresql://postgres:postgres@localhost:5431/your_db"
+DB_NAME = nom_base
+
+# Option 2 : Utiliser une seule URL
+# Format : postgresql://USER:PASSWORD@HOST:PORT/DBNAME
+DATABASE_URL =
+
+# =========================
+# AUTRES PARAMÈTRES (si besoin)
+# =========================
+# DEBUG = True ou False
+DEBUG = True
+
+
+

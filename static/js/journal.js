@@ -230,9 +230,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   const container_totaux = document.getElementById('hot-totals');
     if (!container_totaux) return;
 
-
-
-
   try {
       // ✅ Chargement dynamique du bon snippet
       const snippetModule = await import(`/static/js/snippets/${typeJournal}.js`);
