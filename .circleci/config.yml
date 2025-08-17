@@ -1,0 +1,72 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@2.0.3
+
+jobs:
+  pytest:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements.txt
+      - run:
+          name: Run tests
+          command: python -m pytest
+
+  flake8:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          pip-dependency-file: requirements.txt
+      - run:
+          name: Run flake8
+          command: flake8
+
+  build:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Login to Docker Hub
+          command: echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USER_ID" --password-stdin
+      - run:
+          name: Build Docker image
+          command: docker build -t lou57810/comptapy-docker-build .
+      - run:
+          name: Push Docker image
+          command: docker push lou57810/comptapy-docker-build
+
+  deploy-to-render:
+    docker:
+      - image: curlimages/curl:latest
+    steps:
+      - run:
+          name: Trigger Render Deploy Hook
+          command: curl $DEPLOY_HOOK
+
+workflows:
+  test_build:
+    jobs:
+      - flake8
+      - pytest
+      - build:
+          filters:
+            branches:
+              only: main
+          requires:
+            - pytest
+            - flake8
+      - deploy-to-render:
+          filters:
+            branches:
+              only: main
+          requires:
+            - build

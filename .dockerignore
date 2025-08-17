@@ -1,0 +1,13 @@
+# Git
+.git
+.gitignore
+
+# Environment
+.env
+# venv/
+
+# Pycharm
+.idea/
+
+# VS
+.vs/

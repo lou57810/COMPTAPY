@@ -1,4 +1,4 @@
-from django.shortcuts import render
+# from django.shortcuts import render
 from rest_framework import generics
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -7,18 +7,9 @@ from rest_framework import status
 
 from .serializers import CompteComptableSerializer, EcritureJournalSerializer
 from django.utils import timezone
-from rest_framework.generics import ListAPIView
 
 from .models import CompteComptable, EcritureJournal
-
-# from .serializers import CompteComptableSerializer
 from django.db.models.functions import Substr
-
-"""
-class CompteComptableListView(ListAPIView):
-    queryset = CompteComptable.objects.all()
-    serializer_class = CompteComptableSerializer
-"""
 
 
 class CompteComptableViewSet(viewsets.ModelViewSet):
@@ -124,6 +115,3 @@ def ecritures_par_compte(request):
         serializer = EcritureJournalSerializer(ecritures, many=True)
         return Response(serializer.data)
     return Response({'error': 'Numéro de compte requis'}, status=400)
-
-
-

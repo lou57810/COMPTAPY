@@ -1,4 +1,3 @@
-
 from django.core.exceptions import ValidationError
 
 
@@ -10,4 +9,3 @@ class ContainsLetterValidator:
 
     def get_help_text(self):
         return 'Le mot de passe doit contenir au moins une lettre majuscule ou minuscule.'
-

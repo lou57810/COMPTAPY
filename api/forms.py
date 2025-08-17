@@ -4,13 +4,14 @@ from api import models
 
 
 class CompteSearchForm(forms.Form):
-        numero = forms.CharField(label="Numéro du compte", required=True)
+    numero = forms.CharField(label="Numéro du compte", required=True)
 
 
 class CompteForm(forms.ModelForm):
     class Meta:
         model = models.CompteComptable
         fields = ['numero', 'nom']
+
 
 class UpdateCompteForm(forms.ModelForm):
     class Meta:

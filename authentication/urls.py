@@ -6,8 +6,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 
-from  . import views
-
 router = routers.DefaultRouter()
 
 urlpatterns = [
@@ -18,7 +16,5 @@ urlpatterns = [
     path('profile-photo/upload_profile_photo/', authentication.views.upload_profile_photo, name='upload_profile_photo')
 ]
 
-
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

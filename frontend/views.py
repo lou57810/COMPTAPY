@@ -1,27 +1,21 @@
 from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 
-
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from api import forms
 from api.models import CompteComptable
 from api.models import EcritureJournal
-from django.utils import timezone
-from rest_framework.response import Response
-from rest_framework import status
+
 from django.views.decorators.csrf import csrf_exempt
 import json
-
-# import requests
-# from PIL import Image
-# from rest_framework import viewsets
 
 
 # =============== Accueil =========================
 
 def accueil(request):
     return render(request, 'frontend/accueil.html')
+
 
 # ============== Journaux ==============================
 """
@@ -72,13 +66,15 @@ def journal_expert_od(request):
 def journal_reouverture(request):
     return render(request,'frontend/journal_reouverture.html')
 """
+
+
 # def journal_type(request):
 def saisie_journal(request):
     type_journal = request.GET.get('type', '')  # Par défaut : journal achats
     context = {
         'type_journal': type_journal,
     }
-    return render(request,'frontend/journal_type.html', context)
+    return render(request, 'frontend/journal_type.html', context)
 
 
 # ========================== Comptes ===========================================
@@ -94,10 +90,6 @@ def create_compte(request):
         compte_form = forms.CompteForm(request.POST)
         if compte_form.is_valid():
             compte_form.save()
-        # handle the POST request here
-        context = {
-            'compte_form': compte_form
-        }
     return render(request, 'frontend/create_compte.html', {'compte_form': compte_form})
 
 
@@ -145,6 +137,7 @@ def update_compte(request):
         'form_edit': form_edit,
         'comptes': comptes,
     })
+
 
 def get_pk_from_numero(request):
     numero = request.GET.get('numero')
@@ -212,6 +205,7 @@ def ecritures_par_compte(numero):
     )
     return JsonResponse(list(ecritures), safe=False)
 
+
 """
 def display_compte_view(request):
     comptes = None
@@ -239,13 +233,7 @@ def afficher_compte(request):
         print('compte:', nom)
 
         lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
-
-
     return render(request, 'frontend/afficher_compte.html', {'lignes': lignes, 'numero': numero, 'nom': nom})
-
-
-
-
 
 
 """
@@ -275,7 +263,3 @@ def ajout_modif_compte(request):
 
     return render(request, "frontend/compte_form.html", {"compte": compte})
 """
-
-
-
-

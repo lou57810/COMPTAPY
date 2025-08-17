@@ -8,7 +8,6 @@ from rest_framework import permissions, viewsets
 from django.shortcuts import render, redirect
 from .serializers import GroupSerializer, UserSerializer
 from django.contrib.auth import get_user_model
-from django.contrib.auth import authenticate
 
 
 User = get_user_model()
@@ -41,7 +40,6 @@ class LoginPage(View):
             request, self.template_name, context={'form': form, 'message': message})
 
 
-
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -65,7 +63,7 @@ def signup_page(request):
     if request.method == 'POST':
         form = forms.SignupForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            # user = form.save()
             form.save()
             # login(request, user)
             return redirect(settings.LOGIN_REDIRECT_URL)
@@ -88,4 +86,3 @@ def upload_profile_photo(request):
             form.save()
             return redirect('accueil')
     return render(request, 'authentication/upload_profile_photo.html', context={'form': form})
-

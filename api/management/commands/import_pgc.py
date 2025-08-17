@@ -1,8 +1,7 @@
-# comptes/management/commands/import_pgc.py
-
 import pandas as pd
 from django.core.management.base import BaseCommand
 from api.models import CompteComptable
+
 
 class Command(BaseCommand):
     help = "Importe le plan comptable général (PGC) depuis un fichier Excel"
@@ -10,7 +9,6 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         # parser.add_argument('fichier', type=str, help="Chemin du fichier Excel (ex: data/pgc.xlsx)")
         parser.add_argument('fichier', type=str, help="data/pgc.xlsx)")
-
 
     def handle(self, *args, **options):
         fichier = options['fichier']

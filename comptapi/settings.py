@@ -13,17 +13,34 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 from decouple import Config, RepositoryEnv
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+"""
+if os.environ.get('DOCKER_ENV') == '1':
+    env_path = BASE_DIR / '.env.docker'
+elif os.environ.get('RENDER') == '1':  # Render définit automatiquement RENDER env var
+    env_path = BASE_DIR / '.env.render'
+else:
+    env_path = BASE_DIR / '.env.local'
+"""
+
 
 if os.environ.get('DOCKER_ENV') == '1':
-    # print('DowkerOk', os.environ.get('DOCKER_ENV'))
-    env_file = '.env.docker'
+    print('DOCKER_RUN:')
+    env_path = BASE_DIR / '.env.docker'
+elif os.environ.get('RENDER') == '1':  # Render définit automatiquement RENDER env var
+    print('RENDER_RUN')
+    env_path = BASE_DIR / '.env.render'
 else:
-    env_file = '.env.local'
+    print('LOCAL_RUN')
+    env_path = BASE_DIR / '.env.local'
 
-config = Config(RepositoryEnv(env_file))
+load_dotenv(dotenv_path=env_path)
+config = Config(RepositoryEnv(env_path))
+
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -34,7 +51,18 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+# ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
+
+# --- Base de données ---
+DB_SCHEME = os.getenv('DB_SCHEME', 'postgres')
+DB_USER = os.getenv('DB_USER', 'postgres')
+DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_NAME = os.getenv('DB_NAME', 'db_compta')
+
+
 
 
 # Application definition
