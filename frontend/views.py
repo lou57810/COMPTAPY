@@ -94,7 +94,7 @@ def create_compte(request):
 
 
 def display_compte(request):
-    compte = None
+    # compte = None
     comptes = CompteComptable.objects.none()
     form_search = forms.CompteSearchForm(request.GET or None)
     form_edit = None
@@ -114,6 +114,25 @@ def display_compte(request):
         'form_edit': form_edit,
         'comptes': comptes,
     })
+
+
+def afficher_compte(request):
+    numero = []
+    nom = []
+    lignes = []
+    numero = request.GET.get('numero', '000000')
+    if numero:
+        compte = get_object_or_404(CompteComptable, numero=numero)
+        nom = compte.nom
+        print('compte:', nom)
+        lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
+        return render(request, 'frontend/afficher_compte.html', {'lignes': lignes, 'numero': numero, 'nom': nom})
+    """else:
+        message = f"Aucun compte trouvé pour le nom : {numero}"
+        return render(request, 'frontend/error_compte.html', {'erreur': message})
+    """
+
+    return render(request, 'frontend/afficher_compte.html', {'lignes': lignes, 'numero': numero, 'nom': nom})
 
 
 def update_compte(request):
@@ -206,34 +225,7 @@ def ecritures_par_compte(numero):
     return JsonResponse(list(ecritures), safe=False)
 
 
-"""
-def display_compte_view(request):
-    comptes = None
-    form_search = forms.CompteSearchForm(request.GET or None)
 
-    if form_search.is_valid():
-        numero_recherche = form_search.cleaned_data.get('numero')
-        comptes = CompteComptable.objects.filter(numero=numero_recherche).first()
-
-    return render(request, 'frontend/display_compte.html', {
-        'comptes': comptes,
-        'form_search': form_search,
-    })
-"""
-
-
-def afficher_compte(request):
-    numero = request.GET.get('numero')
-    nom = []
-    lignes = []
-
-    if numero:
-        compte = get_object_or_404(CompteComptable, numero=numero)
-        nom = compte.nom
-        print('compte:', nom)
-
-        lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
-    return render(request, 'frontend/afficher_compte.html', {'lignes': lignes, 'numero': numero, 'nom': nom})
 
 
 """

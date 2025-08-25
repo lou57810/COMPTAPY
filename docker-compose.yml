@@ -2,11 +2,11 @@ services:
   web:
     build: .
     env_file:
-      - .env.docker
+      - .env
     environment:
       DOCKER_ENV: "1"
     container_name: django_app
-    command: gunicorn comptapi.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn comptapi.wsgi:application --bind 0.0.0.0:${PORT:-8000}
     volumes:
       - .:/app
     ports:
@@ -18,7 +18,7 @@ services:
     image: postgres:15
     container_name: postgres_db
     env_file:
-      - .env.docker
+      - .env
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -26,7 +26,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
 
 volumes:
   postgres_data:

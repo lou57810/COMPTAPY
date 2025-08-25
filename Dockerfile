@@ -16,13 +16,19 @@ WORKDIR /app
 
 # Étape 5 — Installation des dépendances Python
 COPY requirements.txt /app/
+# RUN pip install  --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+# RUN python3 -m pip install --no-cache-dir -r requirements.txt
 
 # Étape 6 — Copie du code source
 COPY . /app/
 
 # Étape 7 — Collecte des fichiers statiques
-RUN python manage.py collectstatic --noinput
+# RUN python manage.py collectstatic --noinput
+# RUN python3 manage.py collectstatic --noinput
 
 # Étape 8 — Commande par défaut
-CMD ["gunicorn", "comptapi.wsgi:application", "--bind", "0.0.0.0:8000"]
+# CMD ["gunicorn", "comptapi.wsgi:application", "--bind", "0.0.0.0:${PORT}"]
+CMD ["sh", "-c", "python3 manage.py collectstatic --noinput && gunicorn comptapi.wsgi:application --bind 0.0.0.0:$PORT"]
+# CMD ["python", "print_env.py"]
+

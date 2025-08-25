@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
-from decouple import Config, RepositoryEnv
+from decouple import config, RepositoryEnv
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -24,12 +24,12 @@ elif os.environ.get('RENDER') == '1':  # Render définit automatiquement RENDER 
     env_path = BASE_DIR / '.env.render'
 else:
     env_path = BASE_DIR / '.env.local'
-"""
+
 
 
 if os.environ.get('DOCKER_ENV') == '1':
     print('DOCKER_RUN:')
-    env_path = BASE_DIR / '.env.docker'
+    env_path = BASE_DIR / '.env'
 elif os.environ.get('RENDER') == '1':  # Render définit automatiquement RENDER env var
     print('RENDER_RUN')
     env_path = BASE_DIR / '.env.render'
@@ -39,7 +39,22 @@ else:
 
 load_dotenv(dotenv_path=env_path)
 config = Config(RepositoryEnv(env_path))
+"""
 
+# Détection d’environnement
+if os.environ.get("DOCKER_ENV") == "1":
+    print("DOCKER_RUN")
+    env_path = BASE_DIR / ".env"
+    load_dotenv(dotenv_path=env_path)
+
+elif os.environ.get("RENDER_EXTERNAL_URL"):
+    # Render définit automatiquement cette variable → pas besoin de .env
+    print("RENDER_RUN")
+
+else:
+    print("LOCAL_RUN")
+    env_path = BASE_DIR / ".env.local"
+    load_dotenv(dotenv_path=env_path)
 
 
 # Quick-start development settings - unsuitable for production
@@ -51,9 +66,11 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-# ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
-
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
+# ALLOWED_HOSTS = config('ALLOWED_HOSTS').split()
+# print('Allowedhosts:', ALLOWED_HOSTS)
+"""
 # --- Base de données ---
 DB_SCHEME = os.getenv('DB_SCHEME', 'postgres')
 DB_USER = os.getenv('DB_USER', 'postgres')
@@ -61,7 +78,7 @@ DB_PASSWORD = os.getenv('DB_PASSWORD', '')
 DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
 DB_PORT = os.getenv('DB_PORT', '5432')
 DB_NAME = os.getenv('DB_NAME', 'db_compta')
-
+"""
 
 
 
@@ -86,8 +103,11 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100
 }
 
+WHITENOISE_MANIFEST_STRICT = False  # Pour éviter l'erreur pytest : missing staticfiles manifest entry
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
