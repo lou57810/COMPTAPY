@@ -69,7 +69,7 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 # ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
 # ALLOWED_HOSTS = config('ALLOWED_HOSTS').split()
-# print('Allowedhosts:', ALLOWED_HOSTS)
+print('Allowedhosts:', ALLOWED_HOSTS)
 """
 # --- Base de données ---
 DB_SCHEME = os.getenv('DB_SCHEME', 'postgres')
