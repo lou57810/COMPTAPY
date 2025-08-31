@@ -13,7 +13,7 @@ urlpatterns = [
     path('frontend/list/', views.display_compte, name='display_compte'),  # Affiche un compte depuis son numero
     path('saisie_journal/', views.saisie_journal, name='saisie-journal'),
     path('valider/<str:type_journal>/', views.valider_journal, name='valider-journal'),
-    path('afficher_compte/', views.afficher_compte, name='afficher-compte'),
+    path('frontend/afficher_compte/', views.afficher_compte, name='afficher-compte'),
 ]
 
 if settings.DEBUG:
