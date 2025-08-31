@@ -12,14 +12,7 @@
 ####       ou Debian (terminal):   ``source venv/bin/activate``
 #### Installation des dépendances modules:
 #### ``pip install -r requirements.txt``
-### Exécuter les migrations:
-#### ``python manage.py makemigrations``
-#### ``python manage.py migrate``
 
-
-### Facultatif: créér un compte superutilisateur
-#### Avec git bash: ``python manage.py createsuperuser``
-#### ou:            ``winpty python manage.py createsuperuser``
 
 ### Préparation pour un déploiement.
 #### Selon le modèle 'env_template', création d'un fichier .env
@@ -33,18 +26,21 @@
 #### Ce fichier ne doit être accessible qu'à l'auteur du projet créé, et contient des données personnalisées.
 
 ### Récupération du plan comptable pour postgresql:
-#### Le PGC est issu d'un fichier pgc.xlsx mais vous pouvez adapter 'import_pgc.py'
-#### pour un fichier différent '***.xlsx'
-#### Placer le fichier dans repertoire 'data' créé à la racine du projet.(data/***.xlsx)
-#### Pour ceci modifier le fichier 'import_pgc.py'
-#### import_pgc.py se trouve dans l'application: 'api/management/commands/import_pgc.py'.
-#### Les dossiers 'management' et 'commands' doivent impérativement contenir les fichiers '__init__.py'.
-#### Pour convertir et insérer le PGC dans la base de données lancer la commande:
-#### ``python manage.py import_pgc.py data/PGC.xlsx``
-#### Il est possible de vérifier si la commande est bien fonctionnelle avec la commande:
-#### ``python manage.py help | findstr pgc``
+#### Le PGC est issu d'un fichier 'PGC.xlsx' situé dans le répertoire data.
+#### En exécutant: ``python scripts/convert_pgc_to_fixture.py``
+#### Nous obtenons un fichier 'pgc.json' à la base du projet.
+#### Django permet d’initialiser la base avec : ``python manage.py loaddata pgc.json``
+#### Ajoutons ce fichier dans le repo (api/fixtures/pgc.json) pour qu’il soit disponible aussi sur Render.
 
-#### Et enfin pour tester l'application:
+### Exécuter les migrations:
+#### ``python manage.py makemigrations``
+#### ``python manage.py migrate``
+
+### Facultatif: créér un compte superutilisateur
+#### Avec git bash: ``python manage.py createsuperuser``
+#### ou:            ``winpty python manage.py createsuperuser``
+
+#### Et enfin pour tester l'application en local:
 #### ``python manage.py runserver``
 
 

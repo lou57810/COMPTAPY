@@ -23,7 +23,7 @@ from authentication.views import UserViewSet
 
 from django.conf import settings
 from django.conf.urls.static import static
-
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
@@ -38,3 +38,5 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += staticfiles_urlpatterns()

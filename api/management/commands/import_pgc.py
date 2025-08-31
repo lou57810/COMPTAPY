@@ -1,34 +1,44 @@
 import pandas as pd
 from django.core.management.base import BaseCommand
 from api.models import CompteComptable
+from pathlib import Path
 
 
 class Command(BaseCommand):
     help = "Importe le plan comptable général (PGC) depuis un fichier Excel"
 
     def add_arguments(self, parser):
-        # parser.add_argument('fichier', type=str, help="Chemin du fichier Excel (ex: data/pgc.xlsx)")
-        parser.add_argument('fichier', type=str, help="data/pgc.xlsx)")
+        parser.add_argument(
+            '--fichier',
+            type=str,
+            default="data/PGC.xlsx",  # valeur par défaut
+            help="Chemin du fichier Excel (ex: data/PGC.xlsx)"
+        )
 
     def handle(self, *args, **options):
         fichier = options['fichier']
+        fichier_path = Path(fichier)
+
+        if not fichier_path.exists():
+            self.stderr.write(self.style.ERROR(f"❌ Fichier introuvable: {fichier_path.resolve()}"))
+            return
 
         try:
-            df = pd.read_excel(fichier, header=None)
+            df = pd.read_excel(fichier_path, header=None)
             df.columns = ['numero', 'libelle']
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Erreur lors de la lecture du fichier Excel : {e}"))
             return
 
-        nb_importés = 0
-        for index, row in df.iterrows():
+        nb_crees, nb_mis_a_jour = 0, 0
+        for _, row in df.iterrows():
             numero = str(row['numero']).strip()
             libelle = str(row['libelle']).strip()
 
             if not numero or not libelle or not numero.isdigit():
-                continue  # Ignore les lignes vides ou invalides
+                continue  # Ignore les lignes invalides
 
-            compte, created = CompteComptable.objects.get_or_create(
+            compte, created = CompteComptable.objects.update_or_create(
                 numero=numero,
                 defaults={
                     'nom': libelle,
@@ -37,9 +47,13 @@ class Command(BaseCommand):
                 }
             )
             if created:
-                nb_importés += 1
+                nb_crees += 1
+            else:
+                nb_mis_a_jour += 1
 
-        self.stdout.write(self.style.SUCCESS(f"✅ {nb_importés} comptes importés depuis {fichier}"))
+        self.stdout.write(self.style.SUCCESS(
+            f"✅ Import terminé: {nb_crees} comptes créés, {nb_mis_a_jour} mis à jour."
+        ))
 
     def infer_type(self, numero):
         if numero.startswith('1'):

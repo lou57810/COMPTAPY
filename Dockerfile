@@ -29,6 +29,7 @@ COPY . /app/
 
 # Étape 8 — Commande par défaut
 # CMD ["gunicorn", "comptapi.wsgi:application", "--bind", "0.0.0.0:${PORT}"]
-CMD ["sh", "-c", "python3 manage.py collectstatic --noinput && gunicorn comptapi.wsgi:application --bind 0.0.0.0:$PORT", "print_env.py"]
+# CMD ["sh", "-c", "python3 manage.py collectstatic --noinput && gunicorn comptapi.wsgi:application --bind 0.0.0.0:$PORT", "print_env.py"]
 # CMD ["python", "print_env.py"]
+CMD ["./entrypoint.sh"]
 

@@ -14,32 +14,11 @@ import os
 from pathlib import Path
 from decouple import config, RepositoryEnv
 from dotenv import load_dotenv
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-"""
-if os.environ.get('DOCKER_ENV') == '1':
-    env_path = BASE_DIR / '.env.docker'
-elif os.environ.get('RENDER') == '1':  # Render définit automatiquement RENDER env var
-    env_path = BASE_DIR / '.env.render'
-else:
-    env_path = BASE_DIR / '.env.local'
 
-
-
-if os.environ.get('DOCKER_ENV') == '1':
-    print('DOCKER_RUN:')
-    env_path = BASE_DIR / '.env'
-elif os.environ.get('RENDER') == '1':  # Render définit automatiquement RENDER env var
-    print('RENDER_RUN')
-    env_path = BASE_DIR / '.env.render'
-else:
-    print('LOCAL_RUN')
-    env_path = BASE_DIR / '.env.local'
-
-load_dotenv(dotenv_path=env_path)
-config = Config(RepositoryEnv(env_path))
-"""
 
 # Détection d’environnement
 if os.environ.get("DOCKER_ENV") == "1":
@@ -69,21 +48,9 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
 # ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
 # ALLOWED_HOSTS = config('ALLOWED_HOSTS').split()
-print('Allowedhosts:', ALLOWED_HOSTS)
-"""
-# --- Base de données ---
-DB_SCHEME = os.getenv('DB_SCHEME', 'postgres')
-DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', '')
-DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
-DB_PORT = os.getenv('DB_PORT', '5432')
-DB_NAME = os.getenv('DB_NAME', 'db_compta')
-"""
-
-
+# print("ALLOWED_HOSTS >>>", ALLOWED_HOSTS)
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -142,17 +109,27 @@ WSGI_APPLICATION = 'comptapi.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config("DB_PASSWORD"),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+if config("DATABASE_URL", default=None):
+    # Cas Render (ou si DATABASE_URL est défini)
+    DATABASES = {
+        'default': dj_database_url.parse(config("DATABASE_URL"))
     }
-}
+else:
+    # Cas local (variables séparées)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config("DB_PASSWORD"),
+            'HOST': config('DB_HOST'),
+            'PORT': config('DB_PORT'),
+        }
+    }
 
+# print('DATABASE:', DATABASES)
+
+# print("DB_PORT >>>", config('DB_PORT'))
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 """

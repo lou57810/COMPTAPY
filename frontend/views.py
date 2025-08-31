@@ -120,17 +120,21 @@ def afficher_compte(request):
     numero = []
     nom = []
     lignes = []
-    numero = request.GET.get('numero', '000000')
+    numero = request.GET.get('numero')
+    # print(f"DEBUG numero reçu: '{numero}'")
+
+    comptes = list(CompteComptable.objects.values_list('numero', flat=True))
+    # print(f"DEBUG comptes existants: {comptes}")
     if numero:
+        # print(f"DEBUG numero reçu2: '{numero}'")
+        # print("GET.numero =", repr(numero))
+        # print("Comptes existants2:", list(CompteComptable.objects.values_list("numero", flat=True)[:5]))
         compte = get_object_or_404(CompteComptable, numero=numero)
         nom = compte.nom
-        print('compte:', nom)
+        # print('compte:', nom)
         lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
-        return render(request, 'frontend/afficher_compte.html', {'lignes': lignes, 'numero': numero, 'nom': nom})
-    """else:
-        message = f"Aucun compte trouvé pour le nom : {numero}"
-        return render(request, 'frontend/error_compte.html', {'erreur': message})
-    """
+    else:
+        nom, lignes = "", []
 
     return render(request, 'frontend/afficher_compte.html', {'lignes': lignes, 'numero': numero, 'nom': nom})
 

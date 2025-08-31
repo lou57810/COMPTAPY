@@ -14,7 +14,6 @@ urlpatterns = [
     path('saisie_journal/', views.saisie_journal, name='saisie-journal'),
     path('valider/<str:type_journal>/', views.valider_journal, name='valider-journal'),
     path('afficher_compte/', views.afficher_compte, name='afficher-compte'),
-    # path('afficher_compte/', views.display_compte, name='afficher-compte'),
 ]
 
 if settings.DEBUG:
