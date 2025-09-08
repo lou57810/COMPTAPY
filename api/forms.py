@@ -23,3 +23,9 @@ class CompteEditForm(forms.ModelForm):
     class Meta:
         model = models.CompteComptable
         fields = ['numero', 'nom']  # Les champs que tu autorises à modifier
+
+
+class EntrepriseForm(forms.ModelForm):
+    class Meta:
+        model = models.Entreprise
+        fields = ["nom", "adresse", "siret", "ape", "date_creation"]

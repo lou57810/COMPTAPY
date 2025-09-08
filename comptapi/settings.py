@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'authentication',
     'api',
     'frontend',
+    # 'django_jinja_knockout',    # Optionnal app
 ]
 
 REST_FRAMEWORK = {
@@ -98,6 +99,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "frontend.context_processors.entreprise_context",
             ],
         },
     },

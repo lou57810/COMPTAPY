@@ -1,8 +1,21 @@
 from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
+# from django.contrib.auth import get_user_model
+from api.models import Entreprise
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.hashers import make_password
+from django.utils.timezone import now
+
+from django.db import transaction
 
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from authentication.permissions import role_required
+from authentication.models import User
+
 from django.http import JsonResponse
+from django import forms
+# from django.forms import ModelForm
 from api import forms
 from api.models import CompteComptable
 from api.models import EcritureJournal
@@ -10,11 +23,85 @@ from api.models import EcritureJournal
 from django.views.decorators.csrf import csrf_exempt
 import json
 
+# User = get_user_model()
+
+
+
+
+@login_required
+@role_required(["OWNER", "ADMIN"])
+def afficher_modifier_dossier(request):
+    entreprise = Entreprise.objects.first()
+    if not entreprise:
+        return redirect("setup")
+
+    if request.method == "POST":
+        form = forms.EntrepriseForm(request.POST, instance=entreprise)
+        if form.is_valid():
+            form.save()
+            return redirect("afficher-statuts")  # refresh
+    else:
+        form = forms.EntrepriseForm(instance=entreprise)
+
+    return render(request, "frontend/afficher_statuts.html", {"form": form})
 
 # =============== Accueil =========================
 
 def accueil(request):
     return render(request, 'frontend/accueil.html')
+
+
+@require_http_methods(["GET", "POST"])
+def setup(request):
+    # si entreprise existe déjà, on bloque l’accès
+    if Entreprise.objects.exists() or User.objects.filter(is_owner=True).exists():
+        return redirect("accueil")  # ou tableau de bord
+
+    if request.method == "POST":
+        # récupérer champs entreprise
+        nom = (request.POST.get("nom") or "").strip()
+        siret = (request.POST.get("siret") or "").strip()
+        ape = (request.POST.get("ape") or "").strip()
+        adresse = (request.POST.get("adresse") or "").strip()
+        date_creation = request.POST.get("date_creation") or now().date()
+
+        email = (request.POST.get("email") or "").strip().lower()
+        password = request.POST.get("password") or ""
+
+        if not email or not password or not nom or not siret:
+            # à toi d’améliorer les messages d’erreur/formulaire
+            return render(request, "frontend/setup.html", {
+                "error": "Champs requis manquants (email, mot de passe, nom, siret)."
+            })
+
+        with transaction.atomic():
+            # 1) créer l’admin avec tous les droits
+            user = User.objects.create_superuser(email=email, password=password)
+            user.is_owner = True
+            user.save(update_fields=["is_owner"])
+
+            # 2) créer l’entreprise en liant owner
+            entreprise = Entreprise.objects.create(
+                nom=nom,
+                siret=siret,
+                ape=ape,
+                adresse=adresse,
+                date_creation=date_creation,
+                owner=user,
+            )
+
+
+
+        # (facultatif) auto-login puis redirection vers la page de statuts
+        auth_user = authenticate(request, email=email, password=password)
+        if auth_user is not None:
+            login(request, auth_user)
+            return redirect("afficher-statuts")
+
+        return redirect("login")
+
+    return render(request, "frontend/setup.html")
+
 
 
 # ============== Journaux ==============================
@@ -131,7 +218,7 @@ def afficher_compte(request):
         # print("Comptes existants2:", list(CompteComptable.objects.values_list("numero", flat=True)[:5]))
         compte = get_object_or_404(CompteComptable, numero=numero)
         nom = compte.nom
-        # print('compte:', nom)
+
         lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
     else:
         nom, lignes = "", []
@@ -229,7 +316,9 @@ def ecritures_par_compte(numero):
     return JsonResponse(list(ecritures), safe=False)
 
 
-
+def afficher_statut_entreprise(request):
+    print('affichage_statuts')
+    return render(request, 'frontend/afficher_statuts.html')
 
 
 """

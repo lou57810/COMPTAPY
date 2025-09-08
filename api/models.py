@@ -18,6 +18,19 @@ JOURNAL_TYPES = [
     ]
 
 
+class Entreprise(models.Model):
+    nom = models.CharField(max_length=255)
+    siret = models.CharField(max_length=14, blank=True, null=True)
+    ape = models.CharField(max_length=10, blank=True, null=True)
+    adresse = models.TextField(blank=True, null=True)
+    date_creation = models.DateField()
+    owner = models.OneToOneField("authentication.User", on_delete=models.CASCADE, related_name="entreprise", null=True, blank=True)
+
+    def __str__(self):
+        return self.nom
+
+
+
 class CompteComptable(models.Model):
     numero = models.CharField(max_length=100, unique=True)  # Exemple : '401', '512'
     nom = models.CharField(max_length=255)  # Exemple : 'Fournisseurs', 'Banque'

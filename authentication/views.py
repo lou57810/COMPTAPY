@@ -12,6 +12,15 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+"""
+# On peut protéger une vue comme ceci :
+from authentication.permissions import role_required
+
+@role_required(["OWNER", "ADMIN"])
+def modifier_dossier(request):
+    ...
+"""
+
 
 class LoginPage(View):
     form_class = forms.LoginForm

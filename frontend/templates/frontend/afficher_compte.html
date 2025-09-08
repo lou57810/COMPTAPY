@@ -16,38 +16,17 @@
 
 <section class="py-3">
   <div class="container">
-<!--    {\% if lignes.exists %}-->
     <h3>Compte: <span> {{ numero }} </span>{{ nom }}</h3>
-<!--    {\% else %}-->
-<!--      <p>Aucun compte trouvé.</p>-->
-      {% with ligne=lignes.first %}
-        <table border="1">
-          <tr>
-            <th>ID</th>
-            <td>{{ ligne.id }}</td>
-          </tr>
-          <tr>
-            <th>Numéro</th>
-            <td>{{ numero }}</td>
-          </tr>
-          <tr>
-            <th>Nom</th>
-            <td>{{ ligne.nom }}</td>
-          </tr>
-        </table>
   </div>
 </section>
+
 <section>
   <div class="container">
         <div class="mt-4" data-compte-numero="{{ numero }}">
           <div id="journal-display"></div>
         </div>
-
-      {% endwith %}
-
-<!--    {\% endif %}-->
   </div>
 </section>
-
+<br><br>
 <script src="{% static 'js/compte.js' %}"></script>
 {% endblock content %}

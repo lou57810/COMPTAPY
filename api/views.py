@@ -115,3 +115,6 @@ def ecritures_par_compte(request):
         serializer = EcritureJournalSerializer(ecritures, many=True)
         return Response(serializer.data)
     return Response({'error': 'Numéro de compte requis'}, status=400)
+
+
+

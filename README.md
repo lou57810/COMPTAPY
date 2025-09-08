@@ -1,47 +1,71 @@
-# Essai création application comptable.
-### Pour le moment cette application est en construction et non opérationnelle.
+## COMPTAPY
 
-### L'application utilise une base de donnée postgresql, le langage de programmation python ainsi que Django.
-### Nécessite l'installation de python, PostgreSQL ainsi que PgAdmin, et la création d'une base de donnée avec PgAdmin (ex: ma_db).
+---
 
-#### Initialisation de git en local, puis copie du code version https:
-#### Lancer la commande ``git clone adresse https copiée``
-#### Création d'un environnement virtuel 'venv' ou nommé comme vous le souhaitez:
-#### ``python  -m venv venv``
-#### Puis, Win (avec console git bash): ``source venv/Scripts/activate``
-####       ou Debian (terminal):   ``source venv/bin/activate``
-#### Installation des dépendances modules:
-#### ``pip install -r requirements.txt``
+#### *Essai Application de comptabilité personnalisée basée sur Django et PostgreSQL, conçue pour gérer plusieurs entreprises (dossiers comptables).*
 
+---
+### 🚀 Fonctionnalités principales
 
-### Préparation pour un déploiement.
-#### Selon le modèle 'env_template', création d'un fichier .env
-#### DB_USER = 
-#### DB_PASSWORD = 
-#### DB_HOST = (ex: 127.0.0.1)
-#### DB_PORT =  (ex: pour postgres: 5432)
-#### DB_NAME = (ex: ma_db) Celle créée avec PgAdmin.
-#### SECRET_KEY = (ex: dans settings.py 'django-insecure.....' crée quand le projet a été créé)
-#### DATABASE_URL = "postgresql://postgres:postgres@localhost:5431/ma_db"
-#### Ce fichier ne doit être accessible qu'à l'auteur du projet créé, et contient des données personnalisées.
+- Création d’une entreprise (nom, SIRET, APE, adresse, date de création).
+- Création automatique d’un administrateur (is_owner) au moment de la configuration.
+- Gestion des utilisateurs avec rôles (gérant, comptable, commercial, DRH, etc.).
+- Plan Comptable Général (PGC) préchargé en base de données.
+- Journaux comptables (achats, ventes, opérations diverses, etc.).
+- Accès sécurisé via authentification.
+---
+### 📦 Installation locale
+1. Cloner le dépôt  
+``git clone https://github.com/ton-compte/comptapy.git``  
+``cd comptapy``
 
-### Récupération du plan comptable pour postgresql:
-#### Le PGC est issu d'un fichier 'PGC.xlsx' situé dans le répertoire data.
-#### En exécutant: ``python scripts/convert_pgc_to_fixture.py``
-#### Nous obtenons un fichier 'pgc.json' à la base du projet.
-#### Django permet d’initialiser la base avec : ``python manage.py loaddata pgc.json``
-#### Ajoutons ce fichier dans le repo (api/fixtures/pgc.json) pour qu’il soit disponible aussi sur Render.
+2. Créer et configurer l’environnement
+Créer un fichier .env.local à la racine :  
+``DEBUG=True``  
+``SECRET_KEY=une_cle_django_ultra_secrete``  
+``DB_NAME=db_compta``  
+``DB_USER=postgres``  
+``DB_PASSWORD=motdepasse``  
+``DB_HOST=127.0.0.1``  
+``DB_PORT=5432``
+3. Construire et lancer avec Docker  
+``docker-compose down -v``  
+``docker-compose up --build``  
+⚠️ La première fois, il faudra appliquer les migrations et charger le PGC :  
+``docker exec -it django_app python manage.py migrate``  
+``docker exec -it django_app python manage.py loaddata api/fixtures/pgc.json``
+---
+### 🏗️ Création d’une entreprise
+La première fois que vous lancez l’application :
+1. Connectez-vous sur ``http://127.0.0.1:8000/setup/``
+2. Remplissez :
+- Nom de l’entreprise
+- SIRET
+- APE
+- Adresse
+- Date de création
+- Email administrateur
+- Mot de passe administrateur
+3. L’entreprise est créée et l’utilisateur défini devient automatiquement owner (is_owner=True) avec tous les droits.
 
-### Exécuter les migrations:
-#### ``python manage.py makemigrations``
-#### ``python manage.py migrate``
+Une fois cette étape terminée, l’écran de login vous permet d’accéder à l’application.
 
-### Facultatif: créér un compte superutilisateur
-#### Avec git bash: ``python manage.py createsuperuser``
-#### ou:            ``winpty python manage.py createsuperuser``
+### 👥 Gestion des utilisateurs et rôles  
+Le propriétaire (owner) peut créer de nouveaux utilisateurs et leur attribuer un rôle :  
+- OWNER : droits complets (équivalent administrateur de l’entreprise).
+- GERANT : gestion juridique et globale.
+- COMPTABLE : accès aux journaux comptables et au PGC.
+- COMMERCIAL : accès aux données de vente.
+- DRH : accès à la gestion des salaires.  
 
-#### Et enfin pour tester l'application en local:
-#### ``python manage.py runserver``
+Les permissions sont centralisées dans authentication/permissions.py pour un contrôle fin de l’accès.
 
+### 🌍 Déploiement sur Render
+1. Ajouter les variables d’environnement
+Dans ``.env.render :``
+``DATABASE_URL=postgresql://user:password@host:5432/db_name``
+``SECRET_KEY=une_cle_secrete``  
+``DEBUG=False``
 
-            
+2. Construire et pousser l’image Docker  
+``./deployDocker.sh``

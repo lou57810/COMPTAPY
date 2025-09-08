@@ -7,6 +7,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.accueil, name='accueil'),
+    path("setup/", views.setup, name="setup"),  # Création entreprise
     path("pgc/", views.liste_compte, name="pgc"),
     path("update_compte/", views.update_compte, name="update_compte"),
     path('frontend/create/', views.create_compte, name='create_compte'),
@@ -14,6 +15,7 @@ urlpatterns = [
     path('saisie_journal/', views.saisie_journal, name='saisie-journal'),
     path('valider/<str:type_journal>/', views.valider_journal, name='valider-journal'),
     path('frontend/afficher_compte/', views.afficher_compte, name='afficher-compte'),
+    path('frontend/afficher_statuts/', views.afficher_modifier_dossier, name='afficher-statuts'),
 ]
 
 if settings.DEBUG:

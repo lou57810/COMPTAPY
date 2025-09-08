@@ -49,6 +49,21 @@
                                 <a href="{% url 'accueil' %}" class="nav-link text-light px-3">Accueil COMPTAPY</a>
                             </li>
 
+                            <li>
+                                {% if not entreprise_exist or user.is_owner %}
+                                  <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Création dossier comptable</a>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                      <!-- Lien Modifier visible seulement pour l’owner -->
+                                      {% if not entreprise_exist %}
+                                        <li><a class="dropdown-item" href="{% url 'setup' %}">New</a></li>
+                                      {% endif %}
+                                      {% if user.is_owner %}
+                                        <li><a class="dropdown-item" href="{% url 'afficher-statuts' %}">Affichage des statuts</a></li>
+                                      {% endif %}
+                                    </ul>
+                                {% endif %}
+                              </li>
+
                             {% if user.is_authenticated %}
                             <li>
                               <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Api</a>
@@ -91,9 +106,9 @@
                                 <li class="nav-item">
                                     <a href="{% url 'login' %}" class="nav-link text-light px-3">Sign_in</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="{% url 'signup' %}" class="nav-link text-light px-3">Sign_up</a>
-                                </li>
+<!--                                <li class="nav-item">-->
+<!--                                    <a href="{\% url 'signup' %}" class="nav-link text-light px-3">Sign_up</a>-->
+<!--                                </li>-->
                             {% endif %}
                             <li class="nav-item">
                                 <a href="#" class="nav-link text-light px-3">Aide</a>

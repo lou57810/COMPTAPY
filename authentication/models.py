@@ -19,7 +19,16 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    class Role(models.TextChoices):
+        OWNER = "OWNER", "Gérant / Propriétaire"
+        COMPTABLE = "COMPTABLE", "Comptable"
+        COMMERCIAL = "COMMERCIAL", "Commercial"
+        DRH = "DRH", "Ressources Humaines"
+        ADMIN = "ADMIN", "Administrateur"  # si besoin de plus de droits
+
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.OWNER,)
     email = models.EmailField(unique=True)
+    is_owner = models.BooleanField(default=False)  # vrai seulement pour le créateur
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     profile_photo = models.ImageField(null=True, blank=True)
@@ -28,3 +37,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+
+    def __str__(self):
+        return f"{self.email} ({self.get_role_display()})"

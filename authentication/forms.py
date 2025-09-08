@@ -7,6 +7,7 @@ class SignupForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = get_user_model()
         fields = ['email']
+        #role =
 
 
 class LoginForm(forms.Form):
