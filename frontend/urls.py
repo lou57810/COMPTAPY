@@ -16,6 +16,8 @@ urlpatterns = [
     path('valider/<str:type_journal>/', views.valider_journal, name='valider-journal'),
     path('frontend/afficher_compte/', views.afficher_compte, name='afficher-compte'),
     path('frontend/afficher_statuts/', views.afficher_modifier_dossier, name='afficher-statuts'),
+    path('frontend/export_compta/', views.export_fec, name='export-fec'),
+    path("frontend/manage_users/", views.manage_users, name="manage-users"),
 ]
 
 if settings.DEBUG:

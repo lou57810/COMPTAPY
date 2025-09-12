@@ -2,9 +2,13 @@ from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 # from django.contrib.auth import get_user_model
 from api.models import Entreprise
+from authentication.forms import UserCreateForm
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.hashers import make_password
 from django.utils.timezone import now
+from django.http import HttpResponse
+import csv
+
 
 from django.db import transaction
 
@@ -23,15 +27,12 @@ from api.models import EcritureJournal
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-# User = get_user_model()
-
-
-
 
 @login_required
-@role_required(["OWNER", "ADMIN"])
+# @role_required(["OWNER", "ADMIN"])
+@role_required(["OWNER"])
 def afficher_modifier_dossier(request):
-    entreprise = Entreprise.objects.first()
+    entreprise = get_object_or_404(Entreprise, owner=request.user)
     if not entreprise:
         return redirect("setup")
 
@@ -73,96 +74,52 @@ def setup(request):
             return render(request, "frontend/setup.html", {
                 "error": "Champs requis manquants (email, mot de passe, nom, siret)."
             })
+        try:
+            with transaction.atomic():
+                # 1) créer l’admin avec tous les droits
+                user = User.objects.create_superuser(email=email, password=password)
+                user.is_owner = True
+                user.role = "OWNER"
+                user.save(update_fields=["is_owner", "role"])
+                """
+                # 2) Créer l'utilisateur
+                user = User.objects.create(
+                    email=email,
+                    password=make_password(password),
+                    is_superuser=True,
+                    is_staff=True,
+                    is_owner=True,
+                    role="OWNER",  # si tu as un champ role sur ton modèle User
+                )
+                """
+                # 2) créer l’entreprise en liant owner
+                entreprise = Entreprise.objects.create(
+                    nom=nom,
+                    siret=siret,
+                    ape=ape,
+                    adresse=adresse,
+                    date_creation=date_creation,
+                    owner=user,
+                )
+                # 3) Lier l'entreprise à l'utilisateur
+                user.entreprise = entreprise
+                user.save(update_fields=["entreprise"])
 
-        with transaction.atomic():
-            # 1) créer l’admin avec tous les droits
-            user = User.objects.create_superuser(email=email, password=password)
-            user.is_owner = True
-            user.save(update_fields=["is_owner"])
-
-            # 2) créer l’entreprise en liant owner
-            entreprise = Entreprise.objects.create(
-                nom=nom,
-                siret=siret,
-                ape=ape,
-                adresse=adresse,
-                date_creation=date_creation,
-                owner=user,
-            )
-
-
-
-        # (facultatif) auto-login puis redirection vers la page de statuts
-        auth_user = authenticate(request, email=email, password=password)
-        if auth_user is not None:
-            login(request, auth_user)
-            return redirect("afficher-statuts")
+        except Exception as e:
+            return render(request, "frontend/setup.html", {
+                "error": f"Erreur lors de la création: {str(e)}"
+            })
 
         return redirect("login")
-
     return render(request, "frontend/setup.html")
 
 
-
-# ============== Journaux ==============================
-"""
-def journal_achats(request):
-    return render(request,'frontend/journal_achats.html')
-
-
-def journal_ventes(request):
-    return render(request,'frontend/journal_ventes.html')
-
-
-def journal_od(request):
-    return render(request,'frontend/journal_od.html')
-
-
-def journal_banque(request):
-    return render(request,'frontend/journal_banque.html')
-
-
-def journal_caisse(request):
-    return render(request,'frontend/journal_caisse.html')
-
-
-def journal_cpte_cheques_postaux(request):
-    return render(request,'frontend/journal_cpte_cheques_postaux.html')
-
-
-def journal_effets_a_payer(request):
-    return render(request,'frontend/journal_effets_a_payer.html')
-
-
-def journal_effets_a_recevoir(request):
-    return render(request,'frontend/journal_effets_a_recevoir.html')
-
-
-def journal_report_nouveau(request):
-    return render(request,'frontend/journal_report_nouveau.html')
-
-
-def journal_cloture(request):
-    return render(request,'frontend/journal_cloture.html')
-
-
-def journal_expert_od(request):
-    return render(request,'frontend/journal_expert_od.html')
-
-
-def journal_reouverture(request):
-    return render(request,'frontend/journal_reouverture.html')
-"""
-
-
-# def journal_type(request):
 def saisie_journal(request):
     type_journal = request.GET.get('type', '')  # Par défaut : journal achats
     context = {
         'type_journal': type_journal,
     }
     return render(request, 'frontend/journal_type.html', context)
-
 
 # ========================== Comptes ===========================================
 
@@ -208,21 +165,14 @@ def afficher_compte(request):
     nom = []
     lignes = []
     numero = request.GET.get('numero')
-    # print(f"DEBUG numero reçu: '{numero}'")
 
     comptes = list(CompteComptable.objects.values_list('numero', flat=True))
-    # print(f"DEBUG comptes existants: {comptes}")
     if numero:
-        # print(f"DEBUG numero reçu2: '{numero}'")
-        # print("GET.numero =", repr(numero))
-        # print("Comptes existants2:", list(CompteComptable.objects.values_list("numero", flat=True)[:5]))
         compte = get_object_or_404(CompteComptable, numero=numero)
         nom = compte.nom
-
         lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
     else:
         nom, lignes = "", []
-
     return render(request, 'frontend/afficher_compte.html', {'lignes': lignes, 'numero': numero, 'nom': nom})
 
 
@@ -321,30 +271,66 @@ def afficher_statut_entreprise(request):
     return render(request, 'frontend/afficher_statuts.html')
 
 
-"""
-# @login_required
-def update_data_compte(request, compte_id=None):
-    print('compte_id:', compte_id)
-    instance_compte = CompteComptable.objects.get(pk=compte_id) if compte_id is not None else None
-    if request.method == "GET":
-        compte_form = forms.CompteForm(instance=instance_compte)
-        context = {'compte_form:': compte_form}
-        return render(request, 'frontend/update_compte.html', context=context)
+@login_required
+@role_required(["OWNER", "COMPTABLE"])
+def export_fec(request):
+    entreprise = request.user.entreprise
+    ecritures = EcritureJournal.objects.filter(compte__entreprise=entreprise)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename=FEC_{entreprise.nom}.csv'
+
+    writer = csv.writer(response, delimiter='|')  # séparateur imposé = pipe
+    writer.writerow([
+        "JournalCode", "JournalLib", "EcritureNum", "EcritureDate",
+        "CompteNum", "CompteLib", "CompAuxNum", "CompAuxLib",
+        "PieceRef", "PieceDate", "EcritureLib",
+        "Debit", "Credit", "EcritureLet", "DateLet",
+        "ValidDate", "Montantdevise", "Idevise"
+    ])
+
+    for e in ecritures:
+        writer.writerow([
+            e.journal.code,
+            e.journal.libelle,
+            e.id,
+            e.date.strftime("%Y%m%d"),
+            e.compte.numero,
+            e.compte.libelle,
+            "",  # CompAuxNum à compléter si tu gères clients/fournisseurs
+            "",
+            e.piece_ref or "",
+            e.piece_date.strftime("%Y%m%d") if e.piece_date else "",
+            e.libelle,
+            e.debit or "0.00",
+            e.credit or "0.00",
+            "",
+            "",
+            e.date.strftime("%Y%m%d"),
+            "",
+            ""
+        ])
+
+    return response
+
+
+@login_required
+@role_required(["OWNER", "DRH"])
+def manage_users(request):
+    entreprise = request.user.entreprise
+    utilisateurs = User.objects.filter(entreprise=entreprise)
 
     if request.method == "POST":
-        compte_form = forms.CompteForm(request.POST, request.FILES, instance=instance_compte)
-        if compte_form.is_valid():
-            compte_form.save()
-            return redirect('accueil')
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.entreprise = entreprise
+            user.save()
+            return redirect("manage-users")
+    else:
+        form = UserCreateForm()
 
-def ajout_modif_compte(request):
-    numero = request.GET.get("id")  # ici "id" représente en réalité le numéro comptable
-    compte = None
-    print('numero:', numero)
+    return render(request, "frontend/manage_users.html", {
+        "utilisateurs": utilisateurs,
+        "form": form
+    })
 
-    if numero:
-        compte = get_object_or_404(CompteComptable, numero=numero)
-        print('compte:', compte)
-
-    return render(request, "frontend/compte_form.html", {"compte": compte})
-"""

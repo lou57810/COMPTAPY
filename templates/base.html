@@ -44,28 +44,28 @@
                         </button>
                     <!--<div class='collapse navbar-collapse' id='navbarSupportedContent'>-->
                     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                        <ul class="navbar-nav dropdown">
-                            <li class="nav-item dropdown">
-                                <a href="{% url 'accueil' %}" class="nav-link text-light px-3">Accueil COMPTAPY</a>
-                            </li>
-
-                            <li>
-                                {% if not entreprise_exist or user.is_owner %}
-                                  <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Création dossier comptable</a>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                      <!-- Lien Modifier visible seulement pour l’owner -->
-                                      {% if not entreprise_exist %}
-                                        <li><a class="dropdown-item" href="{% url 'setup' %}">New</a></li>
-                                      {% endif %}
-                                      {% if user.is_owner %}
-                                        <li><a class="dropdown-item" href="{% url 'afficher-statuts' %}">Affichage des statuts</a></li>
-                                      {% endif %}
-                                    </ul>
-                                {% endif %}
-                              </li>
+                      <ul class="navbar-nav dropdown">
+                        <li class="nav-item dropdown">
+                            <a href="{% url 'accueil' %}" class="nav-link text-light px-3">Accueil COMPTAPY</a>
+                        </li>
+<!--                        {\% if not entreprise_exist or user.is_owner %}-->
+                        {% if user.is_authenticated %}
+                          <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Création dossier comptable</a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                              {% if not entreprise_exist %}
+                                <li><a class="dropdown-item" href="{% url 'setup' %}">New</a></li>
+                              {% endif %}
+                              <!-- Lien Modifier visible seulement pour l’owner -->
+                              {% if user.is_owner %}
+                                <li><a class="dropdown-item" href="{% url 'afficher-statuts' %}">Affichage des statuts</a></li>
+                              {% endif %}
+                            </ul>
+                          </li>
+                        {% endif %}
 
                             {% if user.is_authenticated %}
-                            <li>
+                            <li class="nav-item dropdown">
                               <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Api</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                      <li><a class="dropdown-item" href="#">Accueil Api</a></li>
@@ -74,6 +74,18 @@
                                      <li><a class="dropdown-item" href="{% url 'update' 1 %}">Afficher un compte</a></li>
                                 </ul>
                             </li>
+                            {% if user.role == "OWNER" or user.role == "DRH" %}
+                              <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des utilisateurs</a>
+
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+
+                                    <li><a class="dropdown-item" href="{% url 'manage-users' %}">Création des utilisateurs</a></li>
+  
+                                </ul>
+
+                              </li>
+                            {% endif %}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des Comptes</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
