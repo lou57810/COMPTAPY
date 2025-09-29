@@ -39,7 +39,6 @@
     <script>
       let currentPage = 1;
       const pageSize = 100;
-      // const apiUrl = "/api/comptes/";
 
       const apiUrl = "/api/comptes/";
 
@@ -54,6 +53,7 @@
           .then(response => response.json())
           .then(data => {
             tbody.innerHTML = "";
+
 
             data.results
               .sort((a, b) => {

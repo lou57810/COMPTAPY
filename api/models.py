@@ -19,7 +19,7 @@ JOURNAL_TYPES = [
 
 
 class Entreprise(models.Model):
-    nom = models.CharField(max_length=255)
+    nom = models.CharField(max_length=255, blank=True, null=True)
     siret = models.CharField(max_length=14, blank=True, null=True)
     ape = models.CharField(max_length=10, blank=True, null=True)
     adresse = models.TextField(blank=True, null=True)
@@ -32,14 +32,15 @@ class Entreprise(models.Model):
 
 
 class CompteComptable(models.Model):
-    numero = models.CharField(max_length=100, unique=True)  # Exemple : '401', '512'
+    numero = models.CharField(max_length=100)  # Exemple : '401', '512'
     nom = models.CharField(max_length=255)  # Exemple : 'Fournisseurs', 'Banque'
     libelle = models.CharField(max_length=255, default="N/A")   # Non attribué, à completer dans le champ.
     debit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     credit = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     date_saisie = models.DateTimeField(default=timezone.now)
+    # rendre entreprise facultative
     entreprise = models.ForeignKey(
-        "Entreprise", on_delete=models.CASCADE, related_name="comptes"
+        "Entreprise", on_delete=models.CASCADE, related_name="comptes", null=True, blank=True
     )
     type_compte = models.CharField(
         max_length=20,
@@ -56,6 +57,11 @@ class CompteComptable(models.Model):
         default='perso',
     )
     origine = models.CharField(max_length=20, choices=[('pgc', 'PCG'), ('user', 'Utilisateur')], default='pgc')
+
+    class Meta:
+        unique_together = ("numero", "entreprise") # Les numéros du PGC sont uniques mais à chaques entreprises)
+        # D'ou, lever la contrainte d'unicité sur numero et la remplacer par une contrainte d'unicité composite (numero, entreprise)
+
 
     def __str__(self):
         return f"{self.numero} - {self.nom}"

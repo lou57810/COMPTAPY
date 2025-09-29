@@ -1,6 +1,8 @@
 # from django.shortcuts import render
 from django.views import View
+from .forms import UserLoginForm
 from . import forms
+from .forms import UserLoginForm
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate, login, logout
@@ -11,6 +13,9 @@ from django.contrib.auth import get_user_model
 
 
 User = get_user_model()
+from django.contrib.auth import get_user_model
+
+
 
 """
 # On peut protéger une vue comme ceci :
@@ -24,29 +29,31 @@ def modifier_dossier(request):
 
 class LoginPage(View):
     form_class = forms.LoginForm
-    # template_name = 'authentication/login_back.html'
     template_name = 'authentication/login.html'
 
     def get(self, request):
         form = self.form_class
-        message = ''
+        message = 'test fonction get'
         return render(request, self.template_name, context={'form': form, 'message': message})
 
     def post(self, request):
         form = self.form_class(request.POST)
-        message = ''
+
         if form.is_valid():
-            user = authenticate(
+            print("Existe-t-il ?", User.objects.filter(email=form.cleaned_data['email']).exists())
+            print('Form valid, email, password: ', form.cleaned_data['email'], form.cleaned_data['password'])
+            user = authenticate(request,
                 email=form.cleaned_data['email'],
                 password=form.cleaned_data['password']
             )
+            print('User: ', user)
             if user is not None:
+                print('user:', user)
                 login(request, user)
                 return redirect('accueil')
             else:
                 message = 'Identifiants ou pass invalides.'
-        return render(
-            request, self.template_name, context={'form': form, 'message': message})
+        return render(request, self.template_name, context={'form': form, 'message': message})
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -68,13 +75,12 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 def signup_page(request):
-    # form = forms.SignupForm()
     if request.method == 'POST':
         form = forms.SignupForm(request.POST)
         if form.is_valid():
-            # user = form.save()
-            form.save()
-            # login(request, user)
+            user = form.save()
+            # form.save()
+            # login(request, user)    # Permet la connexion directement
             return redirect(settings.LOGIN_REDIRECT_URL)
     else:
         form = forms.SignupForm()

@@ -3,21 +3,28 @@
 {% block content %}
   <section class="py-5">
     <div class="container">
+      <p>{{ role }}</p>
+<!--    <h2>
+      {% if role == "GERANT" %}
+          <p>Création d’une entreprise (Mono)</p>
+      {% else %}
+          <p>Inscription Expert-Comptable (Multi)</p>
+      {% endif %}
+    </h2>-->
 
-      <h2>Initialisation de la comptabilité</h2>
       <form method="post">
         {% csrf_token %}
+          <label>Nom complet: <input type="text" name="full_name" required></label><br>
+          <label>Email: <input type="email" name="email" required></label><br>
+          <label>Mot de passe: <input type="password" name="password" required></label><br>
 
-        <h3>Entreprise</h3>
-        <label>Nom: <input type="text" name="nom" required></label><br>
-        <label>SIRET: <input type="text" name="siret"></label><br>
-        <label>APE: <input type="text" name="ape"></label><br>
-        <label>Adresse: <textarea name="adresse"></textarea></label><br>
-        <label>Date de création: <input type="date" name="date_creation"></label><br>
-
-        <h3>Administrateur</h3>
-        <label>Email: <input type="email" name="email" required></label><br>
-        <label>Mot de passe: <input type="password" name="password" required></label><br>
+        {% if role in "GERANT,EXPERT_COMPTABLE" %}
+            <label>Nom de l'entreprise: <input type="text" name="nom"></label><br>
+            <label>SIRET: <input type="text" name="siret"></label><br>
+            <label>APE: <input type="text" name="ape"></label><br>
+            <label>Adresse: <textarea name="adresse"></textarea></label><br>
+            <label>Date de création: <input type="date" name="date_creation"></label><br>
+        {% endif %}
 
         <button type="submit">Créer</button>
       </form>

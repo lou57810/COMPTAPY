@@ -1,14 +1,37 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import get_user_model
 from .models import User
 
 
 class SignupForm(UserCreationForm):
-    class Meta(UserCreationForm.Meta):
-        model = get_user_model()
-        fields = ['email']
-        #role =
+    password = forms.CharField(widget=forms.PasswordInput)
+
+    class Meta:
+        model = User
+        fields = ["email", "password"]
+        # fields = ["email", "password"]
+
+    def save(self, commit=True):
+        user = User.objects.create_user(
+            email=self.cleaned_data["email"],
+            password=self.cleaned_data["password"]
+        )
+        return user
+
+
+
+class UserLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super(UserLoginForm, self).__init__(*args, **kwargs)
+
+    username = forms.CharField(widget=forms.TextInput(
+        attrs={'class': 'form-control', 'placeholder': 'Username or Email'}),
+        label="Username or Email*")
+
+    password = forms.CharField(widget=forms.PasswordInput(
+        attrs={'class': 'form-control', 'placeholder': 'Password'}))
 
 
 class LoginForm(forms.Form):

@@ -1,0 +1,32 @@
+h1, h4, h5 {
+    text-align: center;
+    color: white;
+}
+
+a.nav-link text-light px-3 {
+  margin-left: 20px;
+}
+
+.titre_application {
+    text-align: center;
+}
+
+.titre_application, h1 {
+color: white;
+}
+
+.d-grid {
+  margin-top: 200px;
+  margin-bottom: 200px;
+}
+
+.choix_utilisateur, .Mono {
+  padding-top: 20px;
+}
+
+.choix_utilisateur, .Multi {
+  padding-top: 20px;
+}
+body {
+  background-color: Teal;
+}

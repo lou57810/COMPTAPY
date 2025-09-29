@@ -25,6 +25,7 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/dist/handsontable.full.min.css" />
 <!--        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable/styles/ht-theme-main-dark-auto.min.css" />-->
         <link rel="stylesheet" href="{% static 'css/base.css' %}">
+      <link rel="stylesheet" href="{% static 'css/main/_icons.scss' %}">
 
         <!--<script type='text/javascript' src=''></script>-->
 <!--        <script src="https://cdn.jsdelivr.net/npm/handsontable@14.0.0/dist/handsontable.min.js"></script>-->
@@ -48,13 +49,31 @@
                         <li class="nav-item dropdown">
                             <a href="{% url 'accueil' %}" class="nav-link text-light px-3">Accueil COMPTAPY</a>
                         </li>
+
+                        <li class="nav-item dropdown">
+                          <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossier comptable</a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                              {% if not user.is_authenticated %}
+<!--                              {\% if not entreprise_exist %}-->
+<!--                                <li><a class="dropdown-item" href="{\% url 'setup' %}">New</a></li>-->
+                              <li><a class="dropdown-item" href="{% url 'start-app' %}">New</a></li>
+<!--                                <li><a class="dropdown-item" href="{% url 'liste-entreprises' %}">Liste Entreprises</a></li>-->
+                              {% endif %}
+
+
+                              {% if user.is_owner %}
+                                <li><a class="dropdown-item" href="{% url 'afficher-statuts' %}">Afficher, modifier dossier</a></li>
+                              {% endif %}
+                            </ul>
+                        </li>
 <!--                        {\% if not entreprise_exist or user.is_owner %}-->
                         {% if user.is_authenticated %}
                           <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Création dossier comptable</a>
+<!--                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Création dossier comptable</a>-->
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                               {% if not entreprise_exist %}
-                                <li><a class="dropdown-item" href="{% url 'setup' %}">New</a></li>
+<!--                                <li><a class="dropdown-item" href="{% url 'setup' %}">New</a></li>-->
+                              <li><a class="dropdown-item" href="{% url 'start-app' %}">New</a></li>
                               {% endif %}
                               <!-- Lien Modifier visible seulement pour l’owner -->
                               {% if user.is_owner %}
@@ -74,18 +93,26 @@
                                      <li><a class="dropdown-item" href="{% url 'update' 1 %}">Afficher un compte</a></li>
                                 </ul>
                             </li>
+
                             {% if user.role == "OWNER" or user.role == "DRH" %}
                               <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des utilisateurs</a>
-
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-
                                     <li><a class="dropdown-item" href="{% url 'manage-users' %}">Création des utilisateurs</a></li>
-  
                                 </ul>
-
                               </li>
                             {% endif %}
+
+
+                            {% if user.is_authenticated and user.role == "EXPERT_COMPTABLE" %}
+                              <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Accès Experts comptables</a>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                  <li><a class="dropdown-item" href="{% url 'liste-entreprises' %}">Liste des entreprises</a></li>
+                                </ul>
+                              </li>
+                            {% endif %}
+
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des Comptes</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -160,7 +187,7 @@
                 <div class="row gy-4 align-items-center">
                     <div class="col-12 col-md-4">
                         <a class="navbar-brand text-dark text-uppercase fw-bold" href="#">
-                            <span class="bg-primary bg-gradient p-1 rounded-3 text-light">COMPTAPY</span>User : {{ user }}
+                            <span class="bg-primary bg-gradient p-1 rounded-3 text-light">COMPTAPY</span>User : {{ user }}<span></span>
                         </a>
                     </div>
                     <div class="col-12 col-md-4 text-md-center">

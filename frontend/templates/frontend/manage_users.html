@@ -7,11 +7,12 @@
       <div class="container">
           <table class="table table-striped">
               <thead>
-                  <tr><th>Email</th><th>Rôle</th><th>Date de création</th></tr>
+                  <tr><th>Nom société</th><th>Email</th><th>Rôle</th><th>Date de création</th></tr>
               </thead>
               <tbody>
                   {% for u in utilisateurs %}
                   <tr>
+                      <td>{{ u.entreprise }}</td>
                       <td>{{ u.email }}</td>
                       <td>{{ u.get_role_display }}</td>
                       <td>{{ u.date_joined|date:"d/m/Y" }}</td>

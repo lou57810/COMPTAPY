@@ -4,28 +4,33 @@ from api.models import Entreprise
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, email, password=None, role='LECTURE', full_name=None, **extra_fields):
         if not email:
             raise ValueError('Email is required')
         email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+        user = self.model(email=email,
+                          role=role,
+                          full_name=full_name,
+                          **extra_fields)
         user.set_password(password)
         user.save()
         return user
 
-    def create_superuser(self, email, password, **extra_fields):
+    def create_superuser(self, email, password, role="GERANT", **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(email, password, role=role, **extra_fields)
+
 
 
 class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
-        ("OWNER", "Gérant / Propriétaire"),
+        ("GERANT", "Gérant / cogérant"),
         ("COMPTABLE", "Comptable"),
         ("DRH", "DRH"),
         ("COMMERCIAL", "Commercial"),
         ("LECTURE", "Lecture seule"),
+        ("EXPERT_COMPTABLE", "Expert-Comptable (toutes entreprises)"),
     ]
 
     entreprise = models.ForeignKey(
@@ -35,6 +40,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True,
         blank=True
     )
+
+    full_name = models.CharField(max_length=255, blank=True, null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="LECTURE")
     email = models.EmailField(unique=True)
     is_owner = models.BooleanField(default=False)  # vrai seulement pour le créateur
@@ -50,3 +57,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     def has_role(self, *roles):
         """Permet de tester si l'utilisateur a l'un des rôles passés en argument"""
         return self.role in roles or self.is_superuser
+
+
+"""
+class CustomUser(AbstractBaseUser):
+    email = models.EmailField(unique=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username',)
+
+    def __str__(self):
+        return self.email
+
+"""

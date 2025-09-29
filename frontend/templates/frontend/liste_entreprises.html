@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Liste des entreprises</h2>
+
+    {% if entreprises %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>SIRET</th>
+                    <th>Adresse</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in entreprises %}
+                    <tr>
+                        <td>{{ e.nom }}</td>
+                        <td>{{ e.siret }}</td>
+                        <td>{{ e.adresse }}</td>
+                        <td>
+                            <a href="{% url 'afficher-statuts' %}?entreprise_id={{ e.pk }}" class="btn btn-primary btn-sm">
+                                Ouvrir dossier
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Aucune entreprise disponible.</p>
+    {% endif %}
+</div>
+{% endblock %}
