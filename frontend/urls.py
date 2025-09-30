@@ -8,11 +8,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('', views.accueil, name='accueil'),
     path('start_app', views.start_app, name='start-app'),
-    # path("setup/", views.setup, name="setup"),  # Création entreprise
-    # path("multi_setup/", views.multi_setup, name="multi-setup"),  # Création entreprise
-    # path("setup/gerant/", views.setup, {"role": "GERANT"}, name="setup-gerant"),
     path("setup/gerant/", views.setup, name="setup-gerant"),
-    # path("setup/expert/", views.setup, {"role": "EXPERT_COMPTABLE"}, name="setup-expert"),
     path("setup/expert/", views.setup, name="setup-expert"),
     path("pgc/", views.liste_compte, name="pgc"),
     path("update_compte/", views.update_compte, name="update_compte"),

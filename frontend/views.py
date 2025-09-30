@@ -41,8 +41,7 @@ from django.contrib.auth import login
 
 
 @login_required
-# @role_required(["OWNER", "ADMIN"])
-@role_required(["OWNER"])
+@role_required(["OWNER", "EXPERT_COMPTABLE"])
 def afficher_modifier_dossier(request):
     entreprise = get_object_or_404(Entreprise, owner=request.user)
     if not entreprise:
