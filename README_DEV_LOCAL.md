@@ -1,11 +1,21 @@
 # Essai création application comptable en mode développement.
 ### Pour le moment cette application est en construction et non opérationnelle.
 
+
+### Installation personnalisée:
+
 ### L'application utilise une base de donnée postgresql, le langage de programmation python ainsi que Django.
 ### Nécessite l'installation de python, PostgreSQL ainsi que PgAdmin, et la création d'une base de donnée avec PgAdmin (ex: ma_db).
 
-#### Initialisation de git en local, puis copie du code version https:
-#### Lancer la commande ``git clone adresse https copiée``
+#### Initialisation de git en local, puis copie du code version https sur git:
+#### Lancer la commande ``git clone "adresse https à copier"``
+
+### Si vous avez la copie du repository:
+### Démarrage:
+#### Windows: run.bat
+#### Debian: run.sh
+
+### Installation personalisée:
 #### Création d'un environnement virtuel 'venv' ou nommé comme vous le souhaitez:
 #### ``python  -m venv venv``
 #### Puis, Win (avec console git bash): ``source venv/Scripts/activate``
