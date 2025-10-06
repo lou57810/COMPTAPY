@@ -7,6 +7,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.hashers import make_password
 from django.utils.timezone import now
 from django.http import HttpResponse
+from django.contrib import messages
 import csv
 from django.db.utils import IntegrityError
 
@@ -71,25 +72,10 @@ def liste_entreprises(request):
     return render(request, "frontend/liste_entreprises.html", {"entreprises": entreprises})
 
 
-
-# Double emploi: déjà défini dans api/utils
-"""
-def get_accessible_entreprises(user):
-    if user.role == "EXPERT_COMPTABLE":
-        return Entreprise.objects.all()  # accès global
-    return Entreprise.objects.filter(pk=user.entreprise_id) if user.entreprise else Entreprise.objects.none()
-"""
-
-
-
-
-
-
-
 @require_http_methods(["GET", "POST"])
 def setup(request):
     role = request.GET.get("role")  # "GERANT" ou "EXPERT_COMPTABLE"
-    print('role:', role)
+    print('get role:', role)
 
     if request.method == "POST":
         print("➡️ POST reçu avec role:", role)
@@ -141,56 +127,6 @@ def setup(request):
     return render(request, "frontend/setup.html", {"role": role})
 
 
-
-
-
-"""
-def setup(request, mode="mono"):
-
-    # mode = "mono" -> création d'un gérant (OWNER) + son entreprise
-    # mode = "multi" -> création d'un expert comptable (EXPERT_COMPTABLE) sans entreprise liée
-
-    email = request.POST.get("email")
-    password = request.POST.get("password")
-
-    with transaction.atomic():
-        if mode == "mono":
-            # Créer l'entreprise
-            entreprise = Entreprise.objects.create(
-                nom=request.POST.get("nom_entreprise"),
-                siret=request.POST.get("siren"),
-                ape=request.POST.get("ape"),
-                adresse=request.POST.get("adresse"),
-                date_creation=request.POST.get("date_creation"),
-                owner=request.POST.get("user"),
-            )
-
-            # Créer l'utilisateur OWNER lié à cette entreprise
-            user = User.objects.create_user(
-                email=email,
-                password=password,
-                role="OWNER",
-                is_owner=True,
-                entreprise=entreprise
-            )
-
-        elif mode == "multi":
-            # Créer uniquement l'utilisateur expert-comptable
-            # (il pourra ensuite créer/accéder à plusieurs entreprises)
-            user = User.objects.create_user(
-                email=email,
-                password=password,
-                role="EXPERT_COMPTABLE",
-                is_owner=False,
-                entreprise=None
-            )
-
-        else:
-            raise ValueError("Mode non reconnu (mono|multi)")
-
-    return user
-"""
-
 def saisie_journal(request):
     type_journal = request.GET.get('type', '')  # Par défaut : journal achats
     context = {
@@ -211,6 +147,8 @@ def create_compte(request):
         compte_form = forms.CompteForm(request.POST)
         if compte_form.is_valid():
             compte_form.save()
+            messages.success(request, 'Le compte a été créé avec succès !')
+            return render(request, 'frontend/create_compte.html', {'compte_form': compte_form})
     return render(request, 'frontend/create_compte.html', {'compte_form': compte_form})
 
 
@@ -305,8 +243,8 @@ def valider_journal(request, type_journal):
                 debit = ligne.get('debit', 0)
                 credit = ligne.get('credit', 0)
 
-                print("👉 Ligne reçue :", ligne)
-                print("📅 Date extraite :", date)
+               #  print("👉 Ligne reçue :", ligne)
+                # print("📅 Date extraite :", date)
 
                 # ✅ On récupère l’instance du compte correspondant
                 compte = CompteComptable.objects.filter(numero=numero).first()
@@ -327,7 +265,7 @@ def valider_journal(request, type_journal):
                     credit=credit,
                     journal=type_journal  # Achats, Ventes, OD ...
                 )
-                print('Ecritures enregistrées:', ecriture)
+                # print('Ecritures enregistrées:', ecriture)
             return JsonResponse({'status': 'success'})
         except Exception as e:
             print("❌ ERREUR:", e)

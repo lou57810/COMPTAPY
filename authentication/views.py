@@ -40,8 +40,8 @@ class LoginPage(View):
         form = self.form_class(request.POST)
 
         if form.is_valid():
-            print("Existe-t-il ?", User.objects.filter(email=form.cleaned_data['email']).exists())
-            print('Form valid, email, password: ', form.cleaned_data['email'], form.cleaned_data['password'])
+            # print("Existe-t-il ?", User.objects.filter(email=form.cleaned_data['email']).exists())
+            # print('Form valid, email, password: ', form.cleaned_data['email'], form.cleaned_data['password'])
             user = authenticate(request,
                 email=form.cleaned_data['email'],
                 password=form.cleaned_data['password']

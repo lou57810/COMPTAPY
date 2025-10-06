@@ -27,7 +27,7 @@ if os.environ.get("DOCKER_ENV") == "1":
     load_dotenv(dotenv_path=env_path)
 
 elif os.environ.get("RENDER_EXTERNAL_URL"):
-    # Render définit automatiquement cette variable → pas besoin de .env
+    # Render définit automatiquement cette variable → pas besoin de ".env"
     print("RENDER_RUN")
 
 else:

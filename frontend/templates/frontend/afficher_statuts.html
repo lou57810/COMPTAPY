@@ -4,31 +4,17 @@
 
 <section class="py-5">
   <div class="container">
-
-<!--    <h2>Initialisation de la comptabilité</h2>
+    <h2>Dossier de l'entreprise</h2>
       <form method="post">
         {% csrf_token %}
-
-        <h3>Entreprise</h3>
-        <label>Nom: <input type="text" name="nom" required></label><br>
-        <label>SIRET: <input type="text" name="siret"></label><br>
-        <label>APE: <input type="text" name="ape"></label><br>
-        <label>Adresse: <textarea name="adresse"></textarea></label><br>
-        <label>Date de création: <input type="date" name="date_creation"></label><br>
-
-        <h3>Administrateur</h3>
-        <label>Email: <input type="email" name="email" required></label><br>
-        <label>Mot de passe: <input type="password" name="password" required></label><br>
-
-        <button type="submit">Créer</button>
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Modifier</button>
       </form>
-    -->
-    <h2>Dossier de l'entreprise</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Valider</button>
-  </form>
+
+  </div>
+  <div class="container">
+    <h2>Selectionner</h2>
+    <button type="submit" class="btn btn-primary">Enter</button>
   </div>
 </section>
 <br><br>

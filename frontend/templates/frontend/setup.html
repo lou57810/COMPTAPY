@@ -1,10 +1,10 @@
-{% extends 'base.html' %}
+{% extends 'base0.html' %}
 {% load static %}
 {% block content %}
   <section class="py-5">
     <div class="container">
-      <p>{{ role }}</p>
-<!--    <h2>
+      <p>Role : {{ role }}</p>
+    <!--<h2>
       {% if role == "GERANT" %}
           <p>Création d’une entreprise (Mono)</p>
       {% else %}
@@ -18,7 +18,8 @@
           <label>Email: <input type="email" name="email" required></label><br>
           <label>Mot de passe: <input type="password" name="password" required></label><br>
 
-        {% if role in "GERANT,EXPERT_COMPTABLE" %}
+<!--        {\% if role in "GERANT,EXPERT_COMPTABLE" %}-->
+            {% if role == "GERANT" %}
             <label>Nom de l'entreprise: <input type="text" name="nom"></label><br>
             <label>SIRET: <input type="text" name="siret"></label><br>
             <label>APE: <input type="text" name="ape"></label><br>

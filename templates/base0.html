@@ -49,7 +49,6 @@
                         <li class="nav-item dropdown">
                             <a href="{% url 'accueil' %}" class="nav-link text-light px-3">Accueil COMPTAPY</a>
                         </li>
-
                         <li class="nav-item dropdown">
                           {% if not entreprise_exist %}
                           <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossier comptable</a>
@@ -68,7 +67,6 @@
                               {% endif %}
                             </ul>
                         </li>
-<!--                        {\% if not entreprise_exist or user.is_owner %}-->
                         {% if user.is_authenticated %}
                           <li class="nav-item dropdown">
 <!--                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Création dossier comptable</a>-->
@@ -84,104 +82,20 @@
                             </ul>
                           </li>
                         {% endif %}
-
-                            {% if user.is_authenticated %}
-                            <li class="nav-item dropdown">
-                              <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Api</a>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                     <li><a class="dropdown-item" href="#">Accueil Api</a></li>
-                                     <li><a class="dropdown-item" href="#">Todo</a></li>
-                                     <li><a class="dropdown-item" href="{% url 'compte_list' %}">Afficher le PGC</a></li>
-                                     <li><a class="dropdown-item" href="{% url 'update' 1 %}">Afficher un compte</a></li>
-                                </ul>
-                            </li>
-
-                            {% if user.role == "OWNER" or user.role == "DRH" %}
-                              <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des utilisateurs</a>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <li><a class="dropdown-item" href="{% url 'manage-users' %}">Création des utilisateurs</a></li>
-                                </ul>
-                              </li>
-                            {% endif %}
-
-
-                            {% if user.is_authenticated and user.role == "EXPERT_COMPTABLE" %}
+                        {% if user.is_authenticated and user.role == "EXPERT_COMPTABLE" %}
                               <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossiers Entreprises</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                   <li><a class="dropdown-item" href="{% url 'liste-entreprises' %}">Liste des entreprises</a></li>
-                                  <li><a class="dropdown-item" href="{% url 'afficher-statuts' %}">Ajouter une entreprise</a></li>
+                                  <li><a class="dropdown-item" href="{% url 'setup-gerant' %}">Ajouter une entreprise</a></li>
                                 </ul>
                               </li>
-                            {% endif %}
-
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des Comptes</a>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <li><a class="dropdown-item" href="{% url 'afficher-compte' %}">Afficher un compte</a></li>
-                                    <li><a class="dropdown-item" href="{% url 'create_compte' %}">Ajouter un compte</a></li>
-                                    <li><a class="dropdown-item" href="{% url 'update_compte' %}">Modifier un compte</a></li>
-                                    <li><a class="dropdown-item" href="{% url 'pgc' %}">Afficher le pgc</a></li>
-                                </ul>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Journaux</a>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <li><a class="dropdown-item" href="{% url 'saisie-journal' %}">Saisie journaux</a></li>
-                                    <li><a class="dropdown-item" href="#{\% url 'afficher-journal' %}">Affichage journaux</a></li>
-                                </ul>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Parametres</a>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-<!--                                <li><a class="dropdown-item" href="{\% url 'p1' %}">Projet1</a></li>-->
-                                        <li><a class="dropdown-item" href="{% url 'upload_profile_photo' %}">Changer la photo de profil</a></li>
-                                        <li><a class="dropdown-item" href="#">Favoris</a></li>
-                                        <li><a class="dropdown-item" href="#">Album Photo</a></li>
-                                    </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'logout' %}" class="nav-link text-light px-3">Sign_out</a>
-                            </li>
-                            {% else %}
-                                <li class="nav-item">
-                                    <a href="{% url 'login' %}" class="nav-link text-light px-3">Sign_in</a>
-                                </li>
-<!--                                <li class="nav-item">-->
-<!--                                    <a href="{\% url 'signup' %}" class="nav-link text-light px-3">Sign_up</a>-->
-<!--                                </li>-->
-                            {% endif %}
-                            <li class="nav-item">
-                                <a href="#" class="nav-link text-light px-3">Aide</a>
-                            </li>
-                        </ul>
-                        {% if user.is_authenticated %}
-                        <div class="avatar">
-                              {% if user.profile_photo %}
-                                <img class="avatar" src="{{ user.profile_photo.url }}">
-                              {% else %}
-                                <img class="avatar" src="{% static 'img_base/default_profile.png' %}">
-                              {% endif %}
-                        </div>
-                        {% else %}
-
-                        <div class="avatar">
-                            <img class="avatar" src="{% static 'img_base/default_profile.png' %}">
-                        </div>
                         {% endif %}
-
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" >
-
-                            <span class="navbar-toggler-icon">
-                                <i class="fas fa-bars" style="color:#fff; font-size:28px;"></i>
-                            </span>
-                        </button>
+                      </ul>
                     </div>
                 </div>
             </nav>
-        </header>
+         </header>
         <main>
             {% block content %}{% endblock content %}
         </main>
@@ -223,7 +137,7 @@
           <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.min.js" integrity="sha384-RuyvpeZCxMJCqVUGFI0Do1mQrods/hhxYlcVfGPOfQtPJh0JCw12tUAZ/Mv10S7D" crossorigin="anonymous"></script>
         </footer>
         <script type='text/javascript'></script>
-    {% block extra_scripts %}{% endblock %}
+<!--    {% block extra_scripts %}{% endblock %}-->
     </body>
 </html>
 
