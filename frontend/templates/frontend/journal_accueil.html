@@ -2,10 +2,12 @@
 {% block content %}
 {% load static %}
 
+<input type="hidden" id="entreprise_id" value="{{ entreprise.id }}">
+
 
 <section class="py-5">
     <div class="container">
-      <h3>Journal : <span> </span>{{ entreprise }}</h3>
+      <h3>Journal : <span> </span>{{ entreprise }}<span>    </span><span>Id: </span>{{ entreprise.id }}</h3>
       <form method="get" class="mb-4">
         <label for="journal">Choisir un journal :</label>
           <select name="type" id="journal" onchange="this.form.submit()">
@@ -26,21 +28,26 @@
           </select>
       </form>
     </div>
-    <div class="container">
+  <div class="container">
+      {% if type_journal %} {{ type_journal }} <!-- Pas d'affichage sur la page d'accueil journal -->
         <h1>Journal {{ type_journal }}</h1>
 
         <div id="hot"></div>
         <div id="journal_display"></div>
-            <button id="validerEcritures" class="btn btn-primary mt-3" data-url-validation="/valider/{{ type_journal }}/">Valider les écritures</button>
+<!--            <button id="validerEcritures" class="btn btn-primary mt-3" data-url-validation="/valider/{{ type_journal }}/">Valider les écritures</button>-->
+          <button id="validerEcritures"
+                  class="btn btn-success mt-3" data-url-validation="{% url 'valider-journal' type_journal %}?entreprise_id={{ entreprise.id }}">Valider les écritures</button>
 
 
       <div class="container_totaux">
         <h3>Totaux</h3>
               <div id="hot-totals" class="hot handsontable htColumnHeaders"></div>
       </div>
-    </div>
+    {% endif %}
+  </div>
 </section>
 
+
 <script type="module" src="{% static 'js/journal.js' %}"></script>
-{% endblock content %}
+{% endblock %}
 

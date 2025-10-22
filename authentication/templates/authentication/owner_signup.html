@@ -1,0 +1,111 @@
+{% extends "base0.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-lg rounded-3">
+        <div class="card-header bg-primary text-white text-center">
+          <h4>Création du compte propriétaire</h4>
+        </div>
+        <div class="card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+              {{ form.email|add_class:"form-control" }}
+            </div>
+
+            <div class="mb-3 position-relative">
+              <label for="{{ form.password1.id_for_label }}" class="form-label">Mot de passe</label>
+              <div class="input-group">
+                {{ form.password1|add_class:"form-control" }}
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password1">
+                  👁️
+                </button>
+              </div>
+              {% if form.password1.help_text %}
+                <div class="form-text small">{{ form.password1.help_text|safe }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3 position-relative">
+              <label for="{{ form.password2.id_for_label }}" class="form-label">Confirmation du mot de passe</label>
+              <div class="input-group">
+                {{ form.password2|add_class:"form-control" }}
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password2">
+                  👁️
+                </button>
+              </div>
+              {% if form.password2.help_text %}
+                <div class="form-text small">{{ form.password2.help_text|safe }}</div>
+              {% endif %}
+            </div>
+
+
+            <div class="mb-3">
+              <label for="{{ form.nom.id_for_label }}" class="form-label">Nom de l’entreprise</label>
+              {{ form.nom|add_class:"form-control" }}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.siret.id_for_label }}" class="form-label">SIRET</label>
+              {{ form.siret|add_class:"form-control" }}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.ape.id_for_label }}" class="form-label">Code APE</label>
+              {{ form.ape|add_class:"form-control" }}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.adresse.id_for_label }}" class="form-label">Adresse</label>
+              {{ form.adresse|add_class:"form-control" }}
+            </div>
+
+            <div class="mb-3">
+              <label for="role" class="form-label">Rôle</label>
+                <select name="role" id="role" class="form-select" required>
+                  <option value="">-- Sélectionnez un rôle --</option>
+                  <option value="OWNER">Propriétaire</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+            <label for="date_creation" class="form-label">Date de création</label>
+            <input type="date" class="form-control" id="date_creation" name="date_creation">
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Créer le compte</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const buttons = document.querySelectorAll(".toggle-password");
+
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.getAttribute("data-target");
+      const input = document.getElementById(targetId);
+
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+      } else {
+        input.type = "password";
+        btn.textContent = "👁️";
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

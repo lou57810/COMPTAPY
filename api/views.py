@@ -5,11 +5,26 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
+
 from .serializers import CompteComptableSerializer, EcritureJournalSerializer
 from django.utils import timezone
 
 from .models import CompteComptable, EcritureJournal
 from django.db.models.functions import Substr
+from .models import Entreprise
+from .serializers import EntrepriseSerializer
+from rest_framework import generics, permissions
+
+
+class CreateEntrepriseAPIView(generics.CreateAPIView):
+    queryset = Entreprise.objects.all()
+    serializer_class = EntrepriseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+    def perform_create(self, serializer):
+        # L’entreprise est liée à l’utilisateur connecté
+        serializer.save(owner=self.request.user)
 
 
 class CompteComptableViewSet(viewsets.ModelViewSet):

@@ -50,40 +50,40 @@
                             <a href="{% url 'accueil' %}" class="nav-link text-light px-3">Accueil COMPTAPY</a>
                         </li>
 
-                        <li class="nav-item dropdown">
-                          {% if not entreprise_exist %}
-                          <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossier comptable</a>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                              {% if not user.is_authenticated %}
+<!--                        <li class="nav-item dropdown">-->
+<!--                          {\% if not entreprise_exist %}-->
+<!--                          <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossier comptable</a>-->
+<!--                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">-->
+<!--                              {\% if not user.is_authenticated %}-->
 <!--                              {\% if not entreprise_exist %}-->
 <!--                                <li><a class="dropdown-item" href="{\% url 'setup' %}">New</a></li>-->
-                              <li><a class="dropdown-item" href="{% url 'start-app' %}">New</a></li>
-<!--                                <li><a class="dropdown-item" href="{% url 'liste-entreprises' %}">Liste Entreprises</a></li>-->
-                              {% endif %}
-                            {% endif %}
+<!--                              <li><a class="dropdown-item" href="{\% url 'start-app' %}">New</a></li>-->
+<!--                                <li><a class="dropdown-item" href="{\% url 'liste-entreprises' %}">Liste Entreprises</a></li>-->
+<!--                              {\% endif %}-->
+<!--                            {\% endif %}-->
 
 
-                              {% if user.is_owner %}
-                                <li><a class="dropdown-item" href="{% url 'afficher-statuts' %}">Afficher, modifier dossier</a></li>
-                              {% endif %}
-                            </ul>
-                        </li>
+<!--                              {\% if user.is_owner %}-->
+<!--                                <li><a class="dropdown-item" href="{\% url 'afficher-statuts' %}">Afficher, modifier dossier</a></li>-->
+<!--                              {\% endif %}-->
+<!--                            </ul>-->
+<!--                        </li>-->
 <!--                        {\% if not entreprise_exist or user.is_owner %}-->
-                        {% if user.is_authenticated %}
-                          <li class="nav-item dropdown">
+<!--                        {\% if user.is_authenticated %}-->
+<!--                          <li class="nav-item dropdown">-->
 <!--                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Création dossier comptable</a>-->
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                              {% if not entreprise_exist %}
-<!--                                <li><a class="dropdown-item" href="{% url 'setup' %}">New</a></li>-->
-                              <li><a class="dropdown-item" href="{% url 'start-app' %}">New</a></li>
-                              {% endif %}
-                              <!-- Lien Modifier visible seulement pour l’owner -->
-                              {% if user.is_owner %}
-                                <li><a class="dropdown-item" href="{% url 'afficher-statuts' %}">Affichage des statuts</a></li>
-                              {% endif %}
-                            </ul>
-                          </li>
-                        {% endif %}
+<!--                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">-->
+<!--                              {\% if not entreprise_exist %}-->
+<!--                                <li><a class="dropdown-item" href="{\% url 'setup' %}">New</a></li>-->
+<!--                              <li><a class="dropdown-item" href="{\% url 'start-app' %}">New</a></li>-->
+<!--                              {\% endif %}-->
+<!--                               Lien Modifier visible seulement pour l’owner -->
+<!--                              {\% if user.is_owner %}-->
+<!--                                <li><a class="dropdown-item" href="{\% url 'afficher-statuts' %}">Affichage des statuts</a></li>-->
+<!--                              {\% endif %}-->
+<!--                            </ul>-->
+<!--                          </li>-->
+<!--                        {\% endif %}-->
 
                             {% if user.is_authenticated %}
                             <li class="nav-item dropdown">
@@ -95,7 +95,13 @@
                                      <li><a class="dropdown-item" href="{% url 'update' 1 %}">Afficher un compte</a></li>
                                 </ul>
                             </li>
-
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossiers Entreprises</a>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                  <li><a class="dropdown-item" href="{% url 'liste-entreprises' %}">Liste des entreprises</a></li>
+                                  <li><a class="dropdown-item" href="{% url 'ajouter-entreprise' %}">Ajouter une entreprise</a></li>
+                                </ul>
+                            </li>
                             {% if user.role == "OWNER" or user.role == "DRH" %}
                               <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des utilisateurs</a>

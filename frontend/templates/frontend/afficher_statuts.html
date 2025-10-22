@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base0.html' %}
 {% block content %}
 {% load static %}
 
@@ -14,7 +14,7 @@
   </div>
   <div class="container">
     <h2>Selectionner</h2>
-    <button type="submit" class="btn btn-primary">Enter</button>
+    <a href="{% url 'accueil-compta' entreprise.id %}" class="btn btn-secondary btn-lg active" role="button" aria-pressed="true">COMPTA</a>
   </div>
 </section>
 <br><br>

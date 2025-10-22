@@ -1,13 +1,23 @@
-{% extends 'base0.html' %}
+{% extends base_template %}
+
 {% load static %}
 {% block content %}
 
 
 <section class="py-5">
     <div class="container">
-        <h1>En construction</h1>
+      {% if not user.is_authenticated %}
+        <p>Bienvenue&nbsp;! Veuillez vous connecter ou créer un compte pour commencer.</p>
+      {% elif entreprise %}
+      <p>Entreprise sélectionnée : <strong>{{ entreprise.nom }}</strong></p>
+    <!-- Boutons d’accès à la comptabilité, etc. -->
+  {% else %}
+    <h4>Aucune entreprise sélectionnée. Veuillez en créer ou sélectionner une.</h4>
+  {% endif %}
     </div>
 </section>
 
 
-{% endblock content %}
+
+
+{% endblock %}

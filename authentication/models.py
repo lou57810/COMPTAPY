@@ -16,7 +16,7 @@ class CustomUserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_superuser(self, email, password, role="GERANT", **extra_fields):
+    def create_superuser(self, email, password, role="DEVELOPMENT", **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, role=role, **extra_fields)
@@ -25,6 +25,8 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
+        ("DEVELOPMENT", "DEVELOPMENT"),
+        ("OWNER", "Propriétaire du logiciel"),
         ("GERANT", "Gérant / cogérant"),
         ("COMPTABLE", "Comptable"),
         ("DRH", "DRH"),
@@ -56,7 +58,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def has_role(self, *roles):
         """Permet de tester si l'utilisateur a l'un des rôles passés en argument"""
-        return self.role in roles or self.is_superuser
+        # return self.role in roles or self.is_superuser
+        return self.role in roles or self.is_owner
 
 
 """

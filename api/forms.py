@@ -28,4 +28,4 @@ class CompteEditForm(forms.ModelForm):
 class EntrepriseForm(forms.ModelForm):
     class Meta:
         model = models.Entreprise
-        fields = ["nom", "adresse", "siret", "ape", "date_creation"]
+        fields = ["nom", "email", "adresse", "siret", "ape", "date_creation"]

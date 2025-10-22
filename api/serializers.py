@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CompteComptable, EcritureJournal
+from .models import CompteComptable, EcritureJournal, Entreprise
 
 
 class CompteComptableSerializer(serializers.ModelSerializer):
@@ -15,3 +15,9 @@ class EcritureJournalSerializer(serializers.ModelSerializer):
     class Meta:
         model = EcritureJournal
         fields = ['date', 'numero_piece', 'libelle', 'debit', 'credit']
+
+
+class EntrepriseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Entreprise
+        fields = '__all__'

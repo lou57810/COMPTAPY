@@ -44,9 +44,9 @@
 #### En exécutant : ``python scripts/convert_pgc_to_fixture.py``
 #### Nous obtenons un fichier 'pgc.json' à la base du projet.
 ### Si 'pgc.json' a été créé auparavant, il faut le supprimer avant de lancer la commande suivante.
-#### Django permet d’initialiser la base avec : ``python manage.py loaddata pgc.json``
+<!--  Ne plus faire: Django permet d’initialiser la base avec : ``python manage.py loaddata pgc.json``-->
 #### Ajoutons ce fichier dans le repo (api/fixtures/pgc.json) pour qu’il soit disponible aussi sur Render.
-
+####  ``python manage.py import_pgc_reference``
 ### Facultatif : créer un compte 'superutilisateur'
 #### Avec git bash: ``python manage.py createsuperuser``
 #### ou :            ``winpty python manage.py createsuperuser``

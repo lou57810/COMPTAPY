@@ -20,15 +20,39 @@ JOURNAL_TYPES = [
 
 class Entreprise(models.Model):
     nom = models.CharField(max_length=255, blank=True, null=True)
+    email = models.EmailField(unique=True)
     siret = models.CharField(max_length=14, blank=True, null=True)
     ape = models.CharField(max_length=10, blank=True, null=True)
     adresse = models.TextField(blank=True, null=True)
     date_creation = models.DateField()
-    owner = models.OneToOneField("authentication.User", on_delete=models.CASCADE, related_name="entreprise_owned", null=True, blank=True)
+    owner = models.OneToOneField("authentication.User",
+         on_delete=models.CASCADE,
+         related_name="entreprise_owned",
+         null=True,
+         blank=True)
+    gerant = models.OneToOneField(
+        "authentication.User",
+        on_delete=models.SET_NULL,  # si le gérant est supprimé, on garde l’entreprise
+        related_name="entreprise_gerant",
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
-        return self.nom
+        return f"{self.nom} ({self.siret})"
 
+
+class CompteComptableReference(models.Model):
+    numero = models.CharField(max_length=20, unique=True)
+    libelle = models.CharField(max_length=255)
+    type_compte = models.CharField(max_length=50, blank=True, null=True)
+    origine = models.CharField(max_length=50, default="pgc")
+
+    class Meta:
+        ordering = ["numero"]
+
+    def __str__(self):
+        return f"{self.numero} - {self.libelle}"
 
 
 class CompteComptable(models.Model):
@@ -75,6 +99,7 @@ class Journal(models.Model):
 
 class EcritureJournal(models.Model):
     date = models.DateField()
+    entreprise = models.ForeignKey('Entreprise', on_delete=models.CASCADE, related_name='ecritures')
     # A tester: date = models.DateTimeField(auto_now_add = True)
     compte = models.ForeignKey(CompteComptable, on_delete=models.CASCADE)  # N° compte
     nom = models.CharField(max_length=100, null=True, blank=True)

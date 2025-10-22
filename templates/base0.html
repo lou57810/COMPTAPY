@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
     {% load static %}
+    {% load user_extras %}
+    {% owner_exists as owner_already_registered %}
 
     <head>
         <meta charset="utf-8">
@@ -37,8 +39,10 @@
     <!-- --------------------- Fin en-tête ----------------------->
     <body class='snippet-body'>
         <header class="py-4">
+
             <nav class="navbar navbar-expand-xxl fixed-top navbar-dark bg-dark">
                 <div class="container">
+                  <div class="navbar-brand text-white"><p>Statut: <span>{{ user }} </span>{{ user.role }}</p></div>
                     <a class="navbar-brand text-white fs-2" href="{% url 'accueil' %}"></a>
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
@@ -48,49 +52,34 @@
                       <ul class="navbar-nav dropdown">
                         <li class="nav-item dropdown">
                             <a href="{% url 'accueil' %}" class="nav-link text-light px-3">Accueil COMPTAPY</a>
+<!--                          <a class="nav-link text-light px-3">TEST: {\{user.role}}</a>-->
                         </li>
-                        <li class="nav-item dropdown">
-                          {% if not entreprise_exist %}
-                          <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossier comptable</a>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                              {% if not user.is_authenticated %}
-<!--                              {\% if not entreprise_exist %}-->
-<!--                                <li><a class="dropdown-item" href="{\% url 'setup' %}">New</a></li>-->
-                              <li><a class="dropdown-item" href="{% url 'start-app' %}">New</a></li>
-<!--                                <li><a class="dropdown-item" href="{% url 'liste-entreprises' %}">Liste Entreprises</a></li>-->
-                              {% endif %}
+
+                          {% if not user.is_authenticated %}
+                            {% if not owner_already_registered %}
+                              <li class="nav-item">
+                                  <a href="{% url 'signup' %}" class="nav-link text-light px-3">Sign_up</a>
+                              </li>
                             {% endif %}
+                            <li class="nav-item">
+                                <a href="{% url 'login' %}" class="nav-link text-light px-3">Sign_in</a>
+                            </li>
 
 
-                              {% if user.is_owner %}
-                                <li><a class="dropdown-item" href="{% url 'afficher-statuts' %}">Afficher, modifier dossier</a></li>
-                              {% endif %}
-                            </ul>
-                        </li>
-                        {% if user.is_authenticated %}
-                          <li class="nav-item dropdown">
-<!--                                <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Création dossier comptable</a>-->
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                              {% if not entreprise_exist %}
-<!--                                <li><a class="dropdown-item" href="{% url 'setup' %}">New</a></li>-->
-                              <li><a class="dropdown-item" href="{% url 'start-app' %}">New</a></li>
-                              {% endif %}
-                              <!-- Lien Modifier visible seulement pour l’owner -->
-                              {% if user.is_owner %}
-                                <li><a class="dropdown-item" href="{% url 'afficher-statuts' %}">Affichage des statuts</a></li>
-                              {% endif %}
-                            </ul>
-                          </li>
-                        {% endif %}
-                        {% if user.is_authenticated and user.role == "EXPERT_COMPTABLE" %}
-                              <li class="nav-item dropdown">
+                          {% else %}
+                            <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossiers Entreprises</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                   <li><a class="dropdown-item" href="{% url 'liste-entreprises' %}">Liste des entreprises</a></li>
-                                  <li><a class="dropdown-item" href="{% url 'setup-gerant' %}">Ajouter une entreprise</a></li>
+                                  <li><a class="dropdown-item" href="{% url 'ajouter-entreprise' %}">Ajouter une entreprise</a></li>
+                                  <li><a class="dropdown-item" href="#">Supprimer une entreprise</a></li>
                                 </ul>
-                              </li>
-                        {% endif %}
+                            </li>
+                            <li class="nav-item">
+                              <a href="{% url 'logout' %}" class="nav-link text-light px-3">Sign_out</a>
+                            </li>
+                          {% endif %}
+
                       </ul>
                     </div>
                 </div>
@@ -104,7 +93,7 @@
                 <div class="row gy-4 align-items-center">
                     <div class="col-12 col-md-4">
                         <a class="navbar-brand text-dark text-uppercase fw-bold" href="#">
-                            <span class="bg-primary bg-gradient p-1 rounded-3 text-light">COMPTAPY</span>User : {{ user }}<span></span>
+                            <span class="bg-primary bg-gradient p-1 rounded-3 text-light">COMPTAPY</span> User : {{ user }}<br>Rôle : {{user.role}}
                         </a>
                     </div>
                     <div class="col-12 col-md-4 text-md-center">

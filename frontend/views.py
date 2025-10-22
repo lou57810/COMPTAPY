@@ -1,29 +1,25 @@
 from datetime import datetime
+import requests
 from django.shortcuts import render, redirect, get_object_or_404
-# from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model
 from api.models import Entreprise
-from authentication.forms import UserCreateForm
+from authentication.forms import SignupForm, UserCreateForm
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.hashers import make_password
 from django.utils.timezone import now
 from django.http import HttpResponse
 from django.contrib import messages
 import csv
-from django.db.utils import IntegrityError
-
-from django.db import transaction
-
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
 from authentication.permissions import role_required
-from authentication.models import User
 
 from django.http import JsonResponse
-from django import forms
-# from django.forms import ModelForm
+# from django import forms
+
 from api import forms
 from api.models import CompteComptable
 from api.models import EcritureJournal
+from api.views import get_compte_by_numero
 
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -31,20 +27,21 @@ import json
 import io
 import zipfile
 from django.utils.text import slugify
-# from .utils import create_user_and_entreprise
 from api.utils import get_accessible_entreprises, create_user_and_entreprise
 
 from django.shortcuts import render, redirect
-from django.views.decorators.http import require_http_methods
-from django.utils.timezone import now
-from django.contrib.auth import login
+from utils.session_utils import get_entreprise_active
 
+
+User = get_user_model()
 
 
 @login_required
-@role_required(["OWNER", "EXPERT_COMPTABLE"])
-def afficher_modifier_dossier(request):
-    entreprise = get_object_or_404(Entreprise, owner=request.user)
+@role_required(["OWNER", "GERANT"])
+def afficher_modifier_dossier(request, entreprise_id):
+    # 'owner=request.user' : empêche un utilisateur connecté d’accéder à une autre entreprise juste en modifiant l’URL
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    print('entreprise:', entreprise)
     if not entreprise:
         return redirect("setup")
 
@@ -52,87 +49,125 @@ def afficher_modifier_dossier(request):
         form = forms.EntrepriseForm(request.POST, instance=entreprise)
         if form.is_valid():
             form.save()
-            return redirect("afficher-statuts")  # refresh
+            return redirect("afficher-statuts", entreprise_id=entreprise.id)  # refresh
     else:
         form = forms.EntrepriseForm(instance=entreprise)
 
-    return render(request, "frontend/afficher_statuts.html", {"form": form})
+    return render(request, "frontend/afficher_statuts.html", {"form": form, "entreprise": entreprise})
 
 # =============== Accueil =========================
 
 def start_app(request):
     return render(request, "frontend/start_app.html")
 
+
 def accueil(request):
-    return render(request, 'frontend/accueil.html')
+    if User.objects.filter(role="OWNER").exists():
+        messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
+    # Vérifier si l’utilisateur a une « entreprise active » sélectionnée
+
+    entreprise_active = None
+    if request.user.is_authenticated:
+        entreprise_active = getattr(request.user, "entreprise", None)
+
+    # Choix du template parent
+    if not request.user.is_authenticated:
+        base_template = "base0.html"
+    elif not entreprise_active:
+        base_template = "base0.html"
+    else:
+        base_template = "base.html"
+    return render(request, 'frontend/accueil.html', {
+        "base_template": base_template,
+        "entreprise": entreprise_active,
+    })
+
+
+def accueil_dossier_compta(request, entreprise_id):
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    # On sauvegarde l'entreprise active dans la session
+    request.session["entreprise_active_id"] = entreprise.id
+    print('entreprise:', entreprise.nom)
+    # if User.objects.filter(role="GERANT").exists():
+    return render(request, "frontend/accueil_dossier_comptable.html", {"entreprise": entreprise, "entreprise.nom": entreprise.nom})
 
 @login_required
 def liste_entreprises(request):
+    print('user:', request.user.role)
     entreprises = get_accessible_entreprises(request.user)
     return render(request, "frontend/liste_entreprises.html", {"entreprises": entreprises})
 
-
-@require_http_methods(["GET", "POST"])
-def setup(request):
+"""
+@login_required
+def ajouter_entreprise(request):
     role = request.GET.get("role")  # "GERANT" ou "EXPERT_COMPTABLE"
     print('get role:', role)
-
+    # Permet au user connecté d’ajouter une entreprise
     if request.method == "POST":
-        print("➡️ POST reçu avec role:", role)
-        email = (request.POST.get("email") or "").strip().lower()
-        password = request.POST.get("password") or ""
-        full_name = (request.POST.get("full_name") or "").strip()
-        print("Email:", email, "Password:", "****", "Nom complet:", full_name)
-        # Champs entreprise
-        nom = (request.POST.get("nom") or "").strip()
-        siret = (request.POST.get("siret") or "").strip()
-        ape = (request.POST.get("ape") or "").strip()
-        adresse = (request.POST.get("adresse") or "").strip()
-        date_creation = request.POST.get("date_creation") or now().date()
+        form = EntrepriseForm(request.POST)
+        if form.is_valid():
+            entreprise = form.save(commit=False)
+            entreprise.owner = request.user  # ou .created_by selon ton modèle
+            entreprise.save()
+            return redirect("liste-entreprises")
+    else:
+        form = EntrepriseForm()
 
-        if not email or not password:
-            print("❌ Email ou password manquant, role:", role)
-            return render(request, "frontend/setup.html", {
-                "error": "Email et mot de passe requis.",
-                "role": role
-            })
+    return render(request, "frontend/ajouter_entreprise.html", {"form": form})
+"""
 
-        try:
-            print("Tentative création user + entreprise…")
+def setup(request):
+    role = request.GET.get("role")  # "GERANT" ou "EXPERT_COMPTABLE"
+    # print('get role:', role)
+    if request.method == "POST":
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
             user, entreprise = create_user_and_entreprise(
-                email=email,
-                password=password,
-                role=role,
-                nom=nom,
-                siret=siret,
-                ape=ape,
-                adresse=adresse,
-                date_creation=date_creation,
+
+                email=data["email"],
+                password=data["password1"],
+                role=data["role"],
+                nom=data.get("nom"),
+                siret=data.get("siret"),
+                ape=data.get("ape"),
+                adresse=data.get("adresse"),
+                date_creation=data.get("date_creation"),
+                # owner=request.user if request.user.is_authenticated else None,
             )
-            print("✅ Utilisateur créé:", user, "Entreprise:", entreprise)
-            user.full_name = full_name
-            print('full_name', user.full_name)
-            user.save(update_fields=["full_name"])
-
-            # Auto-login après setup
-            login(request, user)
             return redirect("accueil")
+    else:
+        form = SignupForm()
 
-        except Exception as e:
-            return render(request, "frontend/setup.html", {
-                "error": f"Erreur lors de la création: {str(e)}",
-                "role": role
-            })
+    return render(request, "frontend/setup.html", {"form": form})
 
-    return render(request, "frontend/setup.html", {"role": role})
+
+@login_required
+def supprimer_entreprise(request, pk):
+    entreprise = get_object_or_404(Entreprise, pk=pk)
+    # Vérifier que l’utilisateur a le droit (ex : est OWNER de cette entreprise)
+    if request.user.role == "OWNER" and entreprise.owner == request.user:
+        entreprise.delete()
+        # Message de succès (optionnel)
+        messages.success(request, "Entreprise supprimée.")
+    else:
+        # Message d’erreur ou access interdit
+        messages.error(request, "Vous n’êtes pas autorisé.")
+        pass
+    return redirect("list-entreprises")
 
 
 def saisie_journal(request):
+    entreprise = get_entreprise_active(request)
+
+    if not entreprise:
+        messages.warning(request, "Veuillez d'abord sélectionner une entreprise.")
+        return redirect("liste-entreprises")
     type_journal = request.GET.get('type', '')  # Par défaut : journal achats
     context = {
-        'type_journal': type_journal,
+        'type_journal': type_journal, "entreprise": entreprise
     }
-    return render(request, 'frontend/journal_type.html', context)
+    return render(request, 'frontend/journal_accueil.html', context)
 
 # ========================== Comptes ===========================================
 
@@ -223,6 +258,44 @@ def get_pk_from_numero(request):
         return JsonResponse({'error': 'Object not found'}, status=404)
 
 
+# frontend/views.py
+@login_required
+def valider_journal(request, type_journal):
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+    entreprise_id = request.GET.get("entreprise_id")
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id, owner=request.user)
+
+    try:
+        payload = json.loads(request.body)
+        lignes = payload.get("lignes", [])
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Format JSON invalide"}, status=400)
+
+    saved = []
+    for ligne in lignes:
+        if not ligne.get("date"):
+            continue
+
+        ecriture = EcritureJournal.objects.create(
+            entreprise=entreprise,  # 👈 Nouveau champ à ajouter au modèle
+            date=datetime.strptime(ligne["date"], "%d/%m/%Y").date(),
+            # compte_id=get_compte_from_numero(ligne["numero"]),  # à adapter selon ta logique
+            compte_id=get_compte_by_numero(ligne["numero"]),  # à adapter selon ta logique
+            nom=ligne["nom"],
+            numero_piece=ligne["numero_piece"],
+            libelle=ligne["libelle"],
+            debit=ligne["debit"],
+            credit=ligne["credit"],
+            journal=type_journal,
+        )
+        saved.append(ecriture.id)
+
+    return JsonResponse({"success": True, "saved_ids": saved})
+
+
+"""
 @csrf_exempt  # Si tu n'utilises pas {% csrf_token %}, sinon retire ça
 def valider_journal(request, type_journal):
 
@@ -243,7 +316,7 @@ def valider_journal(request, type_journal):
                 debit = ligne.get('debit', 0)
                 credit = ligne.get('credit', 0)
 
-               #  print("👉 Ligne reçue :", ligne)
+                # print("👉 Ligne reçue :", ligne)
                 # print("📅 Date extraite :", date)
 
                 # ✅ On récupère l’instance du compte correspondant
@@ -272,7 +345,7 @@ def valider_journal(request, type_journal):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
-
+"""
 
 def ecritures_par_compte(numero):
     ecritures = EcritureJournal.objects.filter(compte=numero).values(

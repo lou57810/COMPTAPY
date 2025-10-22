@@ -130,6 +130,10 @@ else:
     }
 
 # print('DATABASE:', DATABASES)
+print('DATABASE:', config('DB_PASSWORD'))
+AUTH_PASSWORD_VALIDATORS = [
+    {}
+]
 
 # print("DB_PORT >>>", config('DB_PORT'))
 # Password validation
@@ -171,7 +175,9 @@ USE_I18N = True
 
 USE_TZ = True
 
-LOGIN_REDIRECT_URL = 'login'
+LOGIN_REDIRECT_URL = 'accueil'
+
+LOGIN_URL = "login"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

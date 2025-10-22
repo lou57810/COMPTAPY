@@ -1,9 +1,11 @@
 from django.urls import path, include
+from rest_framework.generics import CreateAPIView
+
 from . import views
 from rest_framework import routers
 from django.contrib.auth import get_user_model
 from .views import (CompteComptableRetrieveUpdateDestroy, CompteComptableListView, get_ecritures_par_compte,
-                    ecritures_par_compte)
+                    ecritures_par_compte, CreateEntrepriseAPIView)
 from authentication.views import UserViewSet
 
 User = get_user_model()
@@ -20,4 +22,5 @@ urlpatterns = [
     path("comptes/<int:pk>/", CompteComptableRetrieveUpdateDestroy.as_view(), name="update"),
     path('comptes/numero/', get_ecritures_par_compte, name='get_ecritures_par_compte'),
     path('ecritures/', ecritures_par_compte, name='ecritures_par_compte'),
+    # path("api/setup/", CreateEntrepriseAPIView.as_view(), name="setup-owner"),
     ]

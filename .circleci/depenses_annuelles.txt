@@ -1,0 +1,20 @@
+Assurance_auto: 480				480
+Entretien auto + Ctrl Technique:650	       1130	
+Assurance maison: 780		               1910	
+bois: 700				       2610	
+Elec: 960				       3750
+Eau:1000				       4750	
+Poubelles:400?				       5150
+GasOil:1000				       6150
+Ramonage: 80				       6230
+Foncier:800				       7030
+Entretien maison: 1000			       8030
+Supplément audio visuel?: 80		       9010
+
+
+Bernard: Frais/mois: 750€
+
+
+taxi épargné: 3000€/ans
+ehpad épargné: 36000€/ans
+Total: 39000€ /ans

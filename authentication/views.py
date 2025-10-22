@@ -1,8 +1,8 @@
 # from django.shortcuts import render
 from django.views import View
-from .forms import UserLoginForm
+# from .forms import UserLoginForm
 from . import forms
-from .forms import UserLoginForm
+from .forms import LoginForm
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate, login, logout
@@ -10,10 +10,13 @@ from rest_framework import permissions, viewsets
 from django.shortcuts import render, redirect
 from .serializers import GroupSerializer, UserSerializer
 from django.contrib.auth import get_user_model
+from django.contrib import messages
+from .forms import SignupForm
+from api.utils import create_user_and_entreprise
 
 
 User = get_user_model()
-from django.contrib.auth import get_user_model
+
 
 
 
@@ -28,7 +31,7 @@ def modifier_dossier(request):
 
 
 class LoginPage(View):
-    form_class = forms.LoginForm
+    form_class = LoginForm
     template_name = 'authentication/login.html'
 
     def get(self, request):
@@ -73,19 +76,60 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+"""
+def signup_owner(request):
+    # Vérifie s'il existe déjà un OWNER dans la base
+    user_role = User.objects.filter(role="OWNER")
+    print('user_signup_exist:', user_role)
+    if User.objects.filter(role="OWNER").exists():
+        messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
+        # return redirect("accueil")  # ou "accueil"
+        return render(request, 'frontend/accueil.html')
 
-def signup_page(request):
     if request.method == 'POST':
         form = forms.SignupForm(request.POST)
+
         if form.is_valid():
-            user = form.save()
+            print("✅ Formulaire signup_owner valide")
             # form.save()
+            user = form.save()
             # login(request, user)    # Permet la connexion directement
+            messages.success(request, "Compte créé avec succès. Vous pouvez maintenant vous connecter.")
             return redirect(settings.LOGIN_REDIRECT_URL)
     else:
         form = forms.SignupForm()
-    return render(request, 'authentication/signup.html', context={'form': form})
+    return render(request, 'authentication/owner_signup.html', context={'form': form, 'user': user_role})
+"""
 
+
+def signup_owner(request):
+    # Vérifie s'il existe déjà un OWNER dans la base
+    user_role = User.objects.filter(role="OWNER")
+    # print('user_signup_exist:', user_role)
+    if User.objects.filter(role="OWNER").exists():
+        messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
+        # return redirect("accueil")  # ou "accueil"
+        return render(request, 'frontend/accueil.html')
+
+    if request.method == "POST":
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            user, entreprise = create_user_and_entreprise(
+                email=data["email"],
+                password=data["password1"],
+                role=data["role"],
+                nom=data.get("nom"),
+                siret=data.get("siret"),
+                ape=data.get("ape"),
+                adresse=data.get("adresse"),
+                date_creation=data.get("date_creation"),
+            )
+            # return redirect("accueil")
+            return redirect(settings.LOGIN_REDIRECT_URL)
+    else:
+        form = forms.SignupForm()
+    return render(request, 'authentication/owner_signup.html', context={'form': form, 'user': user_role})
 
 def logout_user(request):
     logout(request)
