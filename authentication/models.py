@@ -4,13 +4,13 @@ from api.models import Entreprise
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, role='LECTURE', full_name=None, **extra_fields):
+    def create_user(self, email, password=None, role='LECTURE', nom_gerant=None, **extra_fields):
         if not email:
             raise ValueError('Email is required')
         email = self.normalize_email(email)
         user = self.model(email=email,
                           role=role,
-                          full_name=full_name,
+                          nom_gerant=nom_gerant,
                           **extra_fields)
         user.set_password(password)
         user.save()
@@ -43,7 +43,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True
     )
 
-    full_name = models.CharField(max_length=255, blank=True, null=True)
+    # full_name = models.CharField(max_length=255, blank=True, null=True)
+    nom_gerant = models.CharField(max_length=255, blank=True, null=True)
+    # nom_comptable = models.CharField(max_length=255, blank=True, null=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="LECTURE")
     email = models.EmailField(unique=True)
     is_owner = models.BooleanField(default=False)  # vrai seulement pour le créateur

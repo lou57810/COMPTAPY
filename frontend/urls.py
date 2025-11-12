@@ -15,19 +15,18 @@ urlpatterns = [
     # path("entreprises/ajouter", ajouter_entreprise, name="ajouter-entreprise"),
     path("entreprises/ajouter", views.setup, name="ajouter-entreprise"),
     # path("setup/expert/", views.setup, name="setup-expert"),
-    path("pgc/", views.liste_compte, name="pgc"),
+    # path("pgc/", views.liste_compte, name="pgc"),
     path("update_compte/", views.update_compte, name="update_compte"),
-    path('frontend/create/', views.create_compte, name='create_compte'),
+    # path('create/<int:entreprise_id>/', views.create_compte, name='create-compte'),
     path('frontend/list/', views.display_compte, name='display_compte'),  # Affiche un compte depuis son numero
     path('saisie_journal/', views.saisie_journal, name='saisie-journal'),
     path('valider/<str:type_journal>/', views.valider_journal, name='valider-journal'),
     path('frontend/afficher_compte/', views.afficher_compte, name='afficher-compte'),
-    path('frontend/afficher_statuts/<int:entreprise_id>/', views.afficher_modifier_dossier, name='afficher-statuts'),
     path('frontend/export_compta/', views.export_fec, name='export-fec'),
     path("frontend/manage_users/", views.manage_users, name="manage-users"),
     path("frontend/liste_entreprises/", views.liste_entreprises, name="liste-entreprises"),
-    path("entreprise/<int:pk>/supprimer/", views.supprimer_entreprise, name="supprimer-entreprise"),
-    path("compta/<int:entreprise_id>/", views.accueil_dossier_compta, name="accueil-compta"),
+
+    # path("compta/<int:entreprise_id>/", views.accueil_dossier_compta, name="accueil-compta"),
 ]
 
 if settings.DEBUG:

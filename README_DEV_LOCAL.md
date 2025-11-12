@@ -43,7 +43,7 @@
 #### Le PGC est issu d'un fichier 'PGC.xlsx' situé dans le répertoire data.
 #### En exécutant : ``python scripts/convert_pgc_to_fixture.py``
 #### Nous obtenons un fichier 'pgc.json' à la base du projet.
-### Si 'pgc.json' a été créé auparavant, il faut le supprimer avant de lancer la commande suivante.
+### Si 'pgc.json' a été créé auparavant, il faut le supprimer avant de lancer la commande précédente.
 <!--  Ne plus faire: Django permet d’initialiser la base avec : ``python manage.py loaddata pgc.json``-->
 #### Ajoutons ce fichier dans le repo (api/fixtures/pgc.json) pour qu’il soit disponible aussi sur Render.
 ####  ``python manage.py import_pgc_reference``

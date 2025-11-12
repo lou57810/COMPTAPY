@@ -42,7 +42,7 @@
 
             <nav class="navbar navbar-expand-xxl fixed-top navbar-dark bg-dark">
                 <div class="container">
-                  <div class="navbar-brand text-white"><p>Statut: <span>{{ user }} </span>{{ user.role }}</p></div>
+                  <span class="bg-primary bg-gradient p-1 rounded-3 text-light">COMPTAPY</span>
                     <a class="navbar-brand text-white fs-2" href="{% url 'accueil' %}"></a>
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
@@ -71,7 +71,8 @@
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossiers Entreprises</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                   <li><a class="dropdown-item" href="{% url 'liste-entreprises' %}">Liste des entreprises</a></li>
-                                  <li><a class="dropdown-item" href="{% url 'ajouter-entreprise' %}">Ajouter une entreprise</a></li>
+<!--                                  <li><a class="dropdown-item" href="{\% url 'ajouter-entreprise' %}">Ajouter une entreprise</a></li>-->
+                                  <li><a class="dropdown-item" href="{% url 'creer-dossier' %}">Créer dossier entreprise</a></li>
                                   <li><a class="dropdown-item" href="#">Supprimer une entreprise</a></li>
                                 </ul>
                             </li>
@@ -93,7 +94,7 @@
                 <div class="row gy-4 align-items-center">
                     <div class="col-12 col-md-4">
                         <a class="navbar-brand text-dark text-uppercase fw-bold" href="#">
-                            <span class="bg-primary bg-gradient p-1 rounded-3 text-light">COMPTAPY</span> User : {{ user }}<br>Rôle : {{user.role}}
+                            <span class="bg-primary bg-gradient p-1 rounded-3 text-light">COMPTAPY</span> Mail : {{ user }}<br>{{ entreprise_nom}}
                         </a>
                     </div>
                     <div class="col-12 col-md-4 text-md-center">

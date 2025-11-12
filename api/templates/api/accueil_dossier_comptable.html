@@ -1,0 +1,15 @@
+{% extends 'base_dossier.html' %}
+{% load static %}
+{% block content %}
+
+
+<section class="py-5">
+    <div class="container">
+        <h3>Gérant {{ entreprise.nom_gerant }}</h3>
+        <h3>Mail: {{ entreprise.owner }}</h3>
+      <h2>Dossier <span> </span>{{ entreprise.nom }}</h2>
+    </div>
+</section>
+
+
+{% endblock content %}

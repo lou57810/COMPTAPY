@@ -31,7 +31,7 @@ elif os.environ.get("RENDER_EXTERNAL_URL"):
     print("RENDER_RUN")
 
 else:
-    print("LOCAL_RUN")
+    # print("LOCAL_RUN")
     env_path = BASE_DIR / ".env.local"
     load_dotenv(dotenv_path=env_path)
 
@@ -130,7 +130,7 @@ else:
     }
 
 # print('DATABASE:', DATABASES)
-print('DATABASE:', config('DB_PASSWORD'))
+# print('DATABASE:', config('DB_PASSWORD'))
 AUTH_PASSWORD_VALIDATORS = [
     {}
 ]

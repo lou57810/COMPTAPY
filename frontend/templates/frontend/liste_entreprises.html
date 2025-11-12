@@ -8,9 +8,11 @@
             <thead>
                 <tr>
                     <th>Id</th>
-                    <th>Owner Id</th>
+                    <th>Ownid</th>
+                    <th>Gérant</th>
+                    <th>Email</th>
                     <th>Statut</th>
-                    <th>Nom</th>
+                    <th>Entreprise</th>
                     <th>SIRET</th>
                     <th>Adresse</th>
                     <th>Actions</th>
@@ -21,24 +23,23 @@
                     <tr>
                         <td>{{ e.id }}</td>
                         <td>{{ e.owner_id }}</td>
+                        <td>{{ e.nom_gerant|default:"-" }}</td>
+                        <td>{{ e.owner.email }}</td>
                         <td>{{ e.owner.role }}</td>
                         <td>{{ e.nom }}</td>
                         <td>{{ e.siret }}</td>
                         <td>{{ e.adresse }}</td>
                         <td>
-<!--                            <a href="{\% url 'afficher-statuts' %}?entreprise_id={{ e.pk }}" class="btn btn-primary btn-sm">-->
-                          <a href="{% url 'afficher-statuts' e.id %}" class="btn btn-primary btn-sm">
-                                Ouvrir dossier
-                            </a>
-                        <!-- Bouton supprimer -->
-<!--      <form action="{\% url 'supprimer-entreprise' entreprise.pk %}" method="post" style="display:inline;">-->
-                          <form action="{% url 'supprimer-entreprise' e.pk %}" method="post" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger"
-                onclick="return confirm('Confirmez-vous la suppression de cette entreprise ?');">
-          Supprimer
-        </button>
-      </form>
+                        <a href="{% url 'accueil-compta' e.id %}" class="btn btn-secondary btn-sm active" role="button" aria-pressed="true">COMPTA</a>
+                        <a href="{% url 'afficher-statuts' e.id %}" class="btn btn-primary btn-sm">Modifier</a>
+
+                        <form action="{% url 'supprimer-entreprise' e.pk %}" method="post" style="display:inline;">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-danger"
+                              onclick="return confirm('Confirmez-vous la suppression de cette entreprise ?');">
+                              Suppr
+                          </button>
+                        </form>
                     </tr>
                 {% endfor %}
             </tbody>

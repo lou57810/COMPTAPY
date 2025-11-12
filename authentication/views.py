@@ -43,13 +43,10 @@ class LoginPage(View):
         form = self.form_class(request.POST)
 
         if form.is_valid():
-            # print("Existe-t-il ?", User.objects.filter(email=form.cleaned_data['email']).exists())
-            # print('Form valid, email, password: ', form.cleaned_data['email'], form.cleaned_data['password'])
             user = authenticate(request,
                 email=form.cleaned_data['email'],
                 password=form.cleaned_data['password']
             )
-            print('User: ', user)
             if user is not None:
                 print('user:', user)
                 login(request, user)
@@ -116,6 +113,7 @@ def signup_owner(request):
         if form.is_valid():
             data = form.cleaned_data
             user, entreprise = create_user_and_entreprise(
+                nom_gerant=data["nom_gerant"],
                 email=data["email"],
                 password=data["password1"],
                 role=data["role"],
@@ -129,7 +127,8 @@ def signup_owner(request):
             return redirect(settings.LOGIN_REDIRECT_URL)
     else:
         form = forms.SignupForm()
-    return render(request, 'authentication/owner_signup.html', context={'form': form, 'user': user_role})
+    # return render(request, 'authentication/owner_signup.html', context={'form': form, 'user': user_role})
+    return render(request, 'authentication/owner_signup.html', context={'form': form})
 
 def logout_user(request):
     logout(request)
@@ -138,7 +137,7 @@ def logout_user(request):
 
 def upload_profile_photo(request):
     form = forms.UploadProfilePhotoForm(instance=request.user)
-    print('request.user:', request.user)
+    # print('request.user:', request.user)
     if request.method == 'POST':
         form = forms.UploadProfilePhotoForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():

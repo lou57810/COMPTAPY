@@ -35,7 +35,7 @@ from utils.session_utils import get_entreprise_active
 
 User = get_user_model()
 
-
+"""
 @login_required
 @role_required(["OWNER", "GERANT"])
 def afficher_modifier_dossier(request, entreprise_id):
@@ -47,13 +47,34 @@ def afficher_modifier_dossier(request, entreprise_id):
 
     if request.method == "POST":
         form = forms.EntrepriseForm(request.POST, instance=entreprise)
+        # form = forms.FolderForm(request.POST, instance=entreprise)
         if form.is_valid():
             form.save()
-            return redirect("afficher-statuts", entreprise_id=entreprise.id)  # refresh
+            # return redirect("afficher-statuts", entreprise_id=entreprise.id)  # refresh
+            return redirect("afficher-statuts", entreprise_id=entreprise_id)  # refresh
     else:
         form = forms.EntrepriseForm(instance=entreprise)
+        # form = forms.FolderForm(instance=entreprise)
 
     return render(request, "frontend/afficher_statuts.html", {"form": form, "entreprise": entreprise})
+
+
+@login_required
+def supprimer_entreprise(request, entreprise_id):
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    print("DATA1:", entreprise.owner, entreprise.nom, entreprise.nom_gerant, request.user)
+    # Vérifier que l’utilisateur a le droit (ex : est OWNER de cette entreprise)
+    if request.user.role == "OWNER":
+        print("DATA2:", entreprise.owner, entreprise.nom)
+        entreprise.delete()
+        # Message de succès (optionnel)
+        messages.success(request, "Entreprise supprimée.")
+    else:
+        # Message d’erreur ou access interdit
+        messages.error(request, "Vous n’êtes pas autorisé.")
+        pass
+    return redirect("liste-entreprises")
+"""
 
 # =============== Accueil =========================
 
@@ -65,11 +86,17 @@ def accueil(request):
     if User.objects.filter(role="OWNER").exists():
         messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
     # Vérifier si l’utilisateur a une « entreprise active » sélectionnée
-
+    test = None
+    entreprise_nom = None
     entreprise_active = None
     if request.user.is_authenticated:
+        test = Entreprise.objects.filter(owner=request.user)
+        entreprise_nom = test[0].nom
         entreprise_active = getattr(request.user, "entreprise", None)
+        print('entreprise_active, test:', entreprise_active, entreprise_nom)
 
+    # test = Entreprise.objects.filter(owner=request.user)
+    # print('test:',test[0].nom)
     # Choix du template parent
     if not request.user.is_authenticated:
         base_template = "base0.html"
@@ -77,23 +104,37 @@ def accueil(request):
         base_template = "base0.html"
     else:
         base_template = "base.html"
+        # entreprise_nom = entreprise_active.nom
     return render(request, 'frontend/accueil.html', {
         "base_template": base_template,
-        "entreprise": entreprise_active,
+        "entreprise_nom": entreprise_nom,
     })
 
-
+"""
 def accueil_dossier_compta(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    entreprise_nom = None
+    entreprise_gerant = None
+    # entreprise_active = None
+
+    if request.user.is_authenticated:
+        # test = Entreprise.objects.filter(owner=request.user)
+        entreprise_nom = entreprise.nom
+        entreprise_gerant = entreprise.nom_gerant
+        # entreprise_nom = test[0].nom
+        # entreprise_gerant = test[0].nom_gerant
+        # entreprise_active = getattr(request.user, "entreprise", None)
+        # print('entreprise_gerant, test:', entreprise.nom, entreprise.nom_gerant)
     # On sauvegarde l'entreprise active dans la session
-    request.session["entreprise_active_id"] = entreprise.id
-    print('entreprise:', entreprise.nom)
+    # request.session["entreprise_active_id"] = entreprise.id
+    request.session["entreprise_active_id"] = entreprise_id
+
     # if User.objects.filter(role="GERANT").exists():
-    return render(request, "frontend/accueil_dossier_comptable.html", {"entreprise": entreprise, "entreprise.nom": entreprise.nom})
+    return render(request, "frontend/accueil_dossier_comptable.html", {"entreprise": entreprise, "entreprise_nom": entreprise_nom, "entreprise_gerant": entreprise_gerant})
+"""
 
 @login_required
 def liste_entreprises(request):
-    print('user:', request.user.role)
     entreprises = get_accessible_entreprises(request.user)
     return render(request, "frontend/liste_entreprises.html", {"entreprises": entreprises})
 
@@ -124,7 +165,7 @@ def setup(request):
         if form.is_valid():
             data = form.cleaned_data
             user, entreprise = create_user_and_entreprise(
-
+                nom_gerant=data["nom_gerant"],
                 email=data["email"],
                 password=data["password1"],
                 role=data["role"],
@@ -142,21 +183,6 @@ def setup(request):
     return render(request, "frontend/setup.html", {"form": form})
 
 
-@login_required
-def supprimer_entreprise(request, pk):
-    entreprise = get_object_or_404(Entreprise, pk=pk)
-    # Vérifier que l’utilisateur a le droit (ex : est OWNER de cette entreprise)
-    if request.user.role == "OWNER" and entreprise.owner == request.user:
-        entreprise.delete()
-        # Message de succès (optionnel)
-        messages.success(request, "Entreprise supprimée.")
-    else:
-        # Message d’erreur ou access interdit
-        messages.error(request, "Vous n’êtes pas autorisé.")
-        pass
-    return redirect("list-entreprises")
-
-
 def saisie_journal(request):
     entreprise = get_entreprise_active(request)
 
@@ -170,22 +196,27 @@ def saisie_journal(request):
     return render(request, 'frontend/journal_accueil.html', context)
 
 # ========================== Comptes ===========================================
-
+"""
 def liste_compte(request):
     return render(request, 'frontend/pgc.html')
 
 
 @login_required
-def create_compte(request):
+def create_compte(request, entreprise_id):
+    entreprise_nom = None
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    entreprise_nom = entreprise.nom
+    print('id:', id)
     compte_form = forms.CompteForm()
     if request.method == 'POST':
         compte_form = forms.CompteForm(request.POST)
         if compte_form.is_valid():
             compte_form.save()
             messages.success(request, 'Le compte a été créé avec succès !')
-            return render(request, 'frontend/create_compte.html', {'compte_form': compte_form})
-    return render(request, 'frontend/create_compte.html', {'compte_form': compte_form})
-
+            return render(request, 'frontend/create_compte.html', {'compte_form': compte_form, 'entreprise': entreprise, 'entreprise_nom': entreprise_nom})
+    request.session["entreprise_active_id"] = entreprise_id
+    return render(request, 'frontend/create_compte.html', {'compte_form': compte_form, 'entreprise': entreprise, 'entreprise_nom': entreprise_nom})
+"""
 
 def display_compte(request):
     # compte = None
@@ -353,11 +384,11 @@ def ecritures_par_compte(numero):
     )
     return JsonResponse(list(ecritures), safe=False)
 
-
+"""
 def afficher_statut_entreprise(request):
     print('affichage_statuts')
     return render(request, 'frontend/afficher_statuts.html')
-
+"""
 
 @login_required
 @role_required(["GERANT", "COMPTABLE", "EXPERT_COMPTABLE"])

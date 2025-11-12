@@ -20,6 +20,8 @@ class SignupForm(UserCreationForm):
     )
 
     # Champs optionnels pour entreprise
+    # full_name = forms.CharField(label="Full Name", required=False)
+    nom_gerant = forms.CharField(label="Full Name", required=False)
     nom = forms.CharField(label="Nom de l’entreprise", required=False)
     siret = forms.CharField(label="SIRET", required=False)
     ape = forms.CharField(label="Code APE", required=False)
@@ -28,7 +30,7 @@ class SignupForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User  # ✅ ton modèle personnalisé
-        fields = ["email", "role", "nom", "siret", "ape", "adresse", "date_creation", "password1", "password2"]
+        fields = ["email", "role", "nom", "nom_gerant", "siret", "ape", "adresse", "date_creation", "password1", "password2"]
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
@@ -40,6 +42,7 @@ class SignupForm(UserCreationForm):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
         user.role = self.cleaned_data["role"]
+        print('DATAFORM:', user, user.email, user.role)
         if commit:
             user.save()
         return user

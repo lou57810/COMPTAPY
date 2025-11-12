@@ -20,30 +20,43 @@ JOURNAL_TYPES = [
 
 class Entreprise(models.Model):
     nom = models.CharField(max_length=255, blank=True, null=True)
-    email = models.EmailField(unique=True)
-    siret = models.CharField(max_length=14, blank=True, null=True)
+    siret = models.CharField(max_length=20, blank=True, null=True)
     ape = models.CharField(max_length=10, blank=True, null=True)
     adresse = models.TextField(blank=True, null=True)
-    date_creation = models.DateField()
-    owner = models.OneToOneField("authentication.User",
-         on_delete=models.CASCADE,
-         related_name="entreprise_owned",
-         null=True,
-         blank=True)
-    gerant = models.OneToOneField(
-        "authentication.User",
-        on_delete=models.SET_NULL,  # si le gérant est supprimé, on garde l’entreprise
-        related_name="entreprise_gerant",
+    date_creation = models.DateField(blank=True, null=True)
+    owner = models.ForeignKey(
+        "authentication.User",                # référence différée
+        on_delete=models.CASCADE,             # suppression en cascade si le comptable est supprimé
+        related_name="entreprises",           # owner.entreprises.all() => liste des entreprises
         null=True,
         blank=True,
     )
+    # gerant = models.OneToOneField("authentication.User", on_delete=models.SET_NULL,  # si le gérant est supprimé, on garde l’entreprise
+        # related_name="entreprise_gerant", null=True, blank=True,)
+    nom_gerant = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Entreprise"
+        verbose_name_plural = "Entreprises"
+        ordering = ["nom"]
 
     def __str__(self):
-        return f"{self.nom} ({self.siret})"
+        return f"{self.nom} ({self.nom_gerant or 'sans gérant'})"
 
 
+"""deux modèles très proches, mais qui ont des rôles différents ;
+ la confusion entre eux peut expliquer pourquoi les comptes semblent se “partager” entre entreprises.
+ Le plan comptable général (PGC), est une table de référence commune à toutes les entreprises.
+
+Il sert de modèle ou gabarit.
+Il ne doit jamais être modifié par les utilisateurs.
+Chaque entreprise importe cette table lors de sa création (importer_pgc_pour_entreprise()).
+Les comptes y sont “généraux”, sans lien avec une entreprise :
+"""
+
+# Il n’y a pas 'entreprise' ici : c’est une table de référence globale.
 class CompteComptableReference(models.Model):
-    numero = models.CharField(max_length=20, unique=True)
+    numero = models.CharField(max_length=20)
     libelle = models.CharField(max_length=255)
     type_compte = models.CharField(max_length=50, blank=True, null=True)
     origine = models.CharField(max_length=50, default="pgc")
@@ -55,6 +68,10 @@ class CompteComptableReference(models.Model):
         return f"{self.numero} - {self.libelle}"
 
 
+# Comptes comptables réels d’une entreprise. Chaque entreprise possède sa propre copie de ces comptes,
+# importée depuis CompteComptableReference à sa création.
+# Ici, chaque ligne correspond à un compte propre à une entreprise.
+# C’est dans cette table que sont créés les comptes personnalisés (401X, 512X, etc.).
 class CompteComptable(models.Model):
     numero = models.CharField(max_length=100)  # Exemple : '401', '512'
     nom = models.CharField(max_length=255)  # Exemple : 'Fournisseurs', 'Banque'
@@ -64,7 +81,7 @@ class CompteComptable(models.Model):
     date_saisie = models.DateTimeField(default=timezone.now)
     # rendre entreprise facultative
     entreprise = models.ForeignKey(
-        "Entreprise", on_delete=models.CASCADE, related_name="comptes", null=True, blank=True
+        "api.Entreprise", on_delete=models.CASCADE, related_name="comptes"
     )
     type_compte = models.CharField(
         max_length=20,
@@ -84,11 +101,17 @@ class CompteComptable(models.Model):
 
     class Meta:
         unique_together = ("numero", "entreprise") # Les numéros du PGC sont uniques mais à chaques entreprises)
+        ordering = ["numero"]
         # D'ou, lever la contrainte d'unicité sur numero et la remplacer par une contrainte d'unicité composite (numero, entreprise)
+
+    def save(self, *args, **kwargs):
+        if not self.libelle or self.libelle == "N/A":
+            self.libelle = self.nom  # recopie le nom du compte
+        super().save(*args, **kwargs)
 
 
     def __str__(self):
-        return f"{self.numero} - {self.nom}"
+        return f"{self.numero} - {self.nom} ({self.entreprise.nom})"
 
 
 class Journal(models.Model):
