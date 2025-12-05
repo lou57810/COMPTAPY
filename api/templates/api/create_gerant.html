@@ -1,0 +1,79 @@
+{% extends 'base0.html' %}
+{% load static %}
+{% load form_extras %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+
+        <div class="card shadow-lg rounded-4 p-4 mx-auto" style="max-width: 600px;">
+          <div class="card-header bg-primary text-white text-center">
+            <h4 class="mb-0">Créer un compte Gérant</h4>
+          </div>
+
+          <div class="card-body">
+            <form method="post" novalidate>
+              {% csrf_token %}
+
+              <!-- Nom gérant -->
+              <div class="mb-3">
+                <label for="{{ form.nom_gerant.id_for_label }}" class="form-label">Nom du gérant</label>
+                {{ form.nom_gerant|add_class:"form-control" }}
+                {{ form.nom_gerant.errors }}
+              </div>
+
+              <!-- Email -->
+              <div class="mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                {{ form.email|add_class:"form-control" }}
+                {{ form.email.errors }}
+              </div>
+
+              <!-- Password -->
+              <div class="mb-3 position-relative">
+                <label for="{{ form.password1.id_for_label }}" class="form-label">Mot de passe</label>
+                <div class="input-group">
+                  {{ form.password1|add_class:"form-control" }}
+                  {{ form.password1.errors }}
+                  <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password1">👁️</button>
+                </div>
+                <div class="form-text small">{{ form.password1.help_text|safe }}</div>
+              </div>
+
+              <!-- Password confirmation -->
+              <div class="mb-3 position-relative">
+                <label for="{{ form.password2.id_for_label }}" class="form-label">Confirmation du mot de passe</label>
+                <div class="input-group">
+            {{ form.password2|add_class:"form-control" }}
+            {{ form.password2.errors }}
+                  <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password2">👁️</button>
+                </div>
+              </div>
+
+              <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary px-4">Créer le gérant</button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".toggle-password").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.target);
+      input.type = input.type === "password" ? "text" : "password";
+      btn.textContent = input.type === "password" ? "👁️" : "🙈";
+    });
+  });
+});
+</script>
+{% endblock %}

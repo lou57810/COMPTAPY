@@ -1,23 +1,30 @@
-{% extends 'base0.html' %}
-<!--{\% extends 'base0.html' %}-->
+{% extends "base0.html" %}
 {% load static %}
 {% block content %}
 
-<!--<p>{\{ base_template }}{{ entreprise_nom }}</p>-->
-<section class="py-5">
-    <div class="container">
-      {% if not user.is_authenticated %}
-        <p>Bienvenue&nbsp;! Veuillez vous enregistrer. </p>
-      {% elif entreprise %}
-      <p>Entreprise sélectionnée : <strong>{{ entreprise_nom }}</strong></p>
-    <!-- Boutons d’accès à la comptabilité, etc. -->
-  {% else %}
-    <h4>Accueil. Veuillez sélectionner un dossier entreprise.</h4>
-  {% endif %}
+<h2 class="mb-3">Bienvenue {{ request.user.nom_gerant|default:request.user.email }}</h2>
+
+{% if entreprises %}
+  <p>Liste des dossiers :</p>
+  <ul>
+    {% for e in entreprises %}
+      <li><strong>{{ e.nom }}</strong> — Gérant : </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  {% if is_owner %}
+    <div class="alert alert-info">
+      🧾 Vous êtes le propriétaire du logiciel.
+      Aucune entreprise n’est encore enregistrée.
+      <br>
+<!--      <a href="{\% url 'creer-dossier' gerant_id %}" class="btn btn-primary mt-2">Créer une entreprise</a>-->
     </div>
-</section>
-
-
-
+  {% else %}
+    <div class="alert alert-warning">
+      ⚠️ Vous n’êtes associé à aucune entreprise.
+      Veuillez contacter votre expert comptable.
+    </div>
+  {% endif %}
+{% endif %}
 
 {% endblock %}

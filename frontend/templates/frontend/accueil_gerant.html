@@ -1,0 +1,9 @@
+{% extends "base_gerant.html" %}
+{% load static %}
+{% block content %}
+
+<h2 class="mb-3">Bienvenue  {{ request.user.nom_gerant|default:request.user.email }}</h2>
+
+<h4 class="m-3">{{ entreprise_name }} — Mail : {{ request.user }}</h4>
+
+{% endblock %}

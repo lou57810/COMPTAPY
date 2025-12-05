@@ -1,6 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'base_gerant.html' %}
 {% load static %}
 {% block content %}
+
+<h2 class="mb-3">Bienvenue {{ request.user.nom_gerant|default:request.user.email }}</h2>
 <section class="py-5">
     <div class="container">
 
@@ -20,7 +22,7 @@
     </style>
 
 
-    <h1>Plan Comptable Général</h1>
+    <h1>Plan Comptable Général bla</h1>
     <table id="pgc-table">
         <thead>
             <tr>

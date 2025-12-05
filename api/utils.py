@@ -5,9 +5,12 @@ from django.utils.timezone import now
 from django.contrib.auth import get_user_model
 from .models import Entreprise, CompteComptable, CompteComptableReference
 from django.conf import settings
-import json
 
-User = get_user_model()
+import json
+from django.core.exceptions import ObjectDoesNotExist
+
+from authentication.models import User
+# User = get_user_model()
 
 
 
@@ -46,21 +49,60 @@ def get_accessible_entreprises(user):
     Retourne un queryset d'entreprises que l'utilisateur peut voir.
     """
     if user.role == "OWNER":
+        # entreprise_comptable = Entreprise.objects.filter(owner=user).first()
+        # print('Entreprise', entreprise_comptable)
         return Entreprise.objects.all()
     if user.entreprise:
         return Entreprise.objects.filter(pk=user.entreprise.pk)
     return Entreprise.objects.none()
 
 
-# api/utils.py
-from django.db import transaction
-from django.conf import settings
-from .models import Entreprise, CompteComptable, CompteComptableReference
-from authentication.models import User
-import json
-from pathlib import Path
+def get_owner():
+    return User.objects.filter(role="OWNER").first()
 
 
+def get_entreprise_from_gerant(user):
+    return Entreprise.objects.filter(gerant=user).first()
+
+
+def create_user_and_entreprise(
+    nom_gerant, email, password, role, nom, siret, ape, adresse, date_creation):
+    """Crée un gérant (utilisateur) et une entreprise liée au propriétaire unique (OWNER)."""
+    try:
+        owner = User.objects.get(role="OWNER")
+    except ObjectDoesNotExist:
+        raise ValueError("Aucun propriétaire (OWNER) n’est défini dans la base.")
+
+    # Vérifie si un utilisateur avec le même e-mail existe déjà
+    if User.objects.filter(email=email).exists():
+        raise ValueError(f"L'adresse e-mail '{email}' est déjà utilisée.")
+
+    # Création du gérant
+    user = User.objects.create_user(
+        nom_gerant=nom_gerant,
+        email=email,
+        password=password,
+        role=role or "GERANT",
+    )
+
+    # Création de l’entreprise
+    entreprise = Entreprise.objects.create(
+        owner=owner,
+        gerant=user,
+        nom=nom,
+        siret=siret,
+        ape=ape,
+        adresse=adresse,
+        date_creation=date_creation,
+        nom_gerant=nom_gerant,
+    )
+
+    # Import du plan comptable général pour cette entreprise
+    importer_pgc_pour_entreprise(entreprise)
+    print(f"✅ Entreprise '{entreprise.nom}' créée avec succès pour le gérant '{user.email}'.")
+    return user, entreprise
+
+"""
 @transaction.atomic
 def create_user_and_entreprise(
     email,
@@ -74,12 +116,11 @@ def create_user_and_entreprise(
     owner=None,
     nom_gerant=None,
 ):
-    """
-    Crée un utilisateur et une entreprise associée.
 
-    - OWNER : crée le propriétaire principal (expert comptable)
-    - GERANT : crée un gérant pour une entreprise, liée à l'OWNER existant
-    """
+    # Crée un utilisateur et une entreprise associée.
+    # - OWNER : crée le propriétaire principal (expert comptable)
+    # - GERANT : crée un gérant pour une entreprise, liée à l'OWNER existant
+
 
     # 🧱 Cas 1️⃣ : Création du propriétaire (OWNER)
     if role == "OWNER":
@@ -154,4 +195,4 @@ def create_user_and_entreprise(
     importer_pgc_pour_entreprise(entreprise)
 
     return user, entreprise
-
+"""

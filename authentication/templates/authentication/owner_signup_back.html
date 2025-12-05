@@ -1,0 +1,84 @@
+{% extends "base0.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-lg rounded-3">
+        <div class="card-header bg-primary text-white text-center">
+          <h4>Création du compte propriétaire</h4>
+        </div>
+
+        <div class="card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- NOM DU PROPRIÉTAIRE -->
+            <div class="mb-3">
+              <label class="form-label">{{ form.nom_gerant.label }}</label>
+              {{ form.nom_gerant|add_class:"form-control" }}
+            </div>
+
+            <!-- EMAIL -->
+            <div class="mb-3">
+              <label class="form-label">{{ form.email.label }}</label>
+              {{ form.email|add_class:"form-control" }}
+            </div>
+
+            <!-- MOT DE PASSE -->
+            <div class="mb-3 position-relative">
+              <label class="form-label">{{ form.password1.label }}</label>
+              <div class="input-group">
+                {{ form.password1|add_class:"form-control" }}
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="{{ form.password1.id_for_label }}">
+                  👁️
+                </button>
+              </div>
+              {% if form.password1.help_text %}
+                <div class="form-text small">{{ form.password1.help_text|safe }}</div>
+              {% endif %}
+            </div>
+
+            <!-- CONFIRMATION MOT DE PASSE -->
+            <div class="mb-3 position-relative">
+              <label class="form-label">{{ form.password2.label }}</label>
+              <div class="input-group">
+                {{ form.password2|add_class:"form-control" }}
+                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="{{ form.password2.id_for_label }}">
+                  👁️
+                </button>
+              </div>
+            </div>
+
+            <!-- ROLE (fixé exclusivement à OWNER) -->
+            <input type="hidden" name="role" value="OWNER">
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Créer le compte</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const buttons = document.querySelectorAll(".toggle-password");
+
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.getAttribute("data-target"));
+      if (!input) return;
+
+      input.type = input.type === "password" ? "text" : "password";
+      btn.textContent = input.type === "password" ? "👁️" : "🙈";
+    });
+  });
+});
+</script>
+{% endblock %}

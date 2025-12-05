@@ -1,141 +1,97 @@
 {% extends 'base0.html' %}
 {% load static %}
 {% load form_extras %}
+
 {% block content %}
-  <section class="py-5">
-    <div class="container mt-5">
-      <div class="row justify-content-center">
-        <div class="col-md-6">
-          <p>Role : {{ role }}</p>
-          <div class="card shadow-lg rounded-4 p-4 mx-auto" style="max-width: 600px;">
-            <div class="card-header bg-primary text-white text-center">
-              <h4 class="text-center mb-4">Créer un Dossier Comptable d'entreprise</h4>
+<section class="py-5">
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-7">
 
-          <!--<h2>
-            {% if role == "GERANT" %}
-                <p>Création d’une entreprise (Mono)</p>
-            {% else %}
-                <p>Inscription Expert-Comptable (Multi)</p>
-            {% endif %}
-          </h2>-->
+        <div class="card shadow-lg rounded-4 p-4">
+          <div class="card-header bg-warning text-dark text-center">
+            <h4 class="mb-0">Créer un Dossier Entreprise</h4>
+          </div>
 
-                <form method="post">
-                {% csrf_token %}
+          <div class="card-body">
 
-                <!-- Gérant -->
-                <div class="mb-3">
-                  <label for="{{ form.nom_gerant.id_for_label }}" class="form-label">Gérant Prénom, Nom</label>
-                  {{ form.nom_gerant|add_class:"form-control" }}
-                </div>
-
-                <!-- Email -->
-                <div class="mb-3">
-                  <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
-                  {{ form.email|add_class:"form-control" }}
-                </div>
-                <!-- Password -->
-                <div class="mb-3 position-relative">
-                  <label for="{{ form.password1.id_for_label }}" class="form-label">Mot de passe</label>
-                  <div class="input-group">
-                    {{ form.password1|add_class:"form-control" }}
-                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password1">
-                      👁️
-                    </button>
-                  </div>
-                  {% if form.password1.help_text %}
-                    <div class="form-text small">{{ form.password1.help_text|safe }}</div>
-                  {% endif %}
-                </div>
-
-                <div class="mb-3 position-relative">
-                  <label for="{{ form.password2.id_for_label }}" class="form-label">Confirmation du mot de passe</label>
-                  <div class="input-group">
-                    {{ form.password2|add_class:"form-control" }}
-                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password2">
-                      👁️
-                    </button>
-                  </div>
-                  {% if form.password2.help_text %}
-                    <div class="form-text small">{{ form.password2.help_text|safe }}</div>
-                  {% endif %}
-                </div>
-
-                <!-- ROLE -->
-                <div class="mb-3">
-                  <label for="role" class="form-label">Rôle</label>
-                  <select name="role" id="role" class="form-select" required>
-                    <option value="">-- Sélectionnez un rôle --</option>
-                    <option value="GERANT">Gérant / Cogérant</option>
-                    <option value="OWNER">Propriétaire</option>
-<!--                    <option value="EXPERT_COMPTABLE">Comptable</option>-->
-                  </select>
-                </div>
-
-                <hr>
-
-                <h5 class="text-center mb-3">Informations sur l’entreprise (facultatif)</h5>
-
-                <!-- NOM Entreprise-->
-                <div class="mb-3">
-                  <label for="nom" class="form-label">Nom de l’entreprise</label>
-                  <input type="text" class="form-control" id="nom" name="nom" placeholder="Ex : Cabinet Dupont">
-                </div>
-
-                <!-- SIRET -->
-                <div class="mb-3">
-                  <label for="siret" class="form-label">SIRET</label>
-                  <input type="text" class="form-control" id="siret" name="siret" maxlength="14" placeholder="00000000000000">
-                </div>
-
-                <!-- APE -->
-                <div class="mb-3">
-                  <label for="ape" class="form-label">Code APE</label>
-                  <input type="text" class="form-control" id="ape" name="ape" maxlength="5" placeholder="0000Z">
-                </div>
-
-                <!-- ADRESSE -->
-                <div class="mb-3">
-                  <label for="adresse" class="form-label">Adresse</label>
-                  <textarea class="form-control" id="adresse" name="adresse" rows="2"
-                            placeholder="Adresse complète de l’entreprise"></textarea>
-                </div>
-
-                <!-- DATE CREATION -->
-                <div class="mb-3">
-                  <label for="date_creation" class="form-label">Date de création</label>
-                  <input type="date" class="form-control" id="date_creation" name="date_creation">
-                </div>
-
-                <div class="text-center mt-4">
-                  <button type="submit" class="btn btn-warning px-4">Créer le compte</button>
-                </div>
-              </form>
+            <!-- Afficher le comptable ou expert comptable -->
+            <div class="alert alert-info">
+              <strong>Gérant :</strong> {{ gerant.nom_gerant }} (Mail: {{ gerant.email }})
             </div>
+
+            <form method="POST">
+              {% csrf_token %}
+
+              {# erreurs globales du formulaire #}
+                {% if form.non_field_errors %}
+                  <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                  </div>
+                {% endif %}
+
+              {# champs cachés éventuels (ex: initial, management form) #}
+              {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+              {% endfor %}
+
+              <!-- NOM -->
+              <div class="mb-3">
+                <label class="form-label">{{ form.nom.label }}</label>
+                {{ form.nom|add_class:"form-control" }}
+                {{ form.nom.errors }}
+              </div>
+
+              <!-- Pas de NOM GERANT
+              <div class="mb-3">
+                <label class="form-label">{\{ form.nom_gerant.label }}</label>
+                {\{ form.nom_gerant|add_class:"form-control" }}
+                {\{ form.nom_gerant.errors }}
+              </div>
+              -->
+
+              <!-- SIRET -->
+              <div class="mb-3">
+                <label class="form-label">{{ form.siret.label }}</label>
+                {{ form.siret|add_class:"form-control" }}
+                {{ form.siret.errors }}
+              </div>
+
+              <!-- APE -->
+              <div class="mb-3">
+                <label class="form-label">{{ form.ape.label }}</label>
+                {{ form.ape|add_class:"form-control" }}
+                {{ form.ape.errors }}
+              </div>
+
+              <!-- ADRESSE -->
+              <div class="mb-3">
+                <label class="form-label">{{ form.adresse.label }}</label>
+                {{ form.adresse|add_class:"form-control" }}
+                {{ form.adresse.errors }}
+              </div>
+
+              <!-- DATE CREATION -->
+              <div class="mb-3">
+                <label class="form-label">{{ form.date_creation.label }}</label>
+                {{ form.date_creation|add_class:"form-control" }}
+                {{ form.date_creation.errors }}
+              </div>
+
+              <div class="text-center mt-4">
+                <button type="submit" class="btn btn-warning px-4">Créer le dossier</button>
+              </div>
+            </form>
           </div>
         </div>
+
       </div>
     </div>
-  </section>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const buttons = document.querySelectorAll(".toggle-password");
-
-  buttons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      const targetId = btn.getAttribute("data-target");
-      const input = document.getElementById(targetId);
-
-      if (input.type === "password") {
-        input.type = "text";
-        btn.textContent = "🙈";
-      } else {
-        input.type = "password";
-        btn.textContent = "👁️";
-      }
-    });
-  });
-});
-</script>
-
+  </div>
+</section>
 {% endblock %}
+
+
+
+
+

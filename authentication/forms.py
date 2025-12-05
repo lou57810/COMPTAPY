@@ -4,6 +4,133 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+"""
+class OwnerSignupForm(UserCreationForm):
+    email = forms.EmailField(label="Email", required=True)
+    nom_gerant = forms.CharField(label="Nom complet du propriétaire", required=True)
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ["nom_gerant", "email", "password1", "password2"]
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Un utilisateur avec cet email existe déjà.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.role = "OWNER"
+        user.nom_gerant = self.cleaned_data["nom_gerant"]
+        user.email = self.cleaned_data["email"]
+
+        if commit:
+            user.save()
+        return user
+"""
+
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from authentication.models import User
+from api.models import Entreprise
+
+class OwnerFullSignupForm(UserCreationForm):
+
+    # Champs utilisateur
+    nom_gerant = forms.CharField(label="Vos prénom et nom")
+    email = forms.EmailField(label="Email", required=True)
+
+    # Champs entreprise
+    nom = forms.CharField(label="Nom de l’entreprise", required=True)
+    siret = forms.CharField(label="SIRET", required=False)
+    ape = forms.CharField(label="Code APE", required=False)
+    adresse = forms.CharField(widget=forms.Textarea, required=False)
+    date_creation = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"})
+    )
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ["email", "password1", "password2"]
+
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Cet email est déjà utilisé.")
+        return email
+
+    def save(self, commit=True):
+        """Sauvegarde le propriétaire (sans l’entreprise: fait dans la vue)."""
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+        user.role = "OWNER"
+        user.nom_gerant = self.cleaned_data["nom_gerant"]
+        if commit:
+            user.save()
+        return user
+
+    def get_entreprise_data(self):
+        """Retourne les données pour créer l'entreprise."""
+        return {
+            "nom": self.cleaned_data.get("nom"),
+            "siret": self.cleaned_data.get("siret"),
+            "ape": self.cleaned_data.get("ape"),
+            "adresse": self.cleaned_data.get("adresse"),
+            "date_creation": self.cleaned_data.get("date_creation"),
+            "nom_gerant": self.cleaned_data.get("nom_gerant"),
+        }
+
+
+class AddUserForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+    nom_gerant = forms.CharField(label="Vos prénom et nom", required=True)
+
+    # class Meta:
+        # model = User
+        # fields = ["nom_gerant", "email", "password1", "password2"]
+    # Champs entreprise
+    nom = forms.CharField(label="Nom de l’entreprise", required=True)
+    siret = forms.CharField(label="SIRET", required=False)
+    ape = forms.CharField(label="Code APE", required=False)
+    adresse = forms.CharField(widget=forms.Textarea, required=False)
+    date_creation = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"})
+    )
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ["email", "password1", "password2"]
+
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Cet email est déjà utilisé.")
+        return email
+
+    def save(self, commit=True):
+        """Sauvegarde le propriétaire (sans l’entreprise: fait dans la vue)."""
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+        user.role = "GERANT"
+        user.nom_gerant = self.cleaned_data["nom_gerant"]
+        if commit:
+            user.save()
+        return user
+
+    def get_entreprise_data(self):
+        """Retourne les données pour créer l'entreprise."""
+        return {
+            "nom": self.cleaned_data.get("nom"),
+            "siret": self.cleaned_data.get("siret"),
+            "ape": self.cleaned_data.get("ape"),
+            "adresse": self.cleaned_data.get("adresse"),
+            "date_creation": self.cleaned_data.get("date_creation"),
+            "nom_gerant": self.cleaned_data.get("nom_gerant"),
+        }
+
 
 class SignupForm(UserCreationForm):
 
@@ -86,4 +213,6 @@ class UserLoginForm(AuthenticationForm):
         attrs={'class': 'form-control', 'placeholder': 'Password'}))
 
 """
+
+
 

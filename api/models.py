@@ -19,21 +19,30 @@ JOURNAL_TYPES = [
 
 
 class Entreprise(models.Model):
-    nom = models.CharField(max_length=255, blank=True, null=True)
-    siret = models.CharField(max_length=20, blank=True, null=True)
-    ape = models.CharField(max_length=10, blank=True, null=True)
-    adresse = models.TextField(blank=True, null=True)
-    date_creation = models.DateField(blank=True, null=True)
     owner = models.ForeignKey(
-        "authentication.User",                # référence différée
-        on_delete=models.CASCADE,             # suppression en cascade si le comptable est supprimé
-        related_name="entreprises",           # owner.entreprises.all() => liste des entreprises
+        "authentication.User",                # référence différée : évite les imports circulaires
+        on_delete=models.CASCADE,             # si le propriétaire est supprimé, on supprime ses entreprises
+        related_name="entreprises",           # owner.entreprises.all() => liste des entreprises gérées par le comptable
+        limit_choices_to={"role": "OWNER"},   # sécurité : seuls les OWNER peuvent être propriétaires
         null=True,
         blank=True,
     )
-    # gerant = models.OneToOneField("authentication.User", on_delete=models.SET_NULL,  # si le gérant est supprimé, on garde l’entreprise
-        # related_name="entreprise_gerant", null=True, blank=True,)
-    nom_gerant = models.CharField(max_length=255, blank=True, null=True)
+
+    gerant = models.OneToOneField(
+        "authentication.User",
+        on_delete=models.SET_NULL,            # si le gérant est supprimé, on garde l’entreprise
+        related_name="entreprise_gerant",
+        null=True,
+        blank=True,
+        limit_choices_to={"role": "GERANT"},  # seuls les utilisateurs avec rôle GERANT peuvent être assignés
+    )
+
+    nom = models.CharField(max_length=255)
+    siret = models.CharField(max_length=14, blank=True, null=True)
+    ape = models.CharField(max_length=10, blank=True, null=True)
+    adresse = models.TextField(blank=True, null=True)
+    date_creation = models.DateField(blank=True, null=True)
+    nom_gerant = models.CharField(max_length=255, blank=True, null=True)  # info redondante pour affichage
 
     class Meta:
         verbose_name = "Entreprise"
@@ -43,16 +52,12 @@ class Entreprise(models.Model):
     def __str__(self):
         return f"{self.nom} ({self.nom_gerant or 'sans gérant'})"
 
+    @property
+    def nom_contact(self):
+        if self.gerant:
+            return self.gerant.nom_gerant or self.gerant.get_full_name()
+        return None
 
-"""deux modèles très proches, mais qui ont des rôles différents ;
- la confusion entre eux peut expliquer pourquoi les comptes semblent se “partager” entre entreprises.
- Le plan comptable général (PGC), est une table de référence commune à toutes les entreprises.
-
-Il sert de modèle ou gabarit.
-Il ne doit jamais être modifié par les utilisateurs.
-Chaque entreprise importe cette table lors de sa création (importer_pgc_pour_entreprise()).
-Les comptes y sont “généraux”, sans lien avec une entreprise :
-"""
 
 # Il n’y a pas 'entreprise' ici : c’est une table de référence globale.
 class CompteComptableReference(models.Model):

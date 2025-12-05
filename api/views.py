@@ -9,14 +9,15 @@ from django.contrib import messages
 from authentication.forms import SignupForm
 from .utils import create_user_and_entreprise
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import FolderForm, EntrepriseForm, CompteForm
+from .forms import FolderForm, EntrepriseForm, EntrepriseModifForm, CompteForm
 from .serializers import CompteComptableSerializer, EcritureJournalSerializer
 from django.utils import timezone
-
+from django.db import IntegrityError
 from .models import CompteComptable, EcritureJournal, Entreprise
 from django.db.models.functions import Substr
-
+from django.http import HttpResponseForbidden
 from rest_framework import generics, permissions
+from .utils import get_accessible_entreprises, importer_pgc_pour_entreprise, get_entreprise_from_gerant
 
 User = get_user_model()
 
@@ -31,6 +32,87 @@ class CreateEntrepriseAPIView(generics.CreateAPIView):
     def perform_create(self, serializer):
         # L’entreprise est liée à l’utilisateur connecté
         serializer.save(owner=self.request.user)
+"""
+
+@login_required
+def liste_entreprises(request):
+    entreprise_name = Entreprise.objects.filter(owner=request.user).first()
+    entreprises = get_accessible_entreprises(request.user)
+    return render(request, "api/liste_entreprises.html", {"entreprises": entreprises, "entreprise_name": entreprise_name})
+
+
+@login_required
+def creer_dossier_gerant(request, gerant_id):
+    print('gerant_id:', gerant_id)
+    gerant = get_object_or_404(User, id=gerant_id)
+
+    if request.user.role != "OWNER":
+        return HttpResponseForbidden("Permission refusée")
+
+    if request.method == "POST":
+        form = FolderForm(request.POST)
+        print("DEBUG - folder form errors:", form.errors)  # <--- utile pour debug
+        if form.is_valid():
+            entreprise = form.save(commit=False)
+            # entreprise.created_by = gerant  # liaison entreprise → gérant
+            # Lier la bonne relation User <-> Entreprise selon ce qui existe dans le modèle
+            if hasattr(entreprise, "gerant"):
+                entreprise.gerant = gerant
+            elif hasattr(entreprise, "created_by"):
+                entreprise.created_by = gerant
+            else:
+                # Par défaut, on rattache le owner (le comptable) ; si tu veux rattacher le gérant,
+                # adapte selon ton modèle (ou ajoute le champ gerant dans le modèle Entreprise).
+                entreprise.owner = request.user
+            entreprise.save()
+            importer_pgc_pour_entreprise(entreprise)
+            # return redirect("dashboard")
+            return redirect("accueil-manager") # C'est le propriétaire manager qui créée les dossiers et leurs gérants.
+    else:
+        form = FolderForm()
+
+    return render(request, "api/ajouter_dossier.html", {
+        "form": form,
+        "gerant": gerant,
+        "gerant_id": gerant_id
+    })
+
+"""
+@login_required
+def creer_dossier_owner(request, user_id):
+    print('user_id:', user_id)
+    gerant = get_object_or_404(User, id=user_id)
+
+    if request.user.role != "OWNER":
+        return HttpResponseForbidden("Permission refusée")
+
+    if request.method == "POST":
+        form = FolderForm(request.POST)
+        print("DEBUG - folder form errors:", form.errors)  # <--- utile pour debug
+        if form.is_valid():
+            entreprise = form.save(commit=False)
+            # entreprise.created_by = gerant  # liaison entreprise → gérant
+            # Lier la bonne relation User <-> Entreprise selon ce qui existe dans le modèle
+            if hasattr(entreprise, "gerant"):
+                entreprise.gerant = gerant
+            elif hasattr(entreprise, "created_by"):
+                entreprise.created_by = gerant
+            else:
+                # Par défaut, on rattache le owner (le comptable) ; si tu veux rattacher le gérant,
+                # adapte selon ton modèle (ou ajoute le champ gerant dans le modèle Entreprise).
+                entreprise.owner = request.user
+            entreprise.save()
+            importer_pgc_pour_entreprise(entreprise)
+            # return redirect("dashboard")
+            return redirect("accueil-manager")
+    else:
+        form = FolderForm()
+
+    return render(request, "api/ajouter_dossier.html", {
+        "form": form,
+        "gerant": gerant,
+        "gerant_id": user_id
+    })
 """
 
 def accueil_dossier_compta(request, entreprise_id):
@@ -55,12 +137,17 @@ def accueil_dossier_compta(request, entreprise_id):
     return render(request, "api/accueil_dossier_comptable.html", {"entreprise": entreprise, "entreprise_id": entreprise_id, "entreprise_nom": entreprise_nom, "entreprise_gerant": entreprise_gerant})
 
 def liste_compte(request):
-    return render(request, 'api/pgc.html', )
+    return render(request, 'api/api_pgc.html', )
 
 
 @login_required
-def create_compte(request, entreprise_id):
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+def create_compte(request):
+    entreprise = Entreprise.objects.filter(gerant=request.user).first()
+
+    # Sinon, la rendre propriétaire (OWNER)
+    if not entreprise:
+        entreprise = Entreprise.objects.filter(owner=request.user).first()
+
     entreprise_nom = entreprise.nom
 
     if request.method == 'POST':
@@ -71,92 +158,95 @@ def create_compte(request, entreprise_id):
             compte.origine = 'user'               # ✅ Marquer comme créé par utilisateur
             compte.save()
             messages.success(request, 'Le compte a été créé avec succès !')
-            return redirect('create-compte', entreprise_id=entreprise.id)
+            return redirect('create-compte')
     else:
         compte_form = CompteForm()
 
-    request.session["entreprise_active_id"] = entreprise_id
+    # request.session["entreprise_active_id"] = entreprise_id
     return render(request, 'api/create_compte.html', {
         'compte_form': compte_form,
         'entreprise': entreprise,
         'entreprise_nom': entreprise_nom,
-        'entreprise_id': entreprise_id
+        # 'entreprise_id': entreprise_id
     })
 
+@login_required
+def liste_compte_entreprise(request):
+    # Premièrement, tenter de récupérer l'entreprise où le user est gérant
+    entreprise = Entreprise.objects.filter(gerant=request.user).first()
 
-from .models import CompteComptable, Entreprise
-from django.shortcuts import render, get_object_or_404
+    # Sinon, la rendre propriétaire (OWNER)
+    if not entreprise:
+        entreprise = Entreprise.objects.filter(owner=request.user).first()
 
-def liste_compte_entreprise(request, entreprise_id):
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    # Si toujours rien, on informe l'utilisateur
+    if not entreprise:
+        messages.warning(request, "Aucune entreprise associée à votre compte.")
+        # rendre la page sans comptes (ou rediriger vers une page d'erreur/creation)
+        return render(request, "api/pgc_entreprise.html", {
+            "entreprise": None,
+            "entreprise_nom": None,
+            "entreprise_id": None,
+            "comptes": CompteComptable.objects.none(),
+        })
+
     entreprise_nom = entreprise.nom
 
-    # ✅ Filtrer les comptes appartenant uniquement à cette entreprise
     comptes = CompteComptable.objects.filter(entreprise=entreprise).order_by('numero')
-
     print(f"📊 {comptes.count()} comptes trouvés pour {entreprise_nom}")
 
-    return render(
-        request,
-        'api/pgc_entreprise.html',
-        {
-            'entreprise': entreprise,
-            'entreprise_nom': entreprise_nom,
-            'entreprise_id': entreprise_id,
-            'comptes': comptes,  # ✅ ajouter les comptes filtrés au contexte
-        },
-    )
-
-
-def create_folder(request):
-    role = request.GET.get("role")  # ignoré ici, on force GERANT
-    if request.method == "POST":
-        form = FolderForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            user, entreprise = create_user_and_entreprise(
-                nom_gerant=data["nom_gerant"],
-                email=data["email"],
-                password=data["password1"],
-                role="GERANT",   # ✅ fixé ici
-                nom=data.get("nom"),
-                siret=data.get("siret"),
-                ape=data.get("ape"),
-                adresse=data.get("adresse"),
-                date_creation=data.get("date_creation"),
-                owner=request.user if request.user.is_authenticated else None,
-            )
-            messages.success(request, f"L’entreprise '{entreprise.nom}' a été créée avec succès.")
-            return redirect("accueil")
-    else:
-        form = FolderForm()
-
-    return render(request, "api/ajouter_dossier.html", {"form": form})
-
+    return render(request, 'api/pgc_entreprise.html', {
+        'entreprise': entreprise,
+        'entreprise_nom': entreprise_nom,
+        'entreprise_id': entreprise.id,
+        'comptes': comptes,
+    })
 
 
 @login_required
 @role_required(["OWNER", "GERANT"])
 def afficher_modifier_dossier(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    email = entreprise.owner.email
+    # entreprise = Entreprise.objects.filter(gerant=request.user).first()
 
+    # Sinon, la rendre propriétaire (OWNER)
     if not entreprise:
-        return redirect("créer_dossier")
+        entreprise = Entreprise.objects.filter(owner=request.user).first()
+    entreprise_nom = entreprise.nom
+    # email = entreprise.owner.email
+    # email = entreprise.gerant
+    # print('entreprise_email, name:', entreprise.gerant.email, entreprise.nom_gerant)
+    print('entreprise_nom:', entreprise.nom)
+    nom_gerant = entreprise.nom_gerant
+    if not entreprise:
+        return redirect("create-folder")
 
     if request.method == "POST":
-        form = EntrepriseForm(request.POST, instance=entreprise)
+        form = EntrepriseModifForm(request.POST, instance=entreprise)
         if form.is_valid():
+            print('Valid')
             form.save()
+            # entreprise.owner.email = form.cleaned_data["email"]
             entreprise.owner.email = form.cleaned_data["email"]
+            # entreprise.owner.save(update_fields=["email"])
             entreprise.owner.save(update_fields=["email"])
-            # return redirect("afficher-statuts", entreprise_id=entreprise_id)
             return redirect("liste-entreprises")
     else:
-        form = EntrepriseForm(instance=entreprise, initial={
+
+        form = EntrepriseModifForm(instance=entreprise, initial={
         "email": entreprise.owner.email if entreprise.owner else ""
-    })
-    return render(request, "api/afficher_statuts.html", {"form": form, "entreprise": entreprise})
+        # "gerant": entreprise.gerant.nom_gerant if entreprise.gerant.nom_gerant else "",
+        # "email": entreprise.gerant.email if entreprise.gerant.email else ""
+        })
+
+        print('unvalid')
+    return render(request, "api/afficher_modifier_dossier.html",
+                  {"form": form,
+                   "entreprise": entreprise,
+                   'entreprise_nom': entreprise_nom,
+                   "entreprise_id": entreprise.id,
+                   "nom_gerant": nom_gerant}
+                  )
 
 
 @login_required

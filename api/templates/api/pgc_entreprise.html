@@ -1,4 +1,4 @@
-{% extends 'base_dossier.html' %}
+{% extends 'base_gerant.html' %}
 {% load static %}
 {% block content %}
 <section class="py-5">
@@ -34,6 +34,9 @@
       <tr>
         <td>{{ compte.numero }}</td>
         <td>{{ compte.libelle }}</td>
+        <td>
+          <a href="{% url 'update-compte' entreprise_id compte.id %}">Modifier</a>
+        </td>
         <td>{{ compte.get_type_compte_display }}</td>
         <td>{{ compte.origine }}</td>
       </tr>

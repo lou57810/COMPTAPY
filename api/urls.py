@@ -6,8 +6,9 @@ from . import views
 from rest_framework import routers
 from django.contrib.auth import get_user_model
 from .views import (CompteComptableRetrieveUpdateDestroy, CompteComptableListView, get_ecritures_par_compte,
-                    ecritures_par_compte, create_folder, afficher_modifier_dossier, supprimer_entreprise,
-                    liste_compte_entreprise, liste_compte, accueil_dossier_compta, create_compte)
+                    ecritures_par_compte, creer_dossier_gerant,
+                    afficher_modifier_dossier, supprimer_entreprise,
+                    liste_compte_entreprise, liste_compte, accueil_dossier_compta, create_compte)  # , creer_dossier_owner,
 from authentication.views import UserViewSet
 
 User = get_user_model()
@@ -21,15 +22,17 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('comptes/numero/', views.get_compte_by_numero, name='get_compte_by_numero'),
     path("comptes/", CompteComptableListView.as_view(), name="compte_list"),
-    path('create_compte/<int:entreprise_id>/', create_compte, name='create-compte'),
+    path('create_compte/', create_compte, name='create-compte'),
     path("comptes/<int:pk>/", CompteComptableRetrieveUpdateDestroy.as_view(), name="update"),
     path('comptes/numero/', get_ecritures_par_compte, name='get_ecritures_par_compte'),
     path('ecritures/', ecritures_par_compte, name='ecritures_par_compte'),
-    path("dossier/ajouter", create_folder, name="creer-dossier"),
-    path('afficher_statuts/<int:entreprise_id>/', afficher_modifier_dossier, name='afficher-statuts'),
+    # path("ajouter_dossier/<int:gerant_id>", creer_dossier_gerant, name="creer-dossier"),
+    # path("ajouter_dossier_owner/<int:gerant_id>", creer_dossier_owner, name="creer-dossier-owner"),
+    path('afficher_modifier_dossier/<int:entreprise_id>', afficher_modifier_dossier, name='afficher-modifier-dossier'),
     path("entreprise/<int:entreprise_id>/supprimer/", supprimer_entreprise, name="supprimer-entreprise"),
     path("compta/<int:entreprise_id>/", accueil_dossier_compta, name="accueil-compta"),
-    path("pgc/", liste_compte, name="pgc"),
-    path("pgc_entreprise/<int:entreprise_id>/", liste_compte_entreprise, name="pgc-entreprise"),
+    # path("pgc/", liste_compte, name="pgc"),
+    path("pgc_entreprise/", liste_compte_entreprise, name="pgc-entreprise"),
+    path("liste_entreprises/", views.liste_entreprises, name="liste-entreprises"),
     # path("api/setup/", CreateEntrepriseAPIView.as_view(), name="setup-owner"),
     ]

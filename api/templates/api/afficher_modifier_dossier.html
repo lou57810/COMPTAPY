@@ -1,11 +1,11 @@
-{% extends 'base0.html' %}
+{% extends 'base_manager.html' %}
 {% block content %}
 {% load static %}
 
 <section class="py-5">
   <div class="container">
     <h2>Dossier de l'entreprise</h2>
-      <form method="post">
+      <form method="POST">
         {% csrf_token %}
         {{ form.as_p }}
 <!--        <p>BLAAAA {{ email }}</p>-->

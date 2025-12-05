@@ -99,7 +99,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                "frontend.context_processors.entreprise_context",
+                # Ajout pour rendre entreprise ou entreprise_id disponible dans tous les templates du gérant
+                "api.context_processors.entreprise_context",
             ],
         },
     },

@@ -1,12 +1,12 @@
 from datetime import datetime
-import requests
+# import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import get_user_model
-from api.models import Entreprise
+from api.models import Entreprise, CompteComptable, EcritureJournal
 from authentication.forms import SignupForm, UserCreateForm
-from django.contrib.auth import login, authenticate
-from django.contrib.auth.hashers import make_password
-from django.utils.timezone import now
+# from django.contrib.auth import login, authenticate
+# from django.contrib.auth.hashers import make_password
+# from django.utils.timezone import now
 from django.http import HttpResponse
 from django.contrib import messages
 import csv
@@ -14,20 +14,19 @@ from django.contrib.auth.decorators import login_required
 from authentication.permissions import role_required
 
 from django.http import JsonResponse
-# from django import forms
 
 from api import forms
-from api.models import CompteComptable
-from api.models import EcritureJournal
-from api.views import get_compte_by_numero
+from api.forms import CompteForm
 
-from django.views.decorators.csrf import csrf_exempt
+
+from api.views import get_compte_by_numero
+# from django.views.decorators.csrf import csrf_exempt
 import json
 
 import io
 import zipfile
 from django.utils.text import slugify
-from api.utils import get_accessible_entreprises, create_user_and_entreprise
+from api.utils import create_user_and_entreprise, get_owner, get_entreprise_from_gerant
 
 from django.shortcuts import render, redirect
 from utils.session_utils import get_entreprise_active
@@ -35,7 +34,7 @@ from utils.session_utils import get_entreprise_active
 
 User = get_user_model()
 
-"""
+
 @login_required
 @role_required(["OWNER", "GERANT"])
 def afficher_modifier_dossier(request, entreprise_id):
@@ -56,9 +55,9 @@ def afficher_modifier_dossier(request, entreprise_id):
         form = forms.EntrepriseForm(instance=entreprise)
         # form = forms.FolderForm(instance=entreprise)
 
-    return render(request, "frontend/afficher_statuts.html", {"form": form, "entreprise": entreprise})
+    return render(request, "frontend/afficher_modifier_dossier.html", {"form": form, "entreprise": entreprise})
 
-
+"""
 @login_required
 def supprimer_entreprise(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
@@ -83,6 +82,83 @@ def start_app(request):
 
 
 def accueil(request):
+    user = request.user
+
+    # Si l'utilisateur n'est pas connecté, on le redirige vers la page de login
+    if not user.is_authenticated:
+        return redirect("login")
+
+    # Si c’est un OWNER : il voit toutes les entreprises
+    if getattr(user, "role", None) == "OWNER":
+        entreprises = Entreprise.objects.all()
+    # Si c’est un gérant : il ne voit que sa propre entreprise
+    elif getattr(user, "role", None) == "GERANT":
+        entreprises = Entreprise.objects.filter(gerant=user)
+    else:
+        entreprises = []
+
+    entreprise_nom = entreprises.first().nom if entreprises else None
+
+    context = {
+        "entreprises": entreprises,
+        "entreprise_nom": entreprise_nom,
+        "is_owner": getattr(user, "role", None) == "OWNER",
+        "gerant_id": request.user.id,
+    }
+
+    # return render(request, "frontend/accueil_manager.html", context)
+    # return render(request, "frontend/accueil_gerant.html", context)
+    return render(request, "frontend/accueil.html", context)
+
+
+# def get_owner():
+    # return User.objects.filter(role="OWNER").first()
+
+
+
+
+
+@login_required
+def accueil_manager(request):
+    # toutes les entreprises du propriétaire
+    # entreprises = Entreprise.objects.filter(owner=request.user)
+    entreprise = Entreprise.objects.filter(owner=request.user).first()
+    # entreprise = Entreprise.objects.filter(gerant=request.user).first()
+    # entreprise = Entreprise.objects.filter(owner=request.user)
+
+    return render(request, "frontend/accueil_manager.html", {
+        "entreprise": entreprise,
+        "is_owner": True,
+        "gerant_id": request.user.id,
+        "gerant": request.user,
+    })
+
+
+@login_required
+def accueil_gerant(request):
+    # Premièrement, tenter de récupérer l'entreprise où le user est gérant
+    entreprise = Entreprise.objects.filter(gerant=request.user).first()
+    # Sinon, la rendre propriétaire (OWNER)
+    if not entreprise:
+        entreprise = Entreprise.objects.filter(owner=request.user).first()
+        print('entreprise:', entreprise)
+    # entreprise = get_entreprise_from_gerant(request.user)
+    entreprise_nom = entreprise.nom
+
+    manager = get_owner()
+
+    return render(request, "frontend/accueil_gerant.html", {
+        # "entreprise_name": entreprise_name,
+        "entreprise": entreprise,
+        "entreprise_nom": entreprise_nom,
+        "is_manager": True,
+        "manager": manager,
+        # "entreprise_id": entreprise_id if entreprise else None,
+    })
+
+
+"""
+def accueil(request):
     if User.objects.filter(role="OWNER").exists():
         messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
     # Vérifier si l’utilisateur a une « entreprise active » sélectionnée
@@ -105,11 +181,10 @@ def accueil(request):
     else:
         base_template = "base.html"
         # entreprise_nom = entreprise_active.nom
-    return render(request, 'frontend/accueil.html', {
+    return render(request, 'frontend/accueil_gerant.html', {
         "base_template": base_template,
-        "entreprise_nom": entreprise_nom,
-    })
-
+        "entreprise_nom": entreprise_nom,    })
+        """
 """
 def accueil_dossier_compta(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
@@ -132,12 +207,12 @@ def accueil_dossier_compta(request, entreprise_id):
     # if User.objects.filter(role="GERANT").exists():
     return render(request, "frontend/accueil_dossier_comptable.html", {"entreprise": entreprise, "entreprise_nom": entreprise_nom, "entreprise_gerant": entreprise_gerant})
 """
-
+"""
 @login_required
 def liste_entreprises(request):
     entreprises = get_accessible_entreprises(request.user)
-    return render(request, "frontend/liste_entreprises.html", {"entreprises": entreprises})
-
+    return render(request, "frontend/liste_entreprises_back.html", {"entreprises": entreprises})
+"""
 """
 @login_required
 def ajouter_entreprise(request):
@@ -196,10 +271,10 @@ def saisie_journal(request):
     return render(request, 'frontend/journal_accueil.html', context)
 
 # ========================== Comptes ===========================================
-"""
-def liste_compte(request):
-    return render(request, 'frontend/pgc.html')
 
+def liste_compte(request):
+    return render(request, 'frontend/api_pgc.html')
+"""
 
 @login_required
 def create_compte(request, entreprise_id):
@@ -241,7 +316,7 @@ def display_compte(request):
     })
 
 
-def afficher_compte(request):
+def afficher_compte(request, entreprise_id):
     numero = []
     nom = []
     lignes = []
@@ -254,10 +329,17 @@ def afficher_compte(request):
         lignes = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
     else:
         nom, lignes = "", []
-    return render(request, 'frontend/afficher_compte.html', {'lignes': lignes, 'numero': numero, 'nom': nom})
+    return render(request, 'frontend/afficher_compte.html', {'entreprise_id': entreprise_id, 'lignes': lignes, 'numero': numero, 'nom': nom})
 
+"""
+def update_compte(request, entreprise_id):
+    # On vérifie que l'entreprise appartient bien au gérant connecté
+    entreprise = get_object_or_404(
+        Entreprise,
+        id=entreprise_id,
+        gerant=request.user
+    )
 
-def update_compte(request):
     compte = None
     comptes = CompteComptable.objects.none()
     form_search = forms.CompteSearchForm(request.GET or None)
@@ -265,18 +347,43 @@ def update_compte(request):
 
     if form_search.is_valid():
         numero = form_search.cleaned_data.get('numero')
-        comptes = CompteComptable.objects.filter(numero=numero)
+        comptes = CompteComptable.objects.filter(numero=numero, entreprise=entreprise)
         if comptes.exists():
             compte = comptes.first()
-            form_edit = forms.UpdateCompteForm(request.POST, request.FILES, instance=compte)
+            print('compte', compte)
+            form_edit = forms.UpdateCompteForm(request.POST or None, request.FILES or None, instance=compte)
             if request.method == "POST" and form_edit.is_valid():
                 form_edit.save()
-                return redirect('update_compte')  # pour revenir proprement
+                return redirect('update-compte', entreprise_id=entreprise_id)  # pour revenir proprement
 
     return render(request, 'frontend/update_compte.html', {
         'form_search': form_search,
         'form_edit': form_edit,
         'comptes': comptes,
+        'entreprise': entreprise,
+        'entreprise_id': entreprise_id,
+    })
+"""
+
+def update_compte(request, entreprise_id, compte_id):
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
+
+    if request.method == "POST":
+        form = CompteForm(request.POST, instance=compte)
+        if form.is_valid():
+            form.save()
+            return redirect('liste-compte-entreprise', entreprise_id=entreprise_id)
+
+    else:
+        form = CompteForm(instance=compte)
+
+    return render(request, "frontend/update_compte.html", {
+        "entreprise": entreprise,
+        "compte": compte,
+        "form_edit": form,
+        "entreprise_id": entreprise_id,
+        "compte_id": compte_id,
     })
 
 
@@ -387,7 +494,7 @@ def ecritures_par_compte(numero):
 """
 def afficher_statut_entreprise(request):
     print('affichage_statuts')
-    return render(request, 'frontend/afficher_statuts.html')
+    return render(request, 'frontend/afficher_modifier_dossier.html')
 """
 
 @login_required

@@ -11,9 +11,10 @@
                     <th>Ownid</th>
                     <th>Gérant</th>
                     <th>Email</th>
-                    <th>Statut</th>
+<!--                    <th>Statut</th>-->
                     <th>Entreprise</th>
                     <th>SIRET</th>
+                    <th>APE</th>
                     <th>Adresse</th>
                     <th>Actions</th>
                 </tr>
@@ -22,16 +23,17 @@
                 {% for e in entreprises %}
                     <tr>
                         <td>{{ e.id }}</td>
-                        <td>{{ e.owner_id }}</td>
-                        <td>{{ e.nom_gerant|default:"-" }}</td>
-                        <td>{{ e.owner.email }}</td>
-                        <td>{{ e.owner.role }}</td>
+                        <td>{{ e.gerant.id }}</td>
+                        <td>{{ e.gerant.nom_gerant }}</td>
+                        <td>{{ e.gerant|default:"-" }}</td>
+<!--                        <td>{{ e.owner.role }}</td>-->
                         <td>{{ e.nom }}</td>
                         <td>{{ e.siret }}</td>
+                        <td>{{ e.ape }}</td>
                         <td>{{ e.adresse }}</td>
                         <td>
                         <a href="{% url 'accueil-compta' e.id %}" class="btn btn-secondary btn-sm active" role="button" aria-pressed="true">COMPTA</a>
-                        <a href="{% url 'afficher-statuts' e.id %}" class="btn btn-primary btn-sm">Modifier</a>
+                        <a href="{% url 'afficher-modifier-dossier' e.id %}" class="btn btn-primary btn-sm">Modifier</a>
 
                         <form action="{% url 'supprimer-entreprise' e.pk %}" method="post" style="display:inline;">
                           {% csrf_token %}

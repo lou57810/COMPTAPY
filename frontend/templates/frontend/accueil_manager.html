@@ -1,0 +1,8 @@
+{% extends "base_manager.html" %}
+{% load static %}
+{% block content %}
+
+<h2 class="mb-3">Bienvenue {{ request.user.nom_gerant|default:request.user.email }}</h2>
+<h2 class="mb-3">{{ request.user.email }}</h2>
+
+{% endblock %}

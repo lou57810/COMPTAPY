@@ -1,4 +1,4 @@
-{% extends 'base0.html' %}
+{% extends 'base_gerant.html' %}
 {% block content %}
 {% load static %}
 
@@ -18,32 +18,20 @@
 <section>
   <div class="container">
 
-    {% if comptes.exists %}
-      {% for compte in comptes %}
-        <table border="1">
+    <table class="table mt-4">
+  <tr><th>ID</th><td>{{ compte.id }}</td></tr>
+  <tr><th>Numéro</th><td>{{ compte.numero }}</td></tr>
+  <tr><th>Nom</th><td>{{ compte.nom }}</td></tr>
+</table>
 
-          <tr>
-            <th>ID</th>
-            <td>{{ compte.id }}</td>
-          </tr>
-          <tr>
-            <th>Numéro</th>
-            <td>{{ compte.numero }}</td>
-          </tr>
-          <tr>
-            <th>Nom</th>
-            <td>{{ compte.nom }}</td>
-          </tr>
-        </table>
-      {% endfor %}
-          <h3>Modifier le nom</h3>
-          <form method="post">
-            {% csrf_token %}
-            {{ form_edit.as_p }}
-            <button type="submit">Enregistrer les modifications</button>
-          </form>
+<h3>Modifier le compte</h3>
 
-    {% endif %}
+<form method="post">
+  {% csrf_token %}
+  {{ form_edit.as_p }}
+  <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+</form>
+
   </div>
 </section>
 
