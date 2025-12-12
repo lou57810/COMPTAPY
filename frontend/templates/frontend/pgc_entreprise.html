@@ -1,0 +1,194 @@
+{% extends 'base_dossier.html' %}
+{% load static %}
+{% block content %}
+<section class="py-5">
+  <div class="container">
+
+    <h1 class="mb-4">Plan Comptable Général</h1>
+    <div class="container">
+
+      <h2>Dossier <span> </span>{{ entreprise_nom }}</h2>
+      <h2>Id: <span> </span>{{ entreprise_id }}</h2>
+      <h2>Id: <span> </span>{{ entreprise.id }}</h2>
+    </div>
+    <!-- Navigation par classes -->
+    <div>
+      <strong>Classes :</strong>
+      {% for c in "1234567" %}
+        <a href="?classe={{ c }}" class="btn btn-outline-primary btn-sm">{{ c }}</a>
+      {% endfor %}
+    </div>
+
+    <!-- BOUTONS EN HAUT -->
+    <div class="d-flex justify-content-between mb-2">
+      <button id="prev-btn-top" class="btn btn-primary">
+        ◀️ Précédent
+      </button>
+      <button id="next-btn-top" class="btn btn-primary">
+        Suivant ▶️
+      </button>
+    </div>
+      <!-- NAVIGATION RAPIDE -->
+      <div class="d-flex gap-2 my-3">
+          <!-- Classes comptables -->
+            <div>
+              <strong>Classes :</strong>
+              <button class="btn btn-outline-primary btn-sm jump-class" data-class="1">1</button>
+              <button class="btn btn-outline-primary btn-sm jump-class" data-class="2">2</button>
+              <button class="btn btn-outline-primary btn-sm jump-class" data-class="3">3</button>
+              <button class="btn btn-outline-primary btn-sm jump-class" data-class="4">4</button>
+              <button class="btn btn-outline-primary btn-sm jump-class" data-class="5">5</button>
+              <button class="btn btn-outline-primary btn-sm jump-class" data-class="6">6</button>
+              <button class="btn btn-outline-primary btn-sm jump-class" data-class="7">7</button>
+            </div>
+      </div>
+        <div class="d-flex gap-2 mb-2">
+        <div id="class-buttons" class="btn-group" role="group" aria-label="Classes"></div>
+        <div id="alpha-buttons" class="btn-group ms-3" role="group" aria-label="Alphabet"></div>
+      </div>
+    <!-----------------TABLE---------------------->
+    <table class="table" id="pgc-table" data-entreprise-id="{{ entreprise_id }}">
+      <thead>
+        <tr>
+          <th>Numéro</th>
+          <th>Libellé</th>
+          <th>Type</th>
+          <th>Origine</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+    </table>
+
+    <!-- BOUTONS EN BAS -->
+    <div class="d-flex justify-content-between mt-2">
+      <button id="prev-btn" class="btn btn-primary">
+        ◀️ Précédent
+      </button>
+      <button id="next-btn" class="btn btn-primary">
+        Suivant ▶️
+      </button>
+    </div>
+
+
+
+  </div>
+</section>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    let currentPage = 1;
+    const pageSize = 100;
+    const entrepriseId = document.querySelector("#pgc-table")
+                                 .dataset.entrepriseId;
+                                 console.log('entrepriseId:', entrepriseId);
+
+    const apiUrl = `frontend/pgc_entreprise/?entreprise_id=${entrepriseId}`;
+
+    console.log('apiUrl:', apiUrl)
+
+    const tbody = document.querySelector("#pgc-table tbody");
+    const prevBtn = document.getElementById("prev-btn");
+    const nextBtn = document.getElementById("next-btn");
+    const prevBtnTop = document.getElementById("prev-btn-top");
+    const nextBtnTop = document.getElementById("next-btn-top");
+
+    // 🔥 Charge une page de comptes
+    function loadPage(page) {
+    fetch(`api/comptes/?entreprise_id=${entrepriseId}&page=${page}&page_size=${pageSize}`)
+        .then(r => r.json())
+        .then(data => {
+            tbody.innerHTML = "";
+
+            data.results.forEach(compte => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${compte.numero}</td>
+                    <td>${compte.libelle}</td>
+                    <td>${compte.type_compte}</td>
+                    <td>${compte.origine}</td>
+                    <td>
+                        <a href="/api/modifier_compte/${entrepriseId}/${compte.id}/">Modifier</a>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            prevBtn.disabled = data.previous === null;
+            nextBtn.disabled = data.next === null;
+            prevBtnTop.disabled = data.previous === null;
+            nextBtnTop.disabled = data.next === null;
+
+            currentPage = page;
+        })
+        .catch(err => console.error("Erreur API:", err));
+}
+
+    //-----------------------------------
+    // 📌 NAVIGATION PAR CLASSE
+    //-----------------------------------
+
+
+
+    function attachClassButtons() {
+        document.querySelectorAll(".jump-class").forEach(btn => {
+            btn.onclick = () => {
+
+                const targetClass = btn.dataset.class;
+                console.log('clik:', targetClass);
+
+                // Va à la première page
+                loadPage(1);
+
+                // Après chargement de la page, on filtre dans la table
+                setTimeout(() => {
+                    filterByClass(targetClass);
+                }, 300);
+            };
+        });
+    }
+
+
+
+    function filterByClass(classDigit) {
+        const rows = tbody.querySelectorAll("tr");
+        console.log('rows:', rows)
+        rows.forEach(row => {
+            const numero = row.children[0].innerText.trim();
+            console.log('numero:')
+            const firstDigit = numero.replace(/\D/g, '').charAt(0);  // extrait le premier chiffre réel
+            console.log('firstDigit:', firstDigit)
+            row.style.display = (firstDigit === classDigit) ? "" : "none";
+        });
+    }
+
+    //-----------------------------------
+
+    function goPrev() {
+        if (currentPage > 1) loadPage(currentPage - 1);
+    }
+
+    function goNext() {
+        loadPage(currentPage + 1);
+    }
+
+    prevBtn.addEventListener("click", goPrev);
+    nextBtn.addEventListener("click", goNext);
+    prevBtnTop.addEventListener("click", goPrev);
+    nextBtnTop.addEventListener("click", goNext);
+
+    // démarrage 1x
+    loadPage(1);
+    attachClassButtons();
+
+
+});
+</script>
+
+{% endblock %}
+
+
+

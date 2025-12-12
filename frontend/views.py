@@ -12,6 +12,8 @@ from django.contrib import messages
 import csv
 from django.contrib.auth.decorators import login_required
 from authentication.permissions import role_required
+from django.http import HttpResponseForbidden
+from django.core.paginator import Paginator
 
 from django.http import JsonResponse
 
@@ -28,13 +30,13 @@ import zipfile
 from django.utils.text import slugify
 from api.utils import create_user_and_entreprise, get_owner, get_entreprise_from_gerant
 
-from django.shortcuts import render, redirect
+
 from utils.session_utils import get_entreprise_active
 
 
 User = get_user_model()
 
-
+"""
 @login_required
 @role_required(["OWNER", "GERANT"])
 def afficher_modifier_dossier(request, entreprise_id):
@@ -56,23 +58,6 @@ def afficher_modifier_dossier(request, entreprise_id):
         # form = forms.FolderForm(instance=entreprise)
 
     return render(request, "frontend/afficher_modifier_dossier.html", {"form": form, "entreprise": entreprise})
-
-"""
-@login_required
-def supprimer_entreprise(request, entreprise_id):
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    print("DATA1:", entreprise.owner, entreprise.nom, entreprise.nom_gerant, request.user)
-    # Vérifier que l’utilisateur a le droit (ex : est OWNER de cette entreprise)
-    if request.user.role == "OWNER":
-        print("DATA2:", entreprise.owner, entreprise.nom)
-        entreprise.delete()
-        # Message de succès (optionnel)
-        messages.success(request, "Entreprise supprimée.")
-    else:
-        # Message d’erreur ou access interdit
-        messages.error(request, "Vous n’êtes pas autorisé.")
-        pass
-    return redirect("liste-entreprises")
 """
 
 # =============== Accueil =========================
@@ -115,16 +100,19 @@ def accueil(request):
     # return User.objects.filter(role="OWNER").first()
 
 
-
-
-
 @login_required
 def accueil_manager(request):
     # toutes les entreprises du propriétaire
     # entreprises = Entreprise.objects.filter(owner=request.user)
-    entreprise = Entreprise.objects.filter(owner=request.user).first()
-    # entreprise = Entreprise.objects.filter(gerant=request.user).first()
-    # entreprise = Entreprise.objects.filter(owner=request.user)
+    # entreprise = Entreprise.objects.filter(owner=request.user).first()
+    entreprise = Entreprise.objects.get(id=1)
+
+    print('entreprise, entreprise.nom:', entreprise, entreprise.owner)
+    if not entreprise:
+        print("pas d'entreprise")
+
+        # entreprise = Entreprise.objects.filter(gerant=request.user).first()
+        # entreprise = Entreprise.objects.filter(owner=request.user)
 
     return render(request, "frontend/accueil_manager.html", {
         "entreprise": entreprise,
@@ -157,34 +145,76 @@ def accueil_gerant(request):
     })
 
 
-"""
-def accueil(request):
-    if User.objects.filter(role="OWNER").exists():
-        messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
-    # Vérifier si l’utilisateur a une « entreprise active » sélectionnée
-    test = None
-    entreprise_nom = None
-    entreprise_active = None
-    if request.user.is_authenticated:
-        test = Entreprise.objects.filter(owner=request.user)
-        entreprise_nom = test[0].nom
-        entreprise_active = getattr(request.user, "entreprise", None)
-        print('entreprise_active, test:', entreprise_active, entreprise_nom)
 
-    # test = Entreprise.objects.filter(owner=request.user)
-    # print('test:',test[0].nom)
-    # Choix du template parent
-    if not request.user.is_authenticated:
-        base_template = "base0.html"
-    elif not entreprise_active:
-        base_template = "base0.html"
-    else:
-        base_template = "base.html"
-        # entreprise_nom = entreprise_active.nom
-    return render(request, 'frontend/accueil_gerant.html', {
-        "base_template": base_template,
-        "entreprise_nom": entreprise_nom,    })
-        """
+
+def pgc_entreprise(request, entreprise_id):
+    entreprise = Entreprise.objects.get(id=entreprise_id)
+
+    classe = request.GET.get("classe")  # ex: "4"
+    comptes = CompteComptable.objects.filter(entreprise=entreprise)
+
+    if classe:
+        comptes = comptes.filter(numero__startswith=classe)
+
+    paginator = Paginator(comptes, 150)   # 50 par page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "frontend/pgc_entreprise_new.html", {
+        "entreprise": entreprise,
+        "entreprise_nom": entreprise.nom,
+        "entreprise_id": entreprise.id,
+        "page_obj": page_obj,
+        "classe": classe,
+        "comptes": page_obj,  # pour garder ton for
+    })
+
+
+
+"""
+@login_required
+def liste_compte_entreprise(request, entreprise_id):
+    # Premièrement, tenter de récupérer l'entreprise où le user est gérant
+    # entreprise = Entreprise.objects.filter(gerant=request.user).first()
+    entreprise = Entreprise.objects.get(id=entreprise_id)
+
+    if entreprise.owner != request.user and entreprise.gerant != request.user:
+        return HttpResponseForbidden("Vous n’avez pas accès à cette entreprise.")
+
+    # Sinon, la rendre propriétaire (OWNER)
+    if not entreprise:
+        entreprise = Entreprise.objects.filter(owner=request.user).first()
+
+    # Si toujours rien, on informe l'utilisateur
+    if not entreprise:
+        messages.warning(request, "Aucune entreprise associée à votre compte.")
+        # rendre la page sans comptes (ou rediriger vers une page d'erreur/creation)
+        return render(request, "frontend/pgc_entreprise_new.html", {
+            "entreprise": None,
+            "entreprise_nom": None,
+            "entreprise_id": None,
+            "comptes_id": CompteComptable.objects.none(),
+        })
+
+    entreprise_nom = entreprise.nom
+    print('entreprise_nom:', entreprise_nom)
+
+    comptes = CompteComptable.objects.filter(entreprise=entreprise).order_by('numero')
+    # compte_liste = CompteComptable.objects.filter(entreprise=entreprise).all()
+    print(f"📊 {comptes.count()} comptes trouvés pour {entreprise_nom}")
+
+    # paginator = Paginator(compte_liste, 50)
+    # page_number = request.GET.get('page')
+    # comte_liste = paginator.get_page(page_number)
+
+    return render(request, 'frontend/pgc_entreprise_new.html', {
+        'entreprise': entreprise,
+        'entreprise_nom': entreprise_nom,
+        'entreprise_id': entreprise_id,
+        'comptes': comptes,
+        #'compte_liste': compte_liste,
+    })
+"""
 """
 def accueil_dossier_compta(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
@@ -207,30 +237,7 @@ def accueil_dossier_compta(request, entreprise_id):
     # if User.objects.filter(role="GERANT").exists():
     return render(request, "frontend/accueil_dossier_comptable.html", {"entreprise": entreprise, "entreprise_nom": entreprise_nom, "entreprise_gerant": entreprise_gerant})
 """
-"""
-@login_required
-def liste_entreprises(request):
-    entreprises = get_accessible_entreprises(request.user)
-    return render(request, "frontend/liste_entreprises_back.html", {"entreprises": entreprises})
-"""
-"""
-@login_required
-def ajouter_entreprise(request):
-    role = request.GET.get("role")  # "GERANT" ou "EXPERT_COMPTABLE"
-    print('get role:', role)
-    # Permet au user connecté d’ajouter une entreprise
-    if request.method == "POST":
-        form = EntrepriseForm(request.POST)
-        if form.is_valid():
-            entreprise = form.save(commit=False)
-            entreprise.owner = request.user  # ou .created_by selon ton modèle
-            entreprise.save()
-            return redirect("liste-entreprises")
-    else:
-        form = EntrepriseForm()
 
-    return render(request, "frontend/ajouter_entreprise.html", {"form": form})
-"""
 
 def setup(request):
     role = request.GET.get("role")  # "GERANT" ou "EXPERT_COMPTABLE"
@@ -272,26 +279,45 @@ def saisie_journal(request):
 
 # ========================== Comptes ===========================================
 
-def liste_compte(request):
-    return render(request, 'frontend/api_pgc.html')
-"""
-
 @login_required
 def create_compte(request, entreprise_id):
-    entreprise_nom = None
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    entreprise = Entreprise.objects.get(id=entreprise_id)
     entreprise_nom = entreprise.nom
-    print('id:', id)
-    compte_form = forms.CompteForm()
+    print('entreprise, e.nom:', entreprise, entreprise_nom)
+
+
+    # Sinon, la rendre propriétaire (OWNER)
+    # if not entreprise:
+        # entreprise = Entreprise.objects.filter(owner=request.user).first()
+
     if request.method == 'POST':
-        compte_form = forms.CompteForm(request.POST)
+        compte_form = CompteForm(request.POST)
         if compte_form.is_valid():
-            compte_form.save()
+            compte = compte_form.save(commit=False)
+            compte.entreprise = entreprise        # ✅ Lier explicitement
+            compte.origine = 'user'
+            libelle = compte.nom
+            # ✅ Marquer comme créé par utilisateur
+            print('data_valid:', compte.origine, compte, compte.entreprise, libelle)
+            compte.save()
             messages.success(request, 'Le compte a été créé avec succès !')
-            return render(request, 'frontend/create_compte.html', {'compte_form': compte_form, 'entreprise': entreprise, 'entreprise_nom': entreprise_nom})
-    request.session["entreprise_active_id"] = entreprise_id
-    return render(request, 'frontend/create_compte.html', {'compte_form': compte_form, 'entreprise': entreprise, 'entreprise_nom': entreprise_nom})
-"""
+            return redirect('accueil-compta', entreprise_id=entreprise_id)
+    else:
+        compte_form = CompteForm()
+
+    # request.session["entreprise_active_id"] = entreprise_id
+    return render(request, 'frontend/create_compte.html', {
+        'compte_form': compte_form,
+        'entreprise': entreprise,
+        'entreprise_nom': entreprise_nom,
+
+        # 'entreprise_id': entreprise_id
+    })
+
+
+def liste_compte(request):
+    return render(request, 'frontend/api_pgc.html')
+
 
 def display_compte(request):
     # compte = None
@@ -332,38 +358,6 @@ def afficher_compte(request, entreprise_id):
     return render(request, 'frontend/afficher_compte.html', {'entreprise_id': entreprise_id, 'lignes': lignes, 'numero': numero, 'nom': nom})
 
 """
-def update_compte(request, entreprise_id):
-    # On vérifie que l'entreprise appartient bien au gérant connecté
-    entreprise = get_object_or_404(
-        Entreprise,
-        id=entreprise_id,
-        gerant=request.user
-    )
-
-    compte = None
-    comptes = CompteComptable.objects.none()
-    form_search = forms.CompteSearchForm(request.GET or None)
-    form_edit = None
-
-    if form_search.is_valid():
-        numero = form_search.cleaned_data.get('numero')
-        comptes = CompteComptable.objects.filter(numero=numero, entreprise=entreprise)
-        if comptes.exists():
-            compte = comptes.first()
-            print('compte', compte)
-            form_edit = forms.UpdateCompteForm(request.POST or None, request.FILES or None, instance=compte)
-            if request.method == "POST" and form_edit.is_valid():
-                form_edit.save()
-                return redirect('update-compte', entreprise_id=entreprise_id)  # pour revenir proprement
-
-    return render(request, 'frontend/update_compte.html', {
-        'form_search': form_search,
-        'form_edit': form_edit,
-        'comptes': comptes,
-        'entreprise': entreprise,
-        'entreprise_id': entreprise_id,
-    })
-"""
 
 def update_compte(request, entreprise_id, compte_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
@@ -371,9 +365,11 @@ def update_compte(request, entreprise_id, compte_id):
 
     if request.method == "POST":
         form = CompteForm(request.POST, instance=compte)
+        print("POST reçu")  # pour vérifier que tu arrives là
+        print(form.errors)  # <-- très important
         if form.is_valid():
             form.save()
-            return redirect('liste-compte-entreprise', entreprise_id=entreprise_id)
+            return redirect('pgc-entreprise', entreprise_id=entreprise_id)
 
     else:
         form = CompteForm(instance=compte)
@@ -381,11 +377,11 @@ def update_compte(request, entreprise_id, compte_id):
     return render(request, "frontend/update_compte.html", {
         "entreprise": entreprise,
         "compte": compte,
-        "form_edit": form,
-        "entreprise_id": entreprise_id,
+        "form": form,
         "compte_id": compte_id,
+        "entreprise_id": entreprise_id,
     })
-
+"""
 
 def get_pk_from_numero(request):
     numero = request.GET.get('numero')

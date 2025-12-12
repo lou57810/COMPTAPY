@@ -108,11 +108,12 @@ class CompteComptable(models.Model):
         unique_together = ("numero", "entreprise") # Les numéros du PGC sont uniques mais à chaques entreprises)
         ordering = ["numero"]
         # D'ou, lever la contrainte d'unicité sur numero et la remplacer par une contrainte d'unicité composite (numero, entreprise)
-
+    """
     def save(self, *args, **kwargs):
         if not self.libelle or self.libelle == "N/A":
             self.libelle = self.nom  # recopie le nom du compte
         super().save(*args, **kwargs)
+    """
 
 
     def __str__(self):

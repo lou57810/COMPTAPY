@@ -42,7 +42,7 @@
 
             <nav class="navbar navbar-expand-xxl fixed-top navbar-dark bg-dark">
                 <div class="container">
-                  <span class="bg-primary bg-gradient p-1 w-25 rounded-3 text-light">{{ entreprise_nom }}</span>
+                  <span class="bg-primary bg-gradient p-1 w-25 rounded-3 text-light">{{ entreprise.nom }}</span>
                     <a class="navbar-brand text-white fs-2" href="{% url 'accueil-gerant' %}"></a>
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
@@ -71,10 +71,10 @@
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des Comptes</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 <!--                                    <li><a class="dropdown-item" href="{\% url 'afficher-compte' entreprise_id %}">Afficher un compte</a></li>-->
-                                    <li><a class="dropdown-item" href="{% url 'create-compte' %}">Ajouter un compte</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'create-compte' entreprise_id %}">Ajouter un compte</a></li>
 <!--                                    <li><a class="dropdown-item" href="{\% url 'update-compte' entreprise_id compte.id %}">Modifier un compte</a></li>-->
 
-                                    <li><a class="dropdown-item" href="{% url 'pgc-entreprise' %}">Afficher le pgc</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'pgc-entreprise' entreprise.id %}">Afficher le pgc</a></li>
                                 </ul>
                             </li>
                             <li class="nav-item dropdown">

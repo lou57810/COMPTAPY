@@ -28,17 +28,17 @@
 
             <nav class="navbar navbar-expand-xxl fixed-top navbar-dark bg-dark">
                 <div class="container">
-                  <span class="bg-primary bg-gradient p-1 w-25 rounded-3 text-light">{{ entreprise.nom }}</span>
-                    <a class="navbar-brand text-white fs-2" href="{% url 'accueil' %}"></a>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                        </button>
+                  <span class="bg-primary bg-gradient p-1 w-25 rounded-3 text-light">{{ entreprise }}</span>
+<!--                    <a class="navbar-brand text-white fs-2" href="{\% url 'accueil' %}"></a>-->
+<!--                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">-->
+<!--                        <span class="navbar-toggler-icon"></span>-->
+<!--                        </button>-->
                     <!--<div class='collapse navbar-collapse' id='navbarSupportedContent'>-->
                     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                       <ul class="navbar-nav dropdown">
-                        <li class="nav-item dropdown">
-                            <a href="{% url 'accueil-manager' %}" class="nav-link text-light px-3">Accueil</a>
-                        </li>
+<!--                        <li class="nav-item dropdown">-->
+<!--                            <a href="{\% url 'accueil-manager' %}" class="nav-link text-light px-3">Accueil</a>-->
+<!--                        </li>-->
 
                           {% if not user.is_authenticated %}
                             {% if not owner_already_registered %}
@@ -61,7 +61,7 @@
                                 </ul>
                             </li>
                             <li class="nav-item">
-                              <a href="{% url 'accueil-gerant' %}" class="nav-link text-light px-3">Mon dossier comptable</a>
+                              <a href="{% url 'accueil-compta' entreprise.id %}" class="nav-link text-light px-3">Mon dossier comptable</a>
                             </li>
 
                             <li class="nav-item">

@@ -9,16 +9,16 @@ from django.contrib import messages
 from authentication.forms import SignupForm
 from .utils import create_user_and_entreprise
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import FolderForm, EntrepriseForm, EntrepriseModifForm, CompteForm
+from .forms import FolderForm, EntrepriseModifForm, CompteForm  # EntrepriseForm,
 from .serializers import CompteComptableSerializer, EcritureJournalSerializer
 from django.utils import timezone
 from django.db import IntegrityError
 from .models import CompteComptable, EcritureJournal, Entreprise
 from django.db.models.functions import Substr
-from django.http import HttpResponseForbidden
+
 from rest_framework import generics, permissions
 from .utils import get_accessible_entreprises, importer_pgc_pour_entreprise, get_entreprise_from_gerant
-
+from django.core.paginator import Paginator
 User = get_user_model()
 
 
@@ -40,7 +40,7 @@ def liste_entreprises(request):
     entreprises = get_accessible_entreprises(request.user)
     return render(request, "api/liste_entreprises.html", {"entreprises": entreprises, "entreprise_name": entreprise_name})
 
-
+"""
 @login_required
 def creer_dossier_gerant(request, gerant_id):
     print('gerant_id:', gerant_id)
@@ -76,7 +76,7 @@ def creer_dossier_gerant(request, gerant_id):
         "gerant": gerant,
         "gerant_id": gerant_id
     })
-
+"""
 """
 @login_required
 def creer_dossier_owner(request, user_id):
@@ -119,12 +119,16 @@ def accueil_dossier_compta(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
     entreprise_nom = None
     entreprise_gerant = None
+    entreprise_gerant_email = None
     # entreprise_active = None
+    print('entreprise_id, entreprise.nom:', entreprise_id, entreprise.nom)
 
     if request.user.is_authenticated:
         # test = Entreprise.objects.filter(owner=request.user)
         entreprise_nom = entreprise.nom
         entreprise_gerant = entreprise.nom_gerant
+        entreprise_gerant_email = request.user.email
+        print('entreprise_gerant_email, NOM:', entreprise_gerant_email, entreprise.nom)
         # entreprise_nom = test[0].nom
         # entreprise_gerant = test[0].nom_gerant
         # entreprise_active = getattr(request.user, "entreprise", None)
@@ -134,91 +138,92 @@ def accueil_dossier_compta(request, entreprise_id):
     request.session["entreprise_active_id"] = entreprise_id
 
     # if User.objects.filter(role="GERANT").exists():
-    return render(request, "api/accueil_dossier_comptable.html", {"entreprise": entreprise, "entreprise_id": entreprise_id, "entreprise_nom": entreprise_nom, "entreprise_gerant": entreprise_gerant})
+    return render(request, "api/accueil_dossier_comptable.html",
+          {"entreprise": entreprise,
+                   "entreprise_id": entreprise_id,
+                   "entreprise_nom": entreprise_nom,
+                   "entreprise_gerant": entreprise_gerant,
+                   "entreprise_gerant_email": entreprise_gerant_email}
+                  )
 
+"""
 def liste_compte(request):
     return render(request, 'api/api_pgc.html', )
+"""
 
 
-@login_required
-def create_compte(request):
-    entreprise = Entreprise.objects.filter(gerant=request.user).first()
 
-    # Sinon, la rendre propriétaire (OWNER)
-    if not entreprise:
-        entreprise = Entreprise.objects.filter(owner=request.user).first()
 
-    entreprise_nom = entreprise.nom
 
-    if request.method == 'POST':
-        compte_form = CompteForm(request.POST)
-        if compte_form.is_valid():
-            compte = compte_form.save(commit=False)
-            compte.entreprise = entreprise        # ✅ Lier explicitement
-            compte.origine = 'user'               # ✅ Marquer comme créé par utilisateur
-            compte.save()
-            messages.success(request, 'Le compte a été créé avec succès !')
-            return redirect('create-compte')
+
+"""
+def update_compte(request, entreprise_id, compte_id):
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
+
+    if request.method == "POST":
+        form = CompteForm(request.POST, instance=compte)
+        print("POST reçu")  # pour vérifier que tu arrives là
+        print('form_errors:', form.errors)  # <-- très important
+        if form.is_valid():
+            form.save()
+            return redirect('pgc-entreprise', entreprise_id=entreprise_id)
+
     else:
-        compte_form = CompteForm()
+        form = CompteForm(instance=compte)
 
-    # request.session["entreprise_active_id"] = entreprise_id
-    return render(request, 'api/create_compte.html', {
-        'compte_form': compte_form,
-        'entreprise': entreprise,
-        'entreprise_nom': entreprise_nom,
-        # 'entreprise_id': entreprise_id
+    return render(request, "api/update_compte.html", {
+        "entreprise": entreprise,
+        "compte": compte,
+        "form": form,
+        "compte_id": compte_id,
+        "entreprise_id": entreprise_id,
+    })
+"""
+
+def update_compte(request, entreprise_id, compte_id):
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
+
+    if request.method == "POST":
+        form = CompteForm(request.POST, instance=compte)
+        if form.is_valid():
+            compte_modifie = form.save(commit=False)
+
+            # 👉 Mise à jour du libellé uniquement pour les comptes user
+            if compte_modifie.origine == "user":
+                compte_modifie.libelle = compte_modifie.nom
+
+            compte_modifie.save()
+
+            return redirect('pgc-entreprise', entreprise_id=entreprise_id)
+
+    else:
+        form = CompteForm(instance=compte)
+
+    return render(request, "api/update_compte.html", {
+        "entreprise": entreprise,
+        "compte": compte,
+        "form": form,
+        "compte_id": compte_id,
+        "entreprise_id": entreprise_id,
     })
 
 @login_required
-def liste_compte_entreprise(request):
-    # Premièrement, tenter de récupérer l'entreprise où le user est gérant
-    entreprise = Entreprise.objects.filter(gerant=request.user).first()
-
-    # Sinon, la rendre propriétaire (OWNER)
-    if not entreprise:
-        entreprise = Entreprise.objects.filter(owner=request.user).first()
-
-    # Si toujours rien, on informe l'utilisateur
-    if not entreprise:
-        messages.warning(request, "Aucune entreprise associée à votre compte.")
-        # rendre la page sans comptes (ou rediriger vers une page d'erreur/creation)
-        return render(request, "api/pgc_entreprise.html", {
-            "entreprise": None,
-            "entreprise_nom": None,
-            "entreprise_id": None,
-            "comptes": CompteComptable.objects.none(),
-        })
-
-    entreprise_nom = entreprise.nom
-
-    comptes = CompteComptable.objects.filter(entreprise=entreprise).order_by('numero')
-    print(f"📊 {comptes.count()} comptes trouvés pour {entreprise_nom}")
-
-    return render(request, 'api/pgc_entreprise.html', {
-        'entreprise': entreprise,
-        'entreprise_nom': entreprise_nom,
-        'entreprise_id': entreprise.id,
-        'comptes': comptes,
-    })
-
-
-@login_required
-@role_required(["OWNER", "GERANT"])
+@role_required(["OWNER"])
 def afficher_modifier_dossier(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    # entreprise = Entreprise.objects.filter(gerant=request.user).first()
 
     # Sinon, la rendre propriétaire (OWNER)
     if not entreprise:
-        entreprise = Entreprise.objects.filter(owner=request.user).first()
-    entreprise_nom = entreprise.nom
-    # email = entreprise.owner.email
-    # email = entreprise.gerant
-    # print('entreprise_email, name:', entreprise.gerant.email, entreprise.nom_gerant)
-    print('entreprise_nom:', entreprise.nom)
-    nom_gerant = entreprise.nom_gerant
-    if not entreprise:
+        # entreprise = Entreprise.objects.filter(owner=request.user).first()
+    # entreprise_nom = entreprise.nom
+    # print('entreprise_nom:', entreprise.nom)
+    # nom_gerant = entreprise.nom_gerant
+        # entreprise_nom = entreprise.nom
+        # print('entreprise_nom:', entreprise.nom)
+        # nom_gerant = entreprise.nom_gerant
+    # if not entreprise:
         return redirect("create-folder")
 
     if request.method == "POST":
@@ -226,6 +231,7 @@ def afficher_modifier_dossier(request, entreprise_id):
         if form.is_valid():
             print('Valid')
             form.save()
+
             # entreprise.owner.email = form.cleaned_data["email"]
             entreprise.owner.email = form.cleaned_data["email"]
             # entreprise.owner.save(update_fields=["email"])
@@ -235,16 +241,16 @@ def afficher_modifier_dossier(request, entreprise_id):
 
         form = EntrepriseModifForm(instance=entreprise, initial={
         "email": entreprise.owner.email if entreprise.owner else ""
-        # "gerant": entreprise.gerant.nom_gerant if entreprise.gerant.nom_gerant else "",
-        # "email": entreprise.gerant.email if entreprise.gerant.email else ""
         })
-
         print('unvalid')
+    entreprise_nom = entreprise.nom
+    nom_gerant = entreprise.nom_gerant
+
     return render(request, "api/afficher_modifier_dossier.html",
                   {"form": form,
                    "entreprise": entreprise,
                    'entreprise_nom': entreprise_nom,
-                   "entreprise_id": entreprise.id,
+                   "entreprise_id": entreprise_id,
                    "nom_gerant": nom_gerant}
                   )
 
@@ -277,7 +283,7 @@ def supprimer_entreprise(request, entreprise_id):
         return redirect("liste-entreprises")
 
 
-
+"""
 class CompteComptableViewSet(viewsets.ModelViewSet):
     serializer_class = CompteComptableSerializer
 
@@ -289,6 +295,19 @@ class CompteComptableViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(origine='user')
+"""
+
+class CompteComptableViewSet(viewsets.ModelViewSet):
+    serializer_class = CompteComptableSerializer
+
+    def get_queryset(self):
+        qs = CompteComptable.objects.all()
+
+        entreprise_id = self.request.query_params.get("entreprise_id")
+        if entreprise_id:
+            qs = qs.filter(entreprise_id=entreprise_id)
+
+        return qs.order_by("numero")
 
 
 # @login_required

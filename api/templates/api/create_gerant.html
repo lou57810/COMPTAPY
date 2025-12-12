@@ -1,8 +1,9 @@
-{% extends 'base0.html' %}
+{% extends "base_manager.html" %}
 {% load static %}
 {% load form_extras %}
 
 {% block content %}
+
 <section class="py-5">
   <div class="container mt-5">
     <div class="row justify-content-center">
@@ -12,27 +13,23 @@
           <div class="card-header bg-primary text-white text-center">
             <h4 class="mb-0">Créer un compte Gérant</h4>
           </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+<!--                {/{ form.non_field_errors }}-->
 
-          <div class="card-body">
-            <form method="post" novalidate>
-              {% csrf_token %}
-
-              <!-- Nom gérant -->
+              <h4>Informations du propriétaire</h4>
               <div class="mb-3">
-                <label for="{{ form.nom_gerant.id_for_label }}" class="form-label">Nom du gérant</label>
-                {{ form.nom_gerant|add_class:"form-control" }}
-                {{ form.nom_gerant.errors }}
+                {{ form.nom_gerant.label_tag }} {{ form.nom_gerant }}
               </div>
-
               <!-- Email -->
               <div class="mb-3">
-                <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
-                {{ form.email|add_class:"form-control" }}
-                {{ form.email.errors }}
+                {{ form.email.label_tag }} {{ form.email }}
+    <!--        {\{ form.password1.label_tag }} {{ form.password1 }}-->
+    <!--        {\{ form.password2.label_tag }} {{ form.password2 }}-->
               </div>
-
               <!-- Password -->
-              <div class="mb-3 position-relative">
+              <div class="container mt-4">
                 <label for="{{ form.password1.id_for_label }}" class="form-label">Mot de passe</label>
                 <div class="input-group">
                   {{ form.password1|add_class:"form-control" }}
@@ -43,23 +40,42 @@
               </div>
 
               <!-- Password confirmation -->
-              <div class="mb-3 position-relative">
+              <div class="container mt-4">
                 <label for="{{ form.password2.id_for_label }}" class="form-label">Confirmation du mot de passe</label>
                 <div class="input-group">
-            {{ form.password2|add_class:"form-control" }}
-            {{ form.password2.errors }}
+                  {{ form.password2|add_class:"form-control" }}
+                  {{ form.password2.errors }}
                   <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password2">👁️</button>
                 </div>
               </div>
 
+              <hr>
+
+              <h4>Informations de l’entreprise</h4>
+              <div class="container mt-4">
+              {{ form.nom.label_tag }} {{ form.nom }}
+              </div>
+              <div>
+              {{ form.siret.label_tag }} {{ form.siret }}
+                </div>
+              <div>
+              {{ form.ape.label_tag }} {{ form.ape }}
+                </div>
+              <div>
+              {{ form.adresse.label_tag }} {{ form.adresse }}
+                </div>
+              <div>
+              {{ form.date_creation.label_tag }} {{ form.date_creation }}
+              </div>
+
+
               <div class="text-center mt-4">
-                <button type="submit" class="btn btn-primary px-4">Créer le gérant</button>
+                <button type="submit" class="btn btn-primary px-4">Créer le dossier gérant</button>
               </div>
 
             </form>
           </div>
         </div>
-
       </div>
     </div>
   </div>

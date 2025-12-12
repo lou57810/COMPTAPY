@@ -18,6 +18,7 @@ from .forms import SignupForm
 from api.utils import importer_pgc_pour_entreprise
 from api.models import Entreprise
 from authentication.forms import AddUserForm
+from django.http import JsonResponse
 
 
 User = get_user_model()
@@ -33,80 +34,6 @@ from authentication.permissions import role_required
 def modifier_dossier(request):
 
 """
-
-"""
-def signup_owner(request):
-
-    # Création unique du propriétaire (OWNER) du logiciel.
-
-    if User.objects.filter(role="OWNER").exists():
-        messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
-        return redirect("accueil")
-
-    if request.method == "POST":
-        form = OwnerSignupForm(request.POST)
-        if form.is_valid():
-            try:
-                user = form.save(commit=False)
-                # Forcer explicitement le rôle OWNER (sécurité)
-                user.role = "OWNER"
-                user.save()
-                messages.success(request, f"Propriétaire {user.email} créé avec succès.")
-                return redirect("login")
-            except Exception as e:
-                messages.error(request, f"Erreur : {e}")
-    else:
-        form = OwnerSignupForm(initial={"role": "OWNER"})  # UX : pré-remplir OWNER
-
-    return render(request, "authentication/owner_signup_back.html", {"form": form})
-
-
-
-def signup_owner(request):
-
-    # Empêche plusieurs propriétaires
-    if User.objects.filter(role="OWNER").exists():
-        messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
-        return redirect("accueil")
-
-    if request.method == "POST":
-        form = OwnerSignupForm(request.POST)
-
-        if form.is_valid():
-            try:
-                # 1️⃣ Création du propriétaire
-                user = form.save(commit=False)
-                user.role = "OWNER"
-                user.save()
-
-                # 2️⃣ Création de l'entreprise personnelle du propriétaire
-                entreprise = Entreprise.objects.create(
-                    nom = f"Entreprise de {user.email}",
-                    owner = user,        # 🔥 IMPORTANT : ton modèle utilise 'owner' pour le propriétaire
-                    gerant = None,       # pas de gérant pour une entreprise personnelle
-                    nom_gerant = "Propriétaire",  # optionnel, pure cosmétique
-                )
-
-                # 3️⃣ Import du PGC automatiquement pour cette entreprise
-                importer_pgc_pour_entreprise(entreprise)
-
-                # 4️⃣ Message + redirection
-                messages.success(
-                    request,
-                    f"Propriétaire {user.email} créé avec son entreprise personnelle."
-                )
-
-                return redirect("accueil-manager")
-
-            except Exception as e:
-                messages.error(request, f"Erreur interne : {e}")
-
-    else:
-        form = OwnerSignupForm(initial={"role": "OWNER"})
-
-    return render(request, "authentication/owner_signup_back.html", {"form": form})
-"""
-
 
 def signup_owner(request):
     if User.objects.filter(role="OWNER").exists():
@@ -148,47 +75,26 @@ def signup_owner(request):
 """
 @login_required
 def creer_gerant(request):
-    if request.user.role != "OWNER":
-        return HttpResponseForbidden("Seul le propriétaire peut créer un gérant")
-
     if request.method == "POST":
         form = AddUserForm(request.POST)
-        print('post:', form)
-        print("ERREURS:", form.errors)  # ← Ajoute ceci
-        if form.is_valid():
-            gerant = form.save()
-            print('gerant:', gerant)
-            return redirect("creer-dossier", gerant_id=gerant.id)
-    else:
-        form = AddUserForm()
-
-    return render(request, "api/create_gerant.html", {"form": form})
-
-"""
-
-@login_required
-def creer_gerant(request):
-    entreprise_name = Entreprise.objects.filter(owner=request.user).first()
-    if request.method == "POST":
-        form = AddUserForm(request.POST)
-
         if form.is_valid():
             try:
                 # 1️⃣ création du gérant
                 gerant = form.save(commit=True)
-                print('gerant:', gerant)
+                print('gerant', gerant)
 
-                # 2️⃣ préparation données entreprise
+                # 2️⃣ récupération des données pour sa nouvelle entreprise
                 data = form.get_entreprise_data()
+                print('data, REQUEST.USER, GERANT: \n', data, request.user, gerant)
 
-                # 3️⃣ création entreprise personnelle
+                # 3️⃣ création de SON entreprise (distincte du propriétaire)
                 entreprise = Entreprise.objects.create(
-                    owner=gerant,
-                    gerant=None,
+                    owner=request.user,  # le propriétaire reste owner !
+                    gerant=gerant,       # le nouveau user devient gérant
                     **data
                 )
 
-                # 4️⃣ import PGC
+                # 4️⃣ import PGC (une seule fois par entreprise)
                 importer_pgc_pour_entreprise(entreprise)
 
                 messages.success(request, "Gérant et entreprise créés avec succès.")
@@ -199,34 +105,100 @@ def creer_gerant(request):
 
     else:
         form = AddUserForm()
-    return render(request, "authentication/create_gerant.html", {"form": form, "entreprise_name": entreprise_name,})
+
+    return render(request, "authentication/create_gerant.html", {
+        "form": form,
+    })
+"""
+
+
+
+@login_required
+def creer_gerant(request):
+    entreprise_name = Entreprise.objects.filter(owner=request.user).first()
+    print('entreprise_manager_name', entreprise_name)
+    if request.method == "POST":
+        form = AddUserForm(request.POST)
+        if form.is_valid():
+            try:
+                # 1️⃣ création du gérant
+                gerant = form.save(commit=True)
+                print('gerant', gerant)
+
+                # 2️⃣ récupération des données pour l’entreprise du gérant
+                data = form.get_entreprise_data()
+                print('data, REQUEST.USER, GERANT: \n', data, request.user, gerant)
+
+                # 3️⃣ création de SON entreprise
+                entreprise = Entreprise.objects.create(
+                    owner=request.user,
+                    gerant=gerant,
+                    **data
+                )
+                print("ENTREPRISE", entreprise)
+                # 4️⃣ import PGC
+                importer_pgc_pour_entreprise(entreprise)
+
+
+                print('Re test entreprise.id:', entreprise.id)
+                # Sinon → redirection classique
+                # messages.success(request, "Gérant et entreprise créés avec succès.")
+                return redirect("accueil-manager")
+
+            except Exception as e:
+                messages.error(request, f"Erreur : {e}")
+
+    else:
+        form = AddUserForm()
+
+    return render(request, "api/create_gerant.html", {
+        "form": form,
+    })
 
 """
-class LoginPage(View):
-
-    form_class = LoginForm
-    template_name = 'authentication/login.html'
-
-    def get(self, request):
-        form = self.form_class
-        message = 'test fonction get'
-        return render(request, self.template_name, context={'form': form, 'message': message})
-
-    def post(self, request):
-        form = self.form_class(request.POST)
-
+@login_required
+def creer_gerant(request):
+    if request.method == "POST":
+        form = AddUserForm(request.POST)
         if form.is_valid():
-            user = authenticate(request,
-                email=form.cleaned_data['email'],
-                password=form.cleaned_data['password']
-            )
-            if user is not None:
-                print('user:', user)
-                login(request, user)
-                return redirect('accueil')
-            else:
-                message = 'Identifiants ou pass invalides.'
-        return render(request, self.template_name, context={'form': form, 'message': message})
+            try:
+                # 1️⃣ création du gérant
+                gerant = form.save(commit=True)
+
+                # 2️⃣ données entreprise
+                data = form.get_entreprise_data()
+
+                # 3️⃣ création entreprise
+                entreprise = Entreprise.objects.create(
+                    owner=request.user,
+                    gerant=gerant,
+                    **data
+                )
+
+                # 4️⃣ import PGC
+                importer_pgc_pour_entreprise(entreprise)
+
+                print("ENTREPRISE CRÉÉE AVEC ID =", entreprise.id)
+
+                # 5️⃣ SI appel AJAX → renvoyer l’ID
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({
+                        "success": True,
+                        "gerant_id": gerant.id,
+                        "entreprise_id": entreprise.id,
+                    })
+
+                # 6️⃣ sinon → redirection normale
+                messages.success(request, "Gérant et entreprise créés avec succès.")
+                return redirect("accueil-manager")
+
+            except Exception as e:
+                messages.error(request, f"Erreur : {e}")
+
+    else:
+        form = AddUserForm()
+
+    return render(request, "authentication/create_gerant_js.html", {"form": form})
 """
 
 
@@ -288,97 +260,6 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
-
-
-
-"""
-def signup_owner(request):
-    # Vérifie s'il existe déjà un OWNER dans la base
-    user_role = User.objects.filter(role="OWNER")
-    print('user_signup_exist:', user_role)
-    if User.objects.filter(role="OWNER").exists():
-        messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
-        # return redirect("accueil")  # ou "accueil"
-        return render(request, 'frontend/accueil_gerant.html')
-
-    if request.method == 'POST':
-        form = forms.SignupForm(request.POST)
-
-        if form.is_valid():
-            print("✅ Formulaire signup_owner valide")
-            # form.save()
-            user = form.save()
-            # login(request, user)    # Permet la connexion directement
-            messages.success(request, "Compte créé avec succès. Vous pouvez maintenant vous connecter.")
-            return redirect(settings.LOGIN_REDIRECT_URL)
-    else:
-        form = forms.SignupForm()
-    return render(request, 'authentication/owner_signup_back.html', context={'form': form, 'user': user_role})
-
-def signup_owner(request):
-
-    # Création unique du propriétaire (OWNER) du logiciel.
-
-    # Vérifie s'il existe déjà un OWNER
-    if User.objects.filter(role="OWNER").exists():
-        messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
-        return redirect("accueil")
-
-    if request.method == "POST":
-        form = SignupForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-
-            try:
-                user = User.objects.create_user(
-                    nom_gerant=data["nom_gerant"],
-                    email=data["email"],
-                    password=data["password1"],
-                    role="OWNER",
-                )
-
-                messages.success(request, f"✅ Propriétaire {user.email} créé avec succès !")
-                return redirect("login")  # ou "accueil"
-
-            except Exception as e:
-                messages.error(request, f"Erreur : {e}")
-
-    else:
-        form = SignupForm()
-
-    return render(request, "authentication/owner_signup_back.html", {"form": form})
-
-def signup_owner(request):
-    # Vérifie s'il existe déjà un OWNER dans la base
-    user_role = User.objects.filter(role="OWNER")
-    # print('user_signup_exist:', user_role)
-    if User.objects.filter(role="OWNER").exists():
-        messages.error(request, "Un propriétaire (OWNER) est déjà enregistré.")
-        # return redirect("accueil")  # ou "accueil"
-        return render(request, 'frontend/accueil_gerant.html')
-
-    if request.method == "POST":
-        form = SignupForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            user, entreprise = create_user_and_entreprise(
-                nom_gerant=data["nom_gerant"],
-                email=data["email"],
-                password=data["password1"],
-                role=data["role"],
-                nom=data.get("nom"),
-                siret=data.get("siret"),
-                ape=data.get("ape"),
-                adresse=data.get("adresse"),
-                date_creation=data.get("date_creation"),
-            )
-            # return redirect("accueil")
-            return redirect(settings.LOGIN_REDIRECT_URL)
-    else:
-        form = forms.SignupForm()
-    # return render(request, 'authentication/owner_signup_back.html', context={'form': form, 'user': user_role})
-    return render(request, 'authentication/owner_signup_back.html', context={'form': form})
-"""
 def logout_user(request):
     logout(request)
     return redirect('accueil')

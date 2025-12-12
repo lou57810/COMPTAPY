@@ -1,0 +1,21 @@
+{% extends "base_manager.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Création d'une entreprise</h2>
+      <form id="form-create-gerant" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Créer le gérant</button>
+      </form>
+</div>
+
+<div id="response"></div>
+
+<script src="{% static 'js/create_gerant.js' %}"></script>
+
+
+
+
+{% endblock %}

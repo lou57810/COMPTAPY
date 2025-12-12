@@ -5,7 +5,7 @@ from django.utils.timezone import now
 from django.contrib.auth import get_user_model
 from .models import Entreprise, CompteComptable, CompteComptableReference
 from django.conf import settings
-
+from pathlib import Path
 import json
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -16,11 +16,9 @@ from authentication.models import User
 
 def importer_pgc_pour_entreprise(entreprise):
     """Importe le plan comptable pour une entreprise donnée, si non déjà présent."""
-    from pathlib import Path
-    import json
-
+    print('entreprise_importe_pgc...:', entreprise)
     if CompteComptable.objects.filter(entreprise=entreprise, origine="pgc").exists():
-        print(f"ℹ️ Le PGC est déjà importé pour {entreprise.nom}")
+        print(f"ℹ️ Le PGC est déjà importé pour {entreprise}")
         return
 
     pgc_path = Path(settings.BASE_DIR) / "pgc.json"
@@ -40,7 +38,7 @@ def importer_pgc_pour_entreprise(entreprise):
             )
         )
     CompteComptable.objects.bulk_create(comptes)
-    print(f"✅ {len(comptes)} comptes importés pour {entreprise.nom}")
+    print(f"✅ {len(comptes)} comptes importés pour {entreprise}")
 
 
 
@@ -70,6 +68,7 @@ def create_user_and_entreprise(
     """Crée un gérant (utilisateur) et une entreprise liée au propriétaire unique (OWNER)."""
     try:
         owner = User.objects.get(role="OWNER")
+        print('OWNER:', owner)
     except ObjectDoesNotExist:
         raise ValueError("Aucun propriétaire (OWNER) n’est défini dans la base.")
 
@@ -84,6 +83,7 @@ def create_user_and_entreprise(
         password=password,
         role=role or "GERANT",
     )
+    print('user, owner:', user, owner)
 
     # Création de l’entreprise
     entreprise = Entreprise.objects.create(
@@ -96,10 +96,11 @@ def create_user_and_entreprise(
         date_creation=date_creation,
         nom_gerant=nom_gerant,
     )
+    print('entreprise:', entreprise)
 
     # Import du plan comptable général pour cette entreprise
     importer_pgc_pour_entreprise(entreprise)
-    print(f"✅ Entreprise '{entreprise.nom}' créée avec succès pour le gérant '{user.email}'.")
+    print(f"✅ Entreprise Fonction importer_pgc... '{entreprise.nom}' créée avec succès pour le gérant '{user.email}'.")
     return user, entreprise
 
 """

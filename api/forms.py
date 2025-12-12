@@ -16,7 +16,7 @@ class CompteSearchForm(forms.Form):
 class CompteForm(forms.ModelForm):
     class Meta:
         model = models.CompteComptable
-        fields = ['numero', 'nom']
+        fields = ['numero', 'libelle']
 
 
 class UpdateCompteForm(forms.ModelForm):
@@ -31,7 +31,7 @@ class CompteEditForm(forms.ModelForm):
         fields = ['numero', 'nom']  # Les champs que tu autorises à modifier
 
 
-
+"""
 class EntrepriseForm(forms.ModelForm):
     email = forms.EmailField(label="Email Gérant", required=False)
     # password = forms.CharField(widget=forms.PasswordInput, label="Mot de passe", required=True)
@@ -73,7 +73,7 @@ class EntrepriseForm(forms.ModelForm):
         if commit:
             entreprise.save()
         return entreprise
-
+"""
 """
 class EntrepriseModifForm(forms.ModelForm):
     email = forms.EmailField(label="Email Gérant", required=False)
@@ -129,9 +129,8 @@ class EntrepriseModifForm(forms.ModelForm):
     # password = forms.CharField(widget=forms.PasswordInput, label="Mot de passe", required=True)
     role = forms.ChoiceField(
         choices=[
-            ("OWNER", "Propriétaire"),
+            ("OWNER", "OWNER"),
             ("GERANT", "Gérant / Cogérant"),
-            ("EXPERT_COMPTABLE", "Expert-Comptable"),
         ],
         label="Rôle",
         required=True
