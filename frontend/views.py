@@ -296,9 +296,10 @@ def create_compte(request, entreprise_id):
             compte = compte_form.save(commit=False)
             compte.entreprise = entreprise        # ✅ Lier explicitement
             compte.origine = 'user'
-            libelle = compte.nom
+            # libelle = compte.nom
+            compte.libelle = compte.nom
             # ✅ Marquer comme créé par utilisateur
-            print('data_valid:', compte.origine, compte, compte.entreprise, libelle)
+            print('data_valid:', compte.origine, compte.nom, compte.entreprise, compte.libelle)
             compte.save()
             messages.success(request, 'Le compte a été créé avec succès !')
             return redirect('accueil-compta', entreprise_id=entreprise_id)
@@ -310,7 +311,7 @@ def create_compte(request, entreprise_id):
         'compte_form': compte_form,
         'entreprise': entreprise,
         'entreprise_nom': entreprise_nom,
-
+        'nom': entreprise.nom,
         # 'entreprise_id': entreprise_id
     })
 
@@ -340,6 +341,37 @@ def display_compte(request):
         'form_edit': form_edit,
         'comptes': comptes,
     })
+
+
+def search_modif_compte(request, entreprise_id):
+    entreprise = Entreprise.objects.get(id=entreprise_id)
+    entreprise_nom = entreprise.nom
+    compte = CompteComptable.objects.none()
+    form_search = forms.CompteSearchForm(request.GET or None)
+    form_edit = None
+
+    if form_search.is_valid():
+        numero = form_search.cleaned_data.get('numero')
+        print('numero:', numero)
+        # compte = CompteComptable.objects.filter(numero=numero)
+        compte = get_object_or_404(CompteComptable, numero=numero)
+        if compte.exists():
+            compte = compte.first()
+            form_edit = forms.CompteEditForm(request.POST or None, instance=compte)
+            if request.method == "POST" and form_edit.is_valid():
+                form_edit.save()
+                return redirect('search_compte')  # pour revenir proprement
+
+
+
+    return render(request, 'frontend/search_compte.html', {
+        'form_search': form_search,
+        'form_edit': form_edit,
+        'compte': compte,
+        'entreprise_nom': entreprise_nom,
+        'compte_form': form_search,
+    })
+
 
 
 def afficher_compte(request, entreprise_id):

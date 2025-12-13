@@ -184,7 +184,8 @@ def update_compte(request, entreprise_id, compte_id):
 def update_compte(request, entreprise_id, compte_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
     compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
-
+    entreprise_nom = entreprise.nom
+    print('entreprise_nom:', entreprise_nom)
     if request.method == "POST":
         form = CompteForm(request.POST, instance=compte)
         if form.is_valid():
@@ -207,6 +208,7 @@ def update_compte(request, entreprise_id, compte_id):
         "form": form,
         "compte_id": compte_id,
         "entreprise_id": entreprise_id,
+        "entreprise_nom": entreprise_nom,
     })
 
 @login_required

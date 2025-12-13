@@ -4,7 +4,7 @@ from . import views
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import accueil_manager, accueil_gerant, afficher_compte, create_compte, pgc_entreprise  # liste_compte_entreprise,
+from .views import accueil_manager, accueil_gerant, afficher_compte, create_compte, pgc_entreprise, search_modif_compte  # liste_compte_entreprise,
 # from .views import ajouter_entreprise
 # from api.utils import create_user_and_entreprise
 
@@ -26,6 +26,7 @@ urlpatterns = [
     # path("entreprise/<int:entreprise_id>/modifier/", views.update_compte, name="update-compte"),
     # path('create/<int:entreprise_id>/', views.create_compte, name='create-compte'),
     path('frontend/list/', views.display_compte, name='display_compte'),  # Affiche un compte depuis son numero
+    path('search_compte/<int:entreprise_id>/', search_modif_compte, name='search-modif-compte'),
     path('saisie_journal/', views.saisie_journal, name='saisie-journal'),
     path('valider/<str:type_journal>/', views.valider_journal, name='valider-journal'),
     path('frontend/afficher_compte/<int:entreprise_id>/', afficher_compte, name='afficher-compte'),

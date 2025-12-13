@@ -1,0 +1,32 @@
+{% extends 'base_dossier.html' %}
+{% block content %}
+<section class="py-5">
+    <div class="container">
+    <h2>Recherche compte</h2>
+    <h4>Entreprise: <span>{{ entreprise_nom }}</span></h4>
+      <form method="post">
+          {{ compte_form.as_p }}
+          {% csrf_token %}
+          <button type="submit" >Afficher</button>
+      </form>
+    <div class="container">
+
+    <!-- ✅ Formulaire toujours visible -->
+    <form method="get" action="{% url 'afficher-compte' entreprise_id %}">
+      <label for="numero">Numéro de compte :</label>
+      <input type="text" name="numero" id="numero" value="{{ name|default_if_none:'' }}">
+      <button type="submit">Rechercher</button>
+    </form>
+  </div>
+
+      {% if messages %}
+        <div class="alert alert-success">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+      {% endif %}
+
+    </div>
+</section>
+{% endblock content %}

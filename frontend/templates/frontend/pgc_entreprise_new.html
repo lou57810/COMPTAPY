@@ -10,11 +10,9 @@
     <div class="container">
 
       <h2>Dossier <span> </span>{{ entreprise_nom }}</h2>
-      <h2>Id: <span> </span>{{ entreprise_id }}</h2>
+<!--      <h2>Id: <span> </span>{{ entreprise_id }}</h2>-->
       <h2>Id: <span> </span>{{ entreprise.id }}</h2>
     </div>
-
-
 
 <div class="d-flex justify-content-between mb-2">
   <div class="pagination">
@@ -41,18 +39,6 @@
   </div>
 </div>
 
-
-<!--
-
-    <div class="d-flex justify-content-between mb-2">
-      <button id="prev-btn-top" class="btn btn-primary">
-        ◀️ Précédent
-      </button>
-      <button id="next-btn-top" class="btn btn-primary">
-        Suivant ▶️
-      </button>
-    </div>
-    -->
       <!-- NAVIGATION RAPIDE -->
       <div class="d-flex gap-2 my-3">
           <!-- Classes comptables -->
@@ -76,7 +62,7 @@
             <tr>
                 <th>Numéro</th>
                 <th>Libellé</th>
-                <th>Clients/Fournisseurs</th>
+<!--                <th>Clients/Fournisseurs</th>-->
                 <th>Type</th>
                 <th>Origine</th>
                 <th>Action</th>
@@ -87,11 +73,11 @@
         <tr>
           <td>{{ e.numero }}</td>
           <td>{{ e.libelle }}</td>
-          <td>{{ e.nom }}</td>
+<!--          <td>{{ e.nom }}</td>-->
           <td>{{ e.type_compte }}</td>
           <td>{{ e.origine }}</td>
           <td><Button type="button" class="btn btn-outline-primary">
-            <a href="/api/modifier_compte/{{ entrepriseId }}/{{ compte.id }}/">Modifier</a>
+            <a href="{% url 'update-compte' entreprise.id e.id %}">Modifier</a>
             </Button>
           </td>
         </tr>

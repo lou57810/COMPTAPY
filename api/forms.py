@@ -16,7 +16,7 @@ class CompteSearchForm(forms.Form):
 class CompteForm(forms.ModelForm):
     class Meta:
         model = models.CompteComptable
-        fields = ['numero', 'libelle']
+        fields = ['numero', 'nom']
 
 
 class UpdateCompteForm(forms.ModelForm):

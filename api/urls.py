@@ -25,7 +25,7 @@ urlpatterns = [
 
     path("comptes/<int:pk>/", CompteComptableRetrieveUpdateDestroy.as_view(), name="update"),
     path('comptes/numero/', get_ecritures_par_compte, name='get_ecritures_par_compte'),
-    # path("modifier_compte/<int:entreprise_id>/<int:compte_id>/", update_compte, name="update-compte"),
+    path("modifier_compte/<int:entreprise_id>/<int:compte_id>/", update_compte, name="update-compte"),
     path('ecritures/', ecritures_par_compte, name='ecritures_par_compte'),
     # path("ajouter_dossier/<int:gerant_id>", creer_dossier_gerant, name="creer-dossier"),
     # path("ajouter_dossier_owner/<int:gerant_id>", creer_dossier_owner, name="creer-dossier-owner"),
