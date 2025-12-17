@@ -7,6 +7,12 @@ let ligneFin = 0;
 let row = 0;
 let internalChange = false;
 let col = 0;
+const entrepriseId = document.getElementById("entreprise_id")?.value;
+console.log('entrepriseId:', entrepriseId)
+if (!entrepriseId) {
+  console.error("❌ entrepriseId manquant");
+  //return;
+}
 
 
 
@@ -76,7 +82,9 @@ function initHandsontable(container, config) {
     // Auto-complétion du nom du compte
     if (String(prop) === '1' && newValue !== oldValue) {
       internalChange = true;
-      fetch(`/api/comptes/numero/?numero=${encodeURIComponent(newValue)}`)
+      fetch(`/api/comptes/${entrepriseId}/numero/?numero=${encodeURIComponent(newValue)}`)
+      // fetch(`/api/comptes/numero/?numero=${encodeURIComponent(newValue)}`)
+      // fetch(`/api/comptes/numero/?entreprise=${entrepriseId}&numero=${encodeURIComponent(newValue)}`)
         .then(response => response.json())
         .then(data => {
           if (data.nom) {

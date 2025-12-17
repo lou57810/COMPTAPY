@@ -1,16 +1,17 @@
-{% extends 'base.html' %}
+<!--{\% extends 'base.html' %}-->
+{% extends 'base_gerant.html' %}
 {% block content %}
 {% load static %}
 
 <input type="hidden" id="entreprise_id" value="{{ entreprise.id }}">
-
+<!--<div id="entreprise" data-id="{\{ entreprise.id }}"></div>-->
 
 <section class="py-5">
     <div class="container">
       <h3>Journal : <span> </span>{{ entreprise }}<span>    </span><span>Id: </span>{{ entreprise.id }}</h3>
       <form method="get" class="mb-4">
         <label for="journal">Choisir un journal :</label>
-          <select name="type" id="journal" onchange="this.form.submit()">
+        <select name="type" id="journal" onchange="this.form.submit()">
 <!--            <option value="type" {% if type_journal == 'type' %}selected{% endif %}>Journal Type</option>-->
             <option value="" disabled {% if not type_journal %}selected{% endif %}>Choisir un journal</option>
             <option value="achats" {% if type_journal == 'achats' %}selected{% endif %}>Journal d'achats</option>
@@ -29,8 +30,8 @@
       </form>
     </div>
   <div class="container">
-      {% if type_journal %} {{ type_journal }} <!-- Pas d'affichage sur la page d'accueil journal -->
-        <h1>Journal {{ type_journal }}</h1>
+      {% if type_journal %}  <!-- Pas d'affichage sur la page d'accueil journal -->
+  <h1>Journal {{ type_journal }}</h1>
 
         <div id="hot"></div>
         <div id="journal_display"></div>

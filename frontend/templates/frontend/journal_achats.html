@@ -1,10 +1,12 @@
-{% extends 'base0.html' %}
+{% extends 'base_gerant.html' %}
 {% block content %}
 {% load static %}
 
 <section class="py-5">
     <div class="container">
-        <h1>Journal d'achats</h1>
+        <h1>Journal d'achats bla</h1>
+<!--            <div id="entreprise" data-id="{\{ entreprise.id }}"></div>-->
+            <input type="hidden" id="entreprise_id" value="{{ entreprise.id }}">
             <div id="hot" data-journal-type="achats"></div>
             <button id="validerEcritures" class="btn btn-primary mt-3" data-url-validation="{% url 'valider-journal' %}">Valider les écritures</button>
             <div>

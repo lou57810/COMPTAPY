@@ -4,7 +4,7 @@ from . import views
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import accueil_manager, accueil_gerant, afficher_compte, create_compte, pgc_entreprise, search_modif_compte  # liste_compte_entreprise,
+from .views import accueil_manager, accueil_gerant, accueil_dossier_compta, afficher_compte, create_compte, pgc_entreprise, search_modif_compte  # liste_compte_entreprise,
 # from .views import ajouter_entreprise
 # from api.utils import create_user_and_entreprise
 
@@ -27,12 +27,13 @@ urlpatterns = [
     # path('create/<int:entreprise_id>/', views.create_compte, name='create-compte'),
     path('frontend/list/', views.display_compte, name='display_compte'),  # Affiche un compte depuis son numero
     path('search_compte/<int:entreprise_id>/', search_modif_compte, name='search-modif-compte'),
-    path('saisie_journal/', views.saisie_journal, name='saisie-journal'),
+    path('saisie_journal/<int:entreprise_id>/', views.saisie_journal, name='saisie-journal'),
     path('valider/<str:type_journal>/', views.valider_journal, name='valider-journal'),
     path('frontend/afficher_compte/<int:entreprise_id>/', afficher_compte, name='afficher-compte'),
     path('frontend/export_compta/', views.export_fec, name='export-fec'),
     path("frontend/manage_users/", views.manage_users, name="manage-users"),
     # path("frontend/liste_entreprises/", views.liste_entreprises, name="liste-entreprises"),
+    path("compta/<int:entreprise_id>/", accueil_dossier_compta, name="accueil-compta"),
 
     # path("compta/<int:entreprise_id>/", views.accueil_dossier_compta, name="accueil-compta"),
 ]

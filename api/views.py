@@ -19,6 +19,7 @@ from django.db.models.functions import Substr
 from rest_framework import generics, permissions
 from .utils import get_accessible_entreprises, importer_pgc_pour_entreprise, get_entreprise_from_gerant
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 User = get_user_model()
 
 
@@ -115,36 +116,7 @@ def creer_dossier_owner(request, user_id):
     })
 """
 
-def accueil_dossier_compta(request, entreprise_id):
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    entreprise_nom = None
-    entreprise_gerant = None
-    entreprise_gerant_email = None
-    # entreprise_active = None
-    print('entreprise_id, entreprise.nom:', entreprise_id, entreprise.nom)
 
-    if request.user.is_authenticated:
-        # test = Entreprise.objects.filter(owner=request.user)
-        entreprise_nom = entreprise.nom
-        entreprise_gerant = entreprise.nom_gerant
-        entreprise_gerant_email = request.user.email
-        print('entreprise_gerant_email, NOM:', entreprise_gerant_email, entreprise.nom)
-        # entreprise_nom = test[0].nom
-        # entreprise_gerant = test[0].nom_gerant
-        # entreprise_active = getattr(request.user, "entreprise", None)
-        # print('entreprise_gerant, test:', entreprise.nom, entreprise.nom_gerant)
-    # On sauvegarde l'entreprise active dans la session
-    # request.session["entreprise_active_id"] = entreprise.id
-    request.session["entreprise_active_id"] = entreprise_id
-
-    # if User.objects.filter(role="GERANT").exists():
-    return render(request, "api/accueil_dossier_comptable.html",
-          {"entreprise": entreprise,
-                   "entreprise_id": entreprise_id,
-                   "entreprise_nom": entreprise_nom,
-                   "entreprise_gerant": entreprise_gerant,
-                   "entreprise_gerant_email": entreprise_gerant_email}
-                  )
 
 """
 def liste_compte(request):
@@ -342,6 +314,23 @@ def get_compte_by_numero(request):
         return Response(serializer.data)
     except CompteComptable.DoesNotExist:
         return Response({'error': 'Compte introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
+
+def compte_par_numero(request, entreprise_id):
+    numero = request.GET.get("numero")
+
+    compte = CompteComptable.objects.filter(
+        entreprise_id=entreprise_id,
+        numero=numero
+    ).first()
+
+    if not compte:
+        return JsonResponse({}, status=404)
+
+    return JsonResponse({
+        "numero": compte.numero,
+        "nom": compte.libelle,
+    })
 
 
 @api_view(['POST'])

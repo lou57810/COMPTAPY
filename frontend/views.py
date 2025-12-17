@@ -100,6 +100,37 @@ def accueil(request):
     # return User.objects.filter(role="OWNER").first()
 
 
+def accueil_dossier_compta(request, entreprise_id):
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    entreprise_nom = None
+    entreprise_gerant = None
+    entreprise_gerant_email = None
+    # entreprise_active = None
+    print('entreprise_id, entreprise.nom:', entreprise_id, entreprise.nom)
+
+    if request.user.is_authenticated:
+        # test = Entreprise.objects.filter(owner=request.user)
+        entreprise_nom = entreprise.nom
+        entreprise_gerant = entreprise.nom_gerant
+        entreprise_gerant_email = request.user.email
+        print('entreprise_gerant_email, NOM:', entreprise_gerant_email, entreprise.nom)
+        # entreprise_nom = test[0].nom
+        # entreprise_gerant = test[0].nom_gerant
+        # entreprise_active = getattr(request.user, "entreprise", None)
+        # print('entreprise_gerant, test:', entreprise.nom, entreprise.nom_gerant)
+    # On sauvegarde l'entreprise active dans la session
+    # request.session["entreprise_active_id"] = entreprise.id
+    request.session["entreprise_active_id"] = entreprise_id
+
+    # if User.objects.filter(role="GERANT").exists():
+    return render(request, "frontend/accueil_dossier_comptable.html",
+          {"entreprise": entreprise,
+                   "entreprise_id": entreprise_id,
+                   "entreprise_nom": entreprise_nom,
+                   "entreprise_gerant": entreprise_gerant,
+                   "entreprise_gerant_email": entreprise_gerant_email}
+                  )
+
 @login_required
 def accueil_manager(request):
     # toutes les entreprises du propriétaire
@@ -126,6 +157,7 @@ def accueil_manager(request):
 def accueil_gerant(request):
     # Premièrement, tenter de récupérer l'entreprise où le user est gérant
     entreprise = Entreprise.objects.filter(gerant=request.user).first()
+    print('entreprise:', entreprise)
     # Sinon, la rendre propriétaire (OWNER)
     if not entreprise:
         entreprise = Entreprise.objects.filter(owner=request.user).first()
@@ -265,8 +297,9 @@ def setup(request):
     return render(request, "frontend/setup.html", {"form": form})
 
 
-def saisie_journal(request):
-    entreprise = get_entreprise_active(request)
+def saisie_journal(request, entreprise_id):
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    print('entreprise:', entreprise)
 
     if not entreprise:
         messages.warning(request, "Veuillez d'abord sélectionner une entreprise.")
@@ -373,6 +406,14 @@ def search_modif_compte(request, entreprise_id):
     })
 
 
+def get_pk_from_numero(request):
+    numero = request.GET.get('numero')
+    try:
+        obj = CompteComptable.objects.get(numero=numero)
+        return JsonResponse({'pk': obj.pk})
+    except CompteComptable.DoesNotExist:
+        return JsonResponse({'error': 'Object not found'}, status=404)
+
 
 def afficher_compte(request, entreprise_id):
     numero = []
@@ -415,13 +456,7 @@ def update_compte(request, entreprise_id, compte_id):
     })
 """
 
-def get_pk_from_numero(request):
-    numero = request.GET.get('numero')
-    try:
-        obj = CompteComptable.objects.get(numero=numero)
-        return JsonResponse({'pk': obj.pk})
-    except CompteComptable.DoesNotExist:
-        return JsonResponse({'error': 'Object not found'}, status=404)
+
 
 
 # frontend/views.py
