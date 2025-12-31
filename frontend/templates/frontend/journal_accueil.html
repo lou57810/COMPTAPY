@@ -4,6 +4,10 @@
 {% load static %}
 
 <input type="hidden" id="entreprise_id" value="{{ entreprise.id }}">
+<input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" id="journal_type" value="{{ type_journal }}">
+<input type="hidden" id="journal_url" value="{% url 'journal-ecritures' entreprise.id %}">
+
 <!--<div id="entreprise" data-id="{\{ entreprise.id }}"></div>-->
 
 <section class="py-5">
@@ -26,7 +30,7 @@
             <option value="reouverture" {% if type_journal == 'reouverture' %}selected{% endif %}>Journal de réouverture</option>
             <option value="report_a_nouveau" {% if type_journal == 'report_a_nouveau' %}selected{% endif %}>Journal de report à nouveau</option>
             <!-- Ajoute d'autres si besoin -->
-          </select>
+        </select>
       </form>
     </div>
   <div class="container">
@@ -35,10 +39,9 @@
 
         <div id="hot"></div>
         <div id="journal_display"></div>
-<!--            <button id="validerEcritures" class="btn btn-primary mt-3" data-url-validation="/valider/{{ type_journal }}/">Valider les écritures</button>-->
-          <button id="validerEcritures"
-                  class="btn btn-success mt-3" data-url-validation="{% url 'valider-journal' type_journal %}?entreprise_id={{ entreprise.id }}">Valider les écritures</button>
-
+          <button type="button" id="validerEcritures"
+            class="btn btn-success mt-3" data-url-validation="{% url 'valider-journal' type_journal %}?entreprise_id={{ entreprise.id }}">Valider les écritures
+          </button>
 
       <div class="container_totaux">
         <h3>Totaux</h3>

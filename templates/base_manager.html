@@ -28,7 +28,7 @@
 
             <nav class="navbar navbar-expand-xxl fixed-top navbar-dark bg-dark">
                 <div class="container">
-                  <span class="bg-primary bg-gradient p-1 w-25 rounded-3 text-light">{{ entreprise }}</span>
+                  <span class="bg-primary bg-gradient p-1 w-25 rounded-3 text-light">{{ entreprise_nom }}</span>
 <!--                    <a class="navbar-brand text-white fs-2" href="{\% url 'accueil' %}"></a>-->
 <!--                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">-->
 <!--                        <span class="navbar-toggler-icon"></span>-->
@@ -49,9 +49,9 @@
                             <li class="nav-item">
                                 <a href="{% url 'login' %}" class="nav-link text-light px-3">Sign_in</a>
                             </li>
+                          {% endif %}
 
 
-                          {% else %}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Dossier Entreprises Clients</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -61,13 +61,14 @@
                                 </ul>
                             </li>
                             <li class="nav-item">
-                              <a href="{% url 'accueil-compta' entreprise.id %}" class="nav-link text-light px-3">Mon dossier comptable</a>
+<!--                              <a href="{% url 'accueil-gerant' %}" class="nav-link text-light px-3">Mon dossier comptable</a>-->
+                              <a href="{% url 'accueil-gerant' %}" class="nav-link text-light px-3">Mon dossier comptable</a>
                             </li>
 
                             <li class="nav-item">
                               <a href="{% url 'logout' %}" class="nav-link text-light px-3">Sign_out</a>
                             </li>
-                          {% endif %}
+
 
                       </ul>
                     </div>

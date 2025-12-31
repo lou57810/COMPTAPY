@@ -18,3 +18,5 @@ Bernard: Frais/mois: 750€
 taxi épargné: 3000€/ans
 ehpad épargné: 36000€/ans
 Total: 39000€ /ans
+
+445700  TVA collectée  706000 Ventes Marchandises 445660 TVA déductible 606100 Achats Marchandises

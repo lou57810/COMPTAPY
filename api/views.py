@@ -13,7 +13,7 @@ from .forms import FolderForm, EntrepriseModifForm, CompteForm  # EntrepriseForm
 from .serializers import CompteComptableSerializer, EcritureJournalSerializer
 from django.utils import timezone
 from django.db import IntegrityError
-from .models import CompteComptable, EcritureJournal, Entreprise
+from .models import CompteComptable, EcritureJournal, Entreprise, Journal
 from django.db.models.functions import Substr
 
 from rest_framework import generics, permissions
@@ -21,6 +21,9 @@ from .utils import get_accessible_entreprises, importer_pgc_pour_entreprise, get
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 User = get_user_model()
+from django.http import JsonResponse
+from datetime import datetime
+import json
 
 
 """
@@ -144,7 +147,7 @@ def update_compte(request, entreprise_id, compte_id):
     else:
         form = CompteForm(instance=compte)
 
-    return render(request, "api/update_compte.html", {
+    return render(request, "api/update_compte_back.html", {
         "entreprise": entreprise,
         "compte": compte,
         "form": form,
@@ -157,7 +160,10 @@ def update_compte(request, entreprise_id, compte_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
     compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
     entreprise_nom = entreprise.nom
-    print('entreprise_nom:', entreprise_nom)
+    compte_numero = compte.numero
+    print('entreprise_nom:', entreprise_nom, compte_numero)
+
+
     if request.method == "POST":
         form = CompteForm(request.POST, instance=compte)
         if form.is_valid():
@@ -323,7 +329,7 @@ def compte_par_numero(request, entreprise_id):
         entreprise_id=entreprise_id,
         numero=numero
     ).first()
-
+    print('compte_par_numero', compte)
     if not compte:
         return JsonResponse({}, status=404)
 
@@ -333,6 +339,91 @@ def compte_par_numero(request, entreprise_id):
     })
 
 
+"""
+def journal_ecritures(request, entreprise_id):
+    journal_type = request.GET.get("type")  # achats, ventes, etc.
+
+    ecritures = EcritureJournal.objects.filter(
+        entreprise_id=entreprise_id,
+        journal=journal_type
+    ).order_by("date", "id")
+
+    data = []
+    for e in ecritures:
+        data.append([
+            e.date.strftime("%d/%m/%Y"),
+            e.compte.numero,
+            e.compte.libelle,
+            e.numero_piece,
+            e.libelle,
+            "", "", "",   # PU, Qté, TVA (selon ton modèle)
+            float(e.debit),
+            float(e.credit),
+        ])
+
+    return JsonResponse({"data": data})
+
+def saisie_journal(request, entreprise_id):
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    print('entreprise:', entreprise)
+
+    if not entreprise:
+        messages.warning(request, "Veuillez d'abord sélectionner une entreprise.")
+        return redirect("liste-entreprises")
+    type_journal = request.GET.get('type', '')  # Par défaut : journal achats
+    print('type_journal:', type_journal)
+    context = {
+        'type_journal': type_journal, "entreprise": entreprise
+    }
+    return render(request, 'frontend/journal_accueil.html', context)
+
+
+def journal_ecritures(request, entreprise_id):
+    journal_type = request.GET.get("type")
+    print('Journal_Type, entreprise_id:', journal_type, entreprise_id)
+
+    if not journal_type:
+        return JsonResponse(
+            {"error": "Type de journal manquant"},
+            status=400
+        )
+
+    journal = get_object_or_404(
+        Journal,
+        entreprise_id=entreprise_id,
+        type=journal_type
+    )
+
+    ecritures = (
+        EcritureJournal.objects
+        .filter(
+            journal=journal,
+            # entreprise=journal.entreprise,
+        )
+        .order_by("date", "id")
+    )
+
+    data = []
+    for e in ecritures:
+        data.append([
+            e.date.strftime("%d/%m/%Y"),
+            e.compte.numero,
+            e.compte.libelle,
+            e.numero_piece,
+            e.libelle,
+            float(e.pu_ht),
+            float(e.quantite),
+            float(e.taux),
+            float(e.debit),
+            float(e.credit),
+        ])
+
+    return JsonResponse({"data": data})
+"""
+
+
+
+"""
 @api_view(['POST'])
 def enregistrer_ecritures(request):
     lignes = request.data.get('lignes', [])
@@ -357,7 +448,7 @@ def enregistrer_ecritures(request):
 
     return Response({'message': 'Écritures enregistrées'}, status=status.HTTP_201_CREATED)
 
-
+"""
 @api_view(['GET'])
 def get_ecritures_par_compte(request):
     numero = request.GET.get('numero')

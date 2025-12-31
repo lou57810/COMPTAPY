@@ -1,8 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
-
-JOURNAL_TYPES = [
+"""
+DEFAULT_JOURNAL_TYPES = [
     ('1', 'Journal Achats'),
     ('2', 'Journal Ventes'),
     ('3', 'Journal OD'),
@@ -16,6 +16,41 @@ JOURNAL_TYPES = [
     ('11', 'Journal expert OD'),
     ('12', 'Journal de réouverture'),
     ]
+"""
+
+
+# Définition unique des types de journaux
+DEFAULT_JOURNAL_TYPES = [
+    ("achats", "AC", "Journal des achats"),
+    ("ventes", "VT", "Journal des ventes"),
+    ("banque", "BQ", "Journal de banque"),
+    ("caisse", "CS", "Journal de caisse"),
+    ("od", "OD", "Opérations diverses"),
+    ("compte chèques postaux", "CCP", "Journal comptes chèques postaux"),
+    ("effets a payer", "EP", "Journal effets payer"),
+    ("effets a recevoir", "ER", "Journal effets recevoir"),
+    ("reports a nouveau", "RE", "Journal reports nouveau"),
+    ("journal de cloture", "JC", "Journal de cloture"),
+    ("journal expert OD", "EOD", "Journal expert OD"),
+    ("journal de reouverture", "JR", "Journal de réouverture"),
+]
+
+# Définition unique des journaux par défaut
+JOURNAL_TYPES = [
+    ("achats","Journal des achats"),
+    ("ventes", "Journal des ventes"),
+    ("banque", "Journal de banque"),
+    ("caisse", "Journal de caisse"),
+    ("od", "Opérations diverses"),
+    ("compte chèques postaux", "Journal comptes chèques postaux"),
+    ("effets a payer", "Journal effets payer"),
+    ("effets a recevoir", "Journal effets recevoir"),
+    ("reports a nouveau", "Journal reports nouveau"),
+    ("journal de cloture", "Journal de cloture"),
+    ("journal expert OD", "Journal expert OD"),
+    ("journal de reouverture", "Journal de réouverture"),
+]
+
 
 
 class Entreprise(models.Model):
@@ -120,11 +155,29 @@ class CompteComptable(models.Model):
         return f"{self.numero} - {self.nom} ({self.entreprise.nom})"
 
 
+"""
 class Journal(models.Model):
     code = models.CharField(max_length=20)
     libelle = models.CharField(max_length=255)
     type = models.CharField(max_length=100, choices=JOURNAL_TYPES)
+"""
 
+
+class Journal(models.Model):
+    entreprise = models.ForeignKey(
+        Entreprise,
+        on_delete=models.CASCADE,
+        related_name='journaux'
+    )
+    code = models.CharField(max_length=20)
+    libelle = models.CharField(max_length=255)
+    type = models.CharField(max_length=100, choices=JOURNAL_TYPES)
+
+    class Meta:
+        unique_together = ('entreprise', 'type')
+
+    def __str__(self):
+        return f"{self.entreprise} – {self.libelle} - {self.type} - {self.code}"
 
 class EcritureJournal(models.Model):
     date = models.DateField()
@@ -132,11 +185,12 @@ class EcritureJournal(models.Model):
     # A tester: date = models.DateTimeField(auto_now_add = True)
     compte = models.ForeignKey(CompteComptable, on_delete=models.CASCADE)  # N° compte
     nom = models.CharField(max_length=100, null=True, blank=True)
-    numero_piece = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    numero_piece = models.CharField(max_length=50, blank=True, null=True)
     libelle = models.CharField(max_length=255, null=True, blank=True)
     pu_ht = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     quantite = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     taux = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     debit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     credit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    journal = models.CharField(max_length=100)
+    journal = models.ForeignKey(Journal, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)

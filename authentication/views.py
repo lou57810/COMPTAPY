@@ -62,7 +62,8 @@ def signup_owner(request):
                 importer_pgc_pour_entreprise(entreprise)
 
                 messages.success(request, "Propriétaire et entreprise créés avec succès.")
-                return redirect("accueil-manager")
+                # return redirect("accueil-manager")
+                return redirect("login")
 
             except Exception as e:
                 messages.error(request, f"Erreur : {e}")
@@ -71,46 +72,6 @@ def signup_owner(request):
         form = OwnerFullSignupForm()
 
     return render(request, "authentication/owner_signup.html", {"form": form})
-
-"""
-@login_required
-def creer_gerant(request):
-    if request.method == "POST":
-        form = AddUserForm(request.POST)
-        if form.is_valid():
-            try:
-                # 1️⃣ création du gérant
-                gerant = form.save(commit=True)
-                print('gerant', gerant)
-
-                # 2️⃣ récupération des données pour sa nouvelle entreprise
-                data = form.get_entreprise_data()
-                print('data, REQUEST.USER, GERANT: \n', data, request.user, gerant)
-
-                # 3️⃣ création de SON entreprise (distincte du propriétaire)
-                entreprise = Entreprise.objects.create(
-                    owner=request.user,  # le propriétaire reste owner !
-                    gerant=gerant,       # le nouveau user devient gérant
-                    **data
-                )
-
-                # 4️⃣ import PGC (une seule fois par entreprise)
-                importer_pgc_pour_entreprise(entreprise)
-
-                messages.success(request, "Gérant et entreprise créés avec succès.")
-                return redirect("accueil-manager")
-
-            except Exception as e:
-                messages.error(request, f"Erreur : {e}")
-
-    else:
-        form = AddUserForm()
-
-    return render(request, "authentication/create_gerant.html", {
-        "form": form,
-    })
-"""
-
 
 
 @login_required
@@ -155,52 +116,6 @@ def creer_gerant(request):
         "form": form,
     })
 
-"""
-@login_required
-def creer_gerant(request):
-    if request.method == "POST":
-        form = AddUserForm(request.POST)
-        if form.is_valid():
-            try:
-                # 1️⃣ création du gérant
-                gerant = form.save(commit=True)
-
-                # 2️⃣ données entreprise
-                data = form.get_entreprise_data()
-
-                # 3️⃣ création entreprise
-                entreprise = Entreprise.objects.create(
-                    owner=request.user,
-                    gerant=gerant,
-                    **data
-                )
-
-                # 4️⃣ import PGC
-                importer_pgc_pour_entreprise(entreprise)
-
-                print("ENTREPRISE CRÉÉE AVEC ID =", entreprise.id)
-
-                # 5️⃣ SI appel AJAX → renvoyer l’ID
-                if request.headers.get("x-requested-with") == "XMLHttpRequest":
-                    return JsonResponse({
-                        "success": True,
-                        "gerant_id": gerant.id,
-                        "entreprise_id": entreprise.id,
-                    })
-
-                # 6️⃣ sinon → redirection normale
-                messages.success(request, "Gérant et entreprise créés avec succès.")
-                return redirect("accueil-manager")
-
-            except Exception as e:
-                messages.error(request, f"Erreur : {e}")
-
-    else:
-        form = AddUserForm()
-
-    return render(request, "authentication/create_gerant_js.html", {"form": form})
-"""
-
 
 class LoginPage(View):
     form_class = LoginForm
@@ -235,10 +150,8 @@ class LoginPage(View):
                     return redirect("accueil-gerant")
                 else:
                     return redirect("accueil")  # fallback
-
             else:
                 message = "Identifiants ou mot de passe invalides."
-
         return render(request, self.template_name, context={'form': form, 'message': message})
 
 

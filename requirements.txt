@@ -4,6 +4,8 @@ certifi==2025.7.9
 charset-normalizer==3.4.2
 dj-database-url==3.0.1
 Django==5.2.4
+django-bootstrap4==25.3
+django-extensions==4.1
 django-jinja-knockout==2.2.1
 djangorestframework==3.16.0
 dotenv-loader==1.0.4

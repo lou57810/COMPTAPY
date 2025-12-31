@@ -43,7 +43,7 @@
             <nav class="navbar navbar-expand-xxl fixed-top navbar-dark bg-dark">
                 <div class="container">
                   <span class="bg-primary bg-gradient p-1 w-25 rounded-3 text-light">{{ entreprise.nom }}</span>
-                    <a class="navbar-brand text-white fs-2" href="{% url 'accueil-gerant' %}"></a>
+                    <a class="navbar-brand text-white fs-2" href="{% url 'accueil-gerant' entreprise_id %}"></a>
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                         </button>
@@ -51,7 +51,7 @@
                     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                       <ul class="navbar-nav dropdown">
                         <li class="nav-item dropdown">
-                            <a href="{% url 'accueil-gerant' %}" class="nav-link text-light px-3">Accueil</a>
+                            <a href="{% url 'accueil-gerant' entreprise_id %}" class="nav-link text-light px-3">Accueil</a>
 <!--                          <a class="nav-link text-light px-3">TEST: {\{user.role}}</a>-->
                         </li>
 

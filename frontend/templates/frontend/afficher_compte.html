@@ -1,4 +1,4 @@
-{% extends 'base0.html' %}
+{% extends 'base_gerant.html' %}
 {% block content %}
 {% load static %}
 
@@ -6,7 +6,7 @@
   <div class="container">
 
     <!-- ✅ Formulaire toujours visible -->
-    <form method="get" action="{% url 'afficher-compte' %}">
+    <form method="get" action="{% url 'afficher-compte' entreprise_id %}">
       <label for="numero">Numéro de compte :</label>
       <input type="text" name="numero" id="numero" value="{{ name|default_if_none:'' }}">
       <button type="submit">Rechercher</button>

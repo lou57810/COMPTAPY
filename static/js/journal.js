@@ -8,13 +8,17 @@ let row = 0;
 let internalChange = false;
 let col = 0;
 const entrepriseId = document.getElementById("entreprise_id")?.value;
+const csrfToken = document.getElementById("csrf_token")?.value;
+console.log('CSRFToken:', csrfToken)
+const journalSelect = document.getElementById('journal_type')?.value;
+console.log('journalSelect:', journalSelect);
+const typeJournal = journalSelect ? journalSelect.value : null;
+
 console.log('entrepriseId:', entrepriseId)
 if (!entrepriseId) {
   console.error("❌ entrepriseId manquant");
   //return;
 }
-
-
 
 // ✅ ################ Fonction d'initialisation du tableau Handsontable #######################
 function initHandsontable(container, config) {
@@ -68,6 +72,29 @@ function initHandsontable(container, config) {
     autoWrapCol: true,
     licenseKey: 'non-commercial-and-evaluation',
   });
+  // 🔁 Chargement des écritures existantes du journal
+    const journalType = document.getElementById("journal_type")?.value;
+    // const journalType = document.getElementById("type_journal")?.value;
+    const journalUrl = document.getElementById("journal_url")?.value;
+    const type = `${journalType}`
+    console.log('journalUrl:', journalUrl);
+    console.log('type:', type);
+    if (journalType && journalUrl) {
+      fetch(`${journalUrl}?type=${journalType}`)
+        .then(response => response.json())
+        .then(json => {
+          if (json.data && json.data.length > 0) {
+            internalChange = true;
+
+            hot.loadData(json.data);
+
+            // ➕ ligne vide pour poursuivre la saisie
+            hot.alter('insert_row_below', hot.countRows());
+
+            internalChange = false;
+          }
+        });
+    }
 
 
     hot.addHook('afterChange', function (changes, source) {
@@ -228,7 +255,7 @@ function getCookie(name) {
 // ############################# Bloc Page #############################
 
 document.addEventListener('DOMContentLoaded', async function () {
-  let typeJournal = document.getElementById('journal')?.value;
+  let typeJournal = document.getElementById('journal_type')?.value;
 
   // ########################## Tableau saisie ###########################
 
@@ -268,15 +295,24 @@ document.addEventListener('DOMContentLoaded', async function () {
 });
 
 // ############################# Validation des écritures #####################################
+    const btn = document.getElementById('validerEcritures');
+    console.log('btn:', btn)
 
-    document.getElementById('validerEcritures').addEventListener('click', function (event) {
-    event.preventDefault();
 
-    if (!hot) {
-    console.error('❌ Tableau non initialisé');
-    return;
-  }
+    btn.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
 
+      const urlValidation = btn.dataset.urlValidation;
+      if (!urlValidation) {
+          console.error("URL de validation absente");
+          return;
+      }
+
+      if (!hot) {
+      console.error('❌ Tableau non initialisé');
+      // return;
+      }
     const data = hot.getData(); // Récupère toutes les lignes du tableau Handsontable
     console.log('data:', data);
 
@@ -293,13 +329,16 @@ document.addEventListener('DOMContentLoaded', async function () {
       }));
       console.log('Lignes à la validation: ', lignes)
 
-    const urlValidation = document.getElementById('validerEcritures')?.dataset?.urlValidation;
-    console.log('URLVALID:', urlValidation);
+    const url_Validation = document.getElementById('validerEcritures')?.dataset?.urlValidation;
+    // const journalUrl = document.getElementById("journal_url")?.value;
+    console.log('URLVALID:', url_Validation);
+    console.log("entreprise_id:", entrepriseId)
     console.log("✅ Données à envoyer :", lignes);
-    fetch(urlValidation, {
+    fetch(url_Validation, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
         // 'X-CSRFToken': getCookie('csrftoken'), // si CSRF est activé
       },
       // body: JSON.stringify({ lignes: payload }),
@@ -307,16 +346,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     })
       .then(response => {
         if (!response.ok) {
-          throw new Error('Erreur serveur');
+          // throw new Error('Erreur serveur');
+          return response.text().then(t => { throw new Error(t); });
         }
+        // console.log('response:', response.json)
         return response.json();
       })
       .then(data => {
         alert('Écritures enregistrées avec succès ✅');
       })
       .catch(error => {
-        console.error('Erreur lors de l’enregistrement :', error);
-        alert('Une erreur est survenue ❌');
+        console.error("Erreur serveur réelle :", error);
+        alert("Erreur lors de l’enregistrement ❌");
       });
   });
 

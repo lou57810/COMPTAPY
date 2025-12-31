@@ -85,7 +85,7 @@ class OwnerFullSignupForm(UserCreationForm):
 
 class AddUserForm(UserCreationForm):
     email = forms.EmailField(required=True)
-    nom_gerant = forms.CharField(label="Vos prénom et nom", required=True)
+    nom_gerant = forms.CharField(label="Prénom et nom", required=True)
 
     # class Meta:
         # model = User

@@ -4,26 +4,17 @@
 
 <h3>{{ entreprise.nom }}</h3>
 
-
-
 <section>
   <div class="container">
-
-    <table class="table mt-4">
-      <tr><th>ID</th><td>{{ compte.id }}</td></tr>
-      <tr><th>Numéro</th><td>{{ compte.numero }}</td></tr>
-      <tr><th>Nom</th><td>{{ compte.nom }}</td></tr>
-    </table>
-
-    <h3>Modifier le compte</h3>
-
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
-    </form>
-
+    <h2>{{ entreprise.nom_gernat }}</h2>
+      <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+<!--        <p>BLAAAA {{ email }}</p>-->
+        <button type="submit" class="btn btn-primary">Modifier</button>
+      </form>
   </div>
 </section>
+
 
 {% endblock content %}
