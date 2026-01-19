@@ -16,14 +16,15 @@ from django.contrib.auth.decorators import login_required
 from authentication.permissions import role_required
 from django.http import HttpResponseForbidden
 from django.core.paginator import Paginator
-
+from decimal import Decimal
 from django.http import JsonResponse
+from django.db.models import Q
 
 from api import forms
 from api.forms import CompteForm
 
 
-from api.views import get_compte_by_numero
+# from api.views import get_compte_by_numero
 # from django.views.decorators.csrf import csrf_exempt
 import json
 
@@ -92,14 +93,7 @@ def accueil(request):
         "is_owner": getattr(user, "role", None) == "OWNER",
         "gerant_id": request.user.id,
     }
-
-    # return render(request, "frontend/accueil_manager.html", context)
-    # return render(request, "frontend/accueil_gerant.html", context)
     return render(request, "frontend/accueil.html", context)
-
-
-# def get_owner():
-    # return User.objects.filter(role="OWNER").first()
 
 
 def accueil_dossier_compta(request, entreprise_id):
@@ -111,17 +105,12 @@ def accueil_dossier_compta(request, entreprise_id):
     print('entreprise_id, entreprise.nom:', entreprise_id, entreprise.nom)
 
     if request.user.is_authenticated:
-        # test = Entreprise.objects.filter(owner=request.user)
         entreprise_nom = entreprise.nom
         entreprise_gerant = entreprise.nom_gerant
         entreprise_gerant_email = request.user.email
         print('entreprise_gerant_email, NOM:', entreprise_gerant_email, entreprise.nom)
-        # entreprise_nom = test[0].nom
-        # entreprise_gerant = test[0].nom_gerant
-        # entreprise_active = getattr(request.user, "entreprise", None)
-        # print('entreprise_gerant, test:', entreprise.nom, entreprise.nom_gerant)
+
     # On sauvegarde l'entreprise active dans la session
-    # request.session["entreprise_active_id"] = entreprise.id
     request.session["entreprise_active_id"] = entreprise_id
 
     # if User.objects.filter(role="GERANT").exists():
@@ -135,17 +124,16 @@ def accueil_dossier_compta(request, entreprise_id):
 
 @login_required
 def accueil_manager(request):
-    print('request.user:', request.user)
     # toutes les entreprises du propriétaire
-    # entreprises = Entreprise.objects.filter(owner=request.user)
-    # entreprise = Entreprise.objects.get(id=1)
     entreprise = Entreprise.objects.filter(owner=request.user)
     entreprise_nom = entreprise[0].nom
+    entreprise.nom = entreprise[0].nom
     if not entreprise:
         print("pas d'entreprise")
 
     return render(request, "frontend/accueil_manager.html", {
         "entreprise_nom": entreprise_nom,
+        "entreprise.nom": entreprise.nom,
         "entreprise": entreprise,
         "is_owner": True,
         "gerant_id": request.user.id,
@@ -153,60 +141,6 @@ def accueil_manager(request):
     })
 
 
-
-"""
-@login_required
-def accueil_gerant(request, entreprise_id):
-    entreprise = Entreprise.objects.get(id=entreprise_id)
-    # Premièrement, tenter de récupérer l'entreprise où le user est gérant
-    # entreprise = Entreprise.objects.filter(gerant=request.user).first()
-    print('entreprise:', entreprise)
-    # Sinon, la rendre propriétaire (OWNER)
-    if not entreprise:
-        entreprise = Entreprise.objects.filter(owner=request.user).first()
-        print('entreprise:', entreprise)
-    # entreprise = get_entreprise_from_gerant(request.user)
-    entreprise_nom = entreprise.nom
-
-    manager = get_owner()
-
-    return render(request, "frontend/accueil_gerant.html", {
-        # "entreprise_name": entreprise_name,
-        "entreprise": entreprise,
-        "entreprise_nom": entreprise_nom,
-        "is_manager": True,
-        "manager": manager,
-        # "entreprise_id": entreprise_id if entreprise else None,
-    })
-"""
-
-# @login_required
-"""
-def accueil_gerant(request):
-    entreprise = Entreprise.objects.filter(owner=request.user)
-    print('entreprise:', entreprise)
-    # entreprise = Entreprise.objects.get(id=entreprise_id)
-    # Premièrement, tenter de récupérer l'entreprise où le user est gérant
-    # entreprise = Entreprise.objects.filter(gerant=request.user).first()
-    # print('entreprise:', entreprise)
-    # Sinon, la rendre propriétaire (OWNER)
-    #if not entreprise:
-        # entreprise = Entreprise.objects.filter(owner=request.user).first()
-        # print('entreprise:', entreprise)
-    # entreprise = get_entreprise_from_gerant(request.user)
-    # entreprise_nom = entreprise.nom
-
-    # manager = get_owner()
-
-    # return render(request, "frontend/accueil_gerant.html", {
-        # "entreprise_name": entreprise_name,
-        # "entreprise": entreprise,
-        # "entreprise_nom": entreprise_nom,
-        # "is_manager": True,
-        # "manager": manager,
-        # "entreprise_id": entreprise_id if entreprise else None,
-   # })
-"""
 @login_required
 def accueil_gerant(request):
     # Premièrement, tenter de récupérer l'entreprise où le user est gérant
@@ -231,9 +165,9 @@ def accueil_gerant(request):
     })
 
 
-
 def pgc_entreprise(request, entreprise_id):
-    entreprise = Entreprise.objects.get(id=entreprise_id)
+    # entreprise = Entreprise.objects.get(id=entreprise_id)
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
 
     classe = request.GET.get("classe")  # ex: "4"
     comptes = CompteComptable.objects.filter(entreprise=entreprise)
@@ -241,11 +175,11 @@ def pgc_entreprise(request, entreprise_id):
     if classe:
         comptes = comptes.filter(numero__startswith=classe)
 
-    paginator = Paginator(comptes, 150)   # 50 par page
+    paginator = Paginator(comptes, 150)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    return render(request, "frontend/pgc_entreprise_new.html", {
+    return render(request, "frontend/pgc_entreprise.html", {
         "entreprise": entreprise,
         "entreprise_nom": entreprise.nom,
         "entreprise_id": entreprise.id,
@@ -274,7 +208,7 @@ def liste_compte_entreprise(request, entreprise_id):
     if not entreprise:
         messages.warning(request, "Aucune entreprise associée à votre compte.")
         # rendre la page sans comptes (ou rediriger vers une page d'erreur/creation)
-        return render(request, "frontend/pgc_entreprise_new.html", {
+        return render(request, "frontend/pgc_entreprise.html", {
             "entreprise": None,
             "entreprise_nom": None,
             "entreprise_id": None,
@@ -292,7 +226,7 @@ def liste_compte_entreprise(request, entreprise_id):
     # page_number = request.GET.get('page')
     # comte_liste = paginator.get_page(page_number)
 
-    return render(request, 'frontend/pgc_entreprise_new.html', {
+    return render(request, 'frontend/pgc_entreprise.html', {
         'entreprise': entreprise,
         'entreprise_nom': entreprise_nom,
         'entreprise_id': entreprise_id,
@@ -350,35 +284,15 @@ def setup(request):
     return render(request, "frontend/setup.html", {"form": form})
 
 
-"""
 def saisie_journal(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    print('entreprise:', entreprise)
 
-    if not entreprise:
-        messages.warning(request, "Veuillez d'abord sélectionner une entreprise.")
-        return redirect("liste-entreprises")
-    type_journal = request.GET.get('type', '')  # Par défaut : journal achats
-    print('type_journal:', type_journal)
-    context = {
-        'type_journal': type_journal,
-        "entreprise": entreprise,
-        'entreprise_id': entreprise_id,
-    }
-    # return render(request, 'frontend/journal_accueil.html', context)
-    # return redirect(f"/journal/{entreprise_id}/?type={type_journal}")
-    # return render(request, 'journal/journal_accueil.html', context)
-    return redirect('journal-ecritures', entreprise_id=entreprise_id) + f"?type={type_journal}"
-"""
-
-def saisie_journal(request, entreprise_id):
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
     type_journal = request.GET.get('type', '')
     # Si un type est choisi → redirection vers /journal/<id>/?type=...
     if type_journal:
         url = reverse('journal-page', args=[entreprise_id])
         url = f"{url}?type={type_journal}"
-        print('url:', url)
+        print('url(saisie_journal:', url)
         return HttpResponseRedirect(url)
 
     print('entreprise, entreprise_id, type_journal:', entreprise, entreprise_id, type_journal)
@@ -436,7 +350,7 @@ def journal_ecritures(request, entreprise_id):
 def journal_page(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
     type_journal = request.GET.get("type")
-
+    print('entreprise(journal_page):', entreprise, type_journal)
     context = {
         "entreprise": entreprise,
         "entreprise_id": entreprise_id,
@@ -446,59 +360,175 @@ def journal_page(request, entreprise_id):
 
 
 def valider_journal(request, type_journal):
-
     if request.method != "POST":
         return JsonResponse({"error": "Méthode non autorisée"}, status=405)
 
-    entreprise_id = request.GET.get("entreprise_id")
-    print('Entrée valider_journal:', type_journal, entreprise_id)
-    entreprise = get_object_or_404(
-        Entreprise,
-        id=entreprise_id,
-        owner=request.user
-    )
+    # Récupération entreprise
+    entreprise_id = request.GET.get("entreprise_id") or request.POST.get("entreprise_id")
+    if not entreprise_id:
+        return JsonResponse({"error": "entreprise_id manquant"}, status=400)
 
-    journal = get_object_or_404(
-        Journal,
-        entreprise=entreprise,
-        type=type_journal
-    )
-    print('entreprise, journal:', entreprise, journal)
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    # Récupération journal
+    # type_journal vient de l’URL, inutile de le reprendre dans GET
+    journal = get_object_or_404(Journal, entreprise=entreprise, type=type_journal)
+    # Vérification du paramétrage du journal
+    if journal.type in ["achats", "ventes"]:
+        if journal.compte_tva is None or journal.compte_ventilation is None:
+            return JsonResponse(
+                {"error": "Le journal n’est pas correctement paramétré (TVA ou ventilation manquante)."},
+                status=400
+            )
 
     try:
-        payload = json.loads(request.body)
-        lignes = payload.get("lignes", [])
+        data = json.loads(request.body)
     except json.JSONDecodeError:
-        return JsonResponse({"error": "Format JSON invalide"}, status=400)
+        return JsonResponse({"error": "JSON invalide"}, status=400)
 
-    saved = []
+    # lignes = data.get("lignes", [])
+    lignes = data.get("lignes")
+    if not lignes:
+        return JsonResponse({"error": "Aucune ligne transmise"}, status=400)
 
+    # Numérotation automatique des pièces
+    journal.dernier_numero_piece += 1
+    numero_piece = journal.dernier_numero_piece
+    journal.save()
+
+    # Traitement des lignes
     for ligne in lignes:
-        if not ligne.get("date"):
-            continue
 
-        compte = get_object_or_404(
-            CompteComptable,
-            entreprise=entreprise,
-            numero=ligne["numero"]
-        )
-        print('compte:', compte)
+        # Vérification des champs obligatoires
+        required_fields = ["date", "numero", "numero_piece", "libelle", "pu_ht", "quantite", "taux"]
+        for field in required_fields:
+            if field not in ligne:
+                return JsonResponse({"error": f"Champ manquant : {field}"}, status=400)
 
-        ecriture = EcritureJournal.objects.create(
+        # Conversion date
+        try:
+            date = datetime.strptime(ligne["date"], "%d/%m/%Y").date()
+        except ValueError:
+            return JsonResponse({"error": "Format de date invalide"}, status=400)
+
+        # Récupération du compte principal
+        try:
+            compte = CompteComptable.objects.get(
+                numero=ligne["numero"],
+                entreprise=entreprise
+            )
+        except CompteComptable.DoesNotExist:
+            return JsonResponse(
+                {"error": f"Compte {ligne['numero']} introuvable pour cette entreprise"},
+                status=400
+            )
+
+        # Calculs
+
+        try:
+            pu_ht = Decimal(ligne["pu_ht"])
+            quantite = Decimal(ligne["quantite"])
+            taux = Decimal(ligne["taux"])
+        except:
+            return JsonResponse({"error": "Montants invalides"}, status=400)
+
+        montant_ht = pu_ht * quantite
+        montant_tva = montant_ht * taux / 100
+        montant_ttc = montant_ht + montant_tva
+
+        # 1) Ligne principale (fournisseur ou client)
+        EcritureJournal.objects.create(
+            date=date,
             entreprise=entreprise,
-            journal=journal,
-            date=datetime.strptime(ligne["date"], "%d/%m/%Y").date(),
             compte=compte,
-            nom=ligne.get("nom"),
-            numero_piece=ligne.get("numero_piece"),
-            libelle=ligne.get("libelle"),
-            debit=ligne.get("debit") or 0,
-            credit=ligne.get("credit") or 0,
+            numero_piece=numero_piece,
+            libelle=ligne["libelle"],
+            pu_ht=pu_ht,
+            quantite=quantite,
+            taux=taux,
+            debit=montant_ttc if journal.sens == "ventes" else 0,
+            credit=montant_ttc if journal.sens == "achats" else 0,
+            journal=journal,
         )
-        print('before saved:', ecriture.id)
-        saved.append(ecriture.id)
 
-    return JsonResponse({"success": True, "saved_ids": saved})
+        if journal.compte_tva is None or journal.compte_ventilation is None:
+            return JsonResponse(
+                {"error": "Le journal n’est pas paramétré (TVA ou ventilation manquante)."},
+                status=400
+            )
+        else:
+            print('journaux_ok')
+
+        # 2) Ligne TVA
+        EcritureJournal.objects.create(
+            date=date,
+            entreprise=entreprise,
+            compte=journal.compte_tva,
+            numero_piece=numero_piece,
+            libelle=ligne["libelle"],
+            pu_ht=pu_ht,
+            quantite=quantite,
+            taux=taux,
+            credit=montant_tva if journal.sens == "ventes" else 0,
+            debit=montant_tva if journal.sens == "achats" else 0,
+            journal=journal,
+        )
+
+
+        ## 3) Ligne ventilation
+        EcritureJournal.objects.create(
+            date=date,
+            entreprise=entreprise,
+            compte=journal.compte_ventilation,
+            numero_piece=numero_piece,
+            libelle=ligne["libelle"],
+            pu_ht=pu_ht,
+            quantite=quantite,
+            taux=taux,
+            debit=montant_ht if journal.sens == "achats" else 0,
+            credit=montant_ht if journal.sens == "ventes" else 0,
+            journal=journal,
+        )
+
+        ecritures = EcritureJournal.objects.filter(journal=journal).order_by("date", "id")
+
+        data = [
+            [
+                e.date.strftime("%d/%m/%Y"),
+                e.compte.numero,
+                e.compte.nom,
+                e.numero_piece,
+                e.libelle,
+                float(e.pu_ht),
+                float(e.quantite),
+                float(e.taux),
+                float(e.debit),
+                float(e.credit),
+            ]
+            for e in ecritures
+        ]
+
+        return JsonResponse({"data": data})
+
+        """
+        ecritures = EcritureJournal.objects.filter(journal=journal).order_by("date", "id")
+        print("POST =", request.POST)
+        data = []
+        for e in ecritures:
+            data.append([
+                e.date.strftime("%d/%m/%Y"),
+                e.compte.numero,
+                e.compte.nom,
+                e.numero_piece,
+                e.libelle,
+                float(e.pu_ht),
+                float(e.quantite),
+                float(e.taux),
+                float(e.debit),
+                float(e.credit),
+            ])
+
+        return JsonResponse({"data": data})
+        """
 # ========================== Comptes ===========================================
 
 @login_required
@@ -524,18 +554,15 @@ def create_compte(request, entreprise_id):
             print('data_valid:', compte.origine, compte.nom, compte.entreprise, compte.libelle)
             compte.save()
             messages.success(request, 'Le compte a été créé avec succès !')
-            # return redirect('accueil-compta', entreprise_id=entreprise_id)
             return redirect('create-compte', entreprise_id=entreprise_id)
     else:
         compte_form = CompteForm()
 
-    # request.session["entreprise_active_id"] = entreprise_id
     return render(request, 'frontend/create_compte.html', {
         'compte_form': compte_form,
         'entreprise': entreprise,
         'entreprise_nom': entreprise_nom,
         'nom': entreprise.nom,
-        # 'entreprise_id': entreprise_id
     })
 
 
@@ -589,9 +616,6 @@ def search_modif_compte(request, entreprise_id):
                 # return redirect('display-compte')  # pour revenir proprement
                 return redirect('update-compte')
 
-
-
-
     return render(request, 'frontend/search_compte.html', {
         'form_search': form_search,
         # 'form_edit': form_edit,
@@ -629,8 +653,8 @@ def afficher_compte(request, entreprise_id):
     return render(request, 'frontend/afficher_compte.html', {'entreprise_id': entreprise_id, 'lignes': lignes, 'numero': numero, 'nom': nom})
 
 
-
 """
+
 def update_compte(request, entreprise_id, compte_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
     compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
@@ -654,115 +678,6 @@ def update_compte(request, entreprise_id, compte_id):
         "entreprise_id": entreprise_id,
     })
 
-
-
-@login_required
-def valider_journal(request, type_journal):
-
-    if request.method != "POST":
-        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
-
-    entreprise_id = request.GET.get("entreprise_id")
-    print('Entrée valider_journal:', type_journal, entreprise_id)
-    entreprise = get_object_or_404(
-        Entreprise,
-        id=entreprise_id,
-        owner=request.user
-    )
-
-    journal = get_object_or_404(
-        Journal,
-        entreprise=entreprise,
-        type=type_journal
-    )
-
-    try:
-        payload = json.loads(request.body)
-        lignes = payload.get("lignes", [])
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Format JSON invalide"}, status=400)
-
-    saved = []
-
-    for ligne in lignes:
-        if not ligne.get("date"):
-            continue
-
-        compte = get_object_or_404(
-            CompteComptable,
-            entreprise=entreprise,
-            numero=ligne["numero"]
-        )
-        print('compte:', compte)
-
-        ecriture = EcritureJournal.objects.create(
-            entreprise=entreprise,
-            journal=journal,
-            date=datetime.strptime(ligne["date"], "%d/%m/%Y").date(),
-            compte=compte,
-            nom=ligne.get("nom"),
-            numero_piece=ligne.get("numero_piece"),
-            libelle=ligne.get("libelle"),
-            debit=ligne.get("debit") or 0,
-            credit=ligne.get("credit") or 0,
-        )
-        print('before saved:', ecriture.id)
-        saved.append(ecriture.id)
-
-    return JsonResponse({"success": True, "saved_ids": saved})
-"""
-
-
-"""
-@csrf_exempt  # Si tu n'utilises pas {% csrf_token %}, sinon retire ça
-def valider_journal(request, type_journal):
-
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            lignes = data.get('lignes', [])
-
-            for ligne in lignes:
-                # On récupère chaque champ par clé
-                date_str = ligne.get('date')
-                if date_str:
-                    date = datetime.strptime(date_str, "%d/%m/%Y").date()  # ou %Y-%m-%d selon format reçu
-                numero = ligne.get('numero')
-                nom = ligne.get('nom')
-                numero_piece = ligne.get('numero_piece')
-                libelle = ligne.get('libelle')
-                debit = ligne.get('debit', 0)
-                credit = ligne.get('credit', 0)
-
-                # print("👉 Ligne reçue :", ligne)
-                # print("📅 Date extraite :", date)
-
-                # ✅ On récupère l’instance du compte correspondant
-                compte = CompteComptable.objects.filter(numero=numero).first()
-
-                if not compte:
-                    # Tu peux aussi lever une exception ou juste passer
-                    print(f"⚠️ Compte non trouvé pour numéro {numero}")
-                    continue
-
-                # ✅ Enregistrement correct
-                ecriture = EcritureJournal.objects.create(
-                    date=date,
-                    compte=compte,  # ici une vraie instance
-                    nom=nom,
-                    numero_piece=numero_piece,
-                    libelle=libelle,
-                    debit=debit,
-                    credit=credit,
-                    journal=type_journal  # Achats, Ventes, OD ...
-                )
-                # print('Ecritures enregistrées:', ecriture)
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            print("❌ ERREUR:", e)
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-
-    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
 """
 
 def ecritures_par_compte(numero):

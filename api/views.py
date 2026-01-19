@@ -24,6 +24,7 @@ User = get_user_model()
 from django.http import JsonResponse
 from datetime import datetime
 import json
+from . import forms
 
 
 """
@@ -40,9 +41,15 @@ class CreateEntrepriseAPIView(generics.CreateAPIView):
 
 @login_required
 def liste_entreprises(request):
-    entreprise_name = Entreprise.objects.filter(owner=request.user).first()
+    # entreprise_name = Entreprise.objects.filter(owner=request.user).first()
+    entreprise = Entreprise.objects.filter(owner=request.user)
+    entreprise_nom = entreprise[0].nom
     entreprises = get_accessible_entreprises(request.user)
-    return render(request, "api/liste_entreprises.html", {"entreprises": entreprises, "entreprise_name": entreprise_name})
+
+    return render(request, "api/liste_entreprises.html",
+                  {"entreprises": entreprises,
+                   "entreprise_nom": entreprise_nom
+                   })
 
 """
 @login_required
@@ -125,7 +132,28 @@ def creer_dossier_owner(request, user_id):
 def liste_compte(request):
     return render(request, 'api/api_pgc.html', )
 """
+def update_compte(request, entreprise_id, compte_id):
+    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
+    compte = get_object_or_404(
+        CompteComptable,
+        id=compte_id,
+        entreprise=entreprise
+    )
 
+    if request.method == "POST":
+        form_edit = forms.UpdateCompteForm(request.POST, request.FILES, instance=compte)
+        if form_edit.is_valid():
+            form_edit.save()
+           # return redirect('update-compte', entreprise_id=entreprise.id, compte_id=compte.id)
+            return redirect('pgc-entreprise', entreprise_id=entreprise.id)
+    else:
+        form_edit = forms.UpdateCompteForm(instance=compte)
+
+    return render(request, 'api/update_compte.html', {
+        'entreprise': entreprise,
+        'compte': compte,
+        'form_edit': form_edit,
+    })
 
 
 
@@ -154,14 +182,15 @@ def update_compte(request, entreprise_id, compte_id):
         "compte_id": compte_id,
         "entreprise_id": entreprise_id,
     })
-"""
 
-def update_compte(request, entreprise_id, compte_id):
+
+def update_compte(request, entreprise_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
+    # compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
+    compte = get_object_or_404(CompteComptable, entreprise=entreprise)
     entreprise_nom = entreprise.nom
-    compte_numero = compte.numero
-    print('entreprise_nom:', entreprise_nom, compte_numero)
+    # compte_numero = compte.numero
+    # print('entreprise_nom:', entreprise_nom, compte_numero)
 
 
     if request.method == "POST":
@@ -184,10 +213,12 @@ def update_compte(request, entreprise_id, compte_id):
         "entreprise": entreprise,
         "compte": compte,
         "form": form,
-        "compte_id": compte_id,
+        # "compte_id": compte_id,
         "entreprise_id": entreprise_id,
         "entreprise_nom": entreprise_nom,
     })
+"""
+
 
 @login_required
 @role_required(["OWNER"])

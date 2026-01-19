@@ -28,6 +28,7 @@ urlpatterns = [
     path("comptes/<int:pk>/", CompteComptableRetrieveUpdateDestroy.as_view(), name="update"),
     path('comptes/numero/', get_ecritures_par_compte, name='get_ecritures_par_compte'),
     # path("journal/<int:entreprise_id>/", journal_ecritures, name="journal-ecritures"),
+    # path("modifier_compte/<int:entreprise_id>/<int:compte_id>/", update_compte, name="update-compte"),
     path("modifier_compte/<int:entreprise_id>/<int:compte_id>/", update_compte, name="update-compte"),
     # path('saisie_journal/<int:entreprise_id>/', views.saisie_journal, name='saisie-journal'),
     path('ecritures/', ecritures_par_compte, name='ecritures_par_compte'),

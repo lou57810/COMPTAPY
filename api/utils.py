@@ -32,7 +32,8 @@ def importer_pgc_pour_entreprise(entreprise):
             CompteComptable(
                 entreprise=entreprise,
                 numero=fields.get("numero"),
-                libelle=fields.get("nom"),
+                # libelle=fields.get("nom"),
+                nom=fields.get("nom"),
                 type_compte=fields.get("type_compte"),
                 origine="pgc",
             )

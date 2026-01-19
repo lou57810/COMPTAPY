@@ -51,9 +51,15 @@
                     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                       <ul class="navbar-nav dropdown">
                         <li class="nav-item dropdown">
+                          {% if user.role == "OWNER" or user.role == "EXPERT_COMPTABLE" %}
+                            <a href="{% url 'accueil-manager' %}" class="nav-link text-light px-3">Accueil Manager</a>
+                        </li>
+                         {% else %}
+                        <li class="nav-item dropdown">
                             <a href="{% url 'accueil-gerant' %}" class="nav-link text-light px-3">Accueil</a>
 <!--                          <a class="nav-link text-light px-3">TEST: {\{user.role}}</a>-->
                         </li>
+                        {% endif %}
 
                           {% if not user.is_authenticated %}
                             {% if not owner_already_registered %}
@@ -66,12 +72,13 @@
                             </li>
 
                           {% else %}
+
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-light px-3" href="#" data-bs-toggle="dropdown">Gestion des Comptes</a>
                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 <!--                                    <li><a class="dropdown-item" href="{\% url 'afficher-compte' entreprise_id %}">Afficher un compte</a></li>-->
                                     <li><a class="dropdown-item" href="{% url 'create-compte' entreprise_id %}">Ajouter un compte</a></li>
-                                    <li><a class="dropdown-item" href="#">Modifier un compte</a></li>
+<!--                                    <li><a class="dropdown-item" href="{\% url 'update-compte' entreprise_id e.id %}">Modifier un compte</a></li>-->
                                     <li><a class="dropdown-item" href="{% url 'afficher-compte' entreprise_id %}">Consulter un compte</a></li>
                                     <li><a class="dropdown-item" href="{% url 'pgc-entreprise' entreprise.id %}">Afficher le pgc</a></li>
                                 </ul>

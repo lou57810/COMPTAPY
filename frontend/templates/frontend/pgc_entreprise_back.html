@@ -8,6 +8,15 @@
     <div class="container">
 
       <h2>Dossier <span> </span>{{ entreprise_nom }}</h2>
+      <h2>Id: <span> </span>{{ entreprise_id }}</h2>
+      <h2>Id: <span> </span>{{ entreprise.id }}</h2>
+    </div>
+    <!-- Navigation par classes -->
+    <div>
+      <strong>Classes :</strong>
+      {% for c in "1234567" %}
+        <a href="?classe={{ c }}" class="btn btn-outline-primary btn-sm">{{ c }}</a>
+      {% endfor %}
     </div>
 
     <!-- BOUTONS EN HAUT -->
@@ -75,8 +84,10 @@
     const pageSize = 100;
     const entrepriseId = document.querySelector("#pgc-table")
                                  .dataset.entrepriseId;
+                                 console.log('entrepriseId:', entrepriseId);
 
-    const apiUrl = `/api/comptes/?entreprise_id=${entrepriseId}`;
+    const apiUrl = `frontend/pgc_entreprise/?entreprise_id=${entrepriseId}`;
+
     console.log('apiUrl:', apiUrl)
 
     const tbody = document.querySelector("#pgc-table tbody");
@@ -87,37 +98,34 @@
 
     // 🔥 Charge une page de comptes
     function loadPage(page) {
-        fetch(`${apiUrl}&page=${page}&page_size=${pageSize}`)
-            .then(r => r.json())
-            .then(data => {
-                tbody.innerHTML = "";
+    fetch(`api/comptes/?entreprise_id=${entrepriseId}&page=${page}&page_size=${pageSize}`)
+        .then(r => r.json())
+        .then(data => {
+            tbody.innerHTML = "";
 
-                data.results.forEach(compte => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${compte.numero}</td>
-                        <td>${compte.libelle}</td>
-                        <td>${compte.type_compte}</td>
-                        <td>${compte.origine}</td>
-                        <td>
-                          <a href="/api/modifier_compte/${entrepriseId}/${compte.id}/">Modifier</a>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
+            data.results.forEach(compte => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${compte.numero}</td>
+                    <td>${compte.libelle}</td>
+                    <td>${compte.type_compte}</td>
+                    <td>${compte.origine}</td>
+                    <td>
+                        <a href="/api/modifier_compte/${entrepriseId}/${compte.id}/">Modifier</a>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
 
-                prevBtn.disabled = data.previous === null;
-                nextBtn.disabled = data.next === null;
-                prevBtnTop.disabled = data.previous === null;
-                nextBtnTop.disabled = data.next === null;
+            prevBtn.disabled = data.previous === null;
+            nextBtn.disabled = data.next === null;
+            prevBtnTop.disabled = data.previous === null;
+            nextBtnTop.disabled = data.next === null;
 
-                currentPage = page;
-
-                // ⚠️ Nécessaire pour garder les events actifs après refresh
-                attachClassButtons();
-            })
-            .catch(err => console.error("Erreur API:", err));
-    }
+            currentPage = page;
+        })
+        .catch(err => console.error("Erreur API:", err));
+}
 
     //-----------------------------------
     // 📌 NAVIGATION PAR CLASSE
@@ -172,9 +180,10 @@
     prevBtnTop.addEventListener("click", goPrev);
     nextBtnTop.addEventListener("click", goNext);
 
-    // démarrage
+    // démarrage 1x
     loadPage(1);
     attachClassButtons();
+
 
 });
 </script>

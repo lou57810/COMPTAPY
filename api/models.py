@@ -143,13 +143,6 @@ class CompteComptable(models.Model):
         unique_together = ("numero", "entreprise") # Les numéros du PGC sont uniques mais à chaques entreprises)
         ordering = ["numero"]
         # D'ou, lever la contrainte d'unicité sur numero et la remplacer par une contrainte d'unicité composite (numero, entreprise)
-    """
-    def save(self, *args, **kwargs):
-        if not self.libelle or self.libelle == "N/A":
-            self.libelle = self.nom  # recopie le nom du compte
-        super().save(*args, **kwargs)
-    """
-
 
     def __str__(self):
         return f"{self.numero} - {self.nom} ({self.entreprise.nom})"
@@ -173,11 +166,30 @@ class Journal(models.Model):
     libelle = models.CharField(max_length=255)
     type = models.CharField(max_length=100, choices=JOURNAL_TYPES)
 
+    # sens débit/crédit
+    sens = models.CharField(
+        max_length=20,
+        choices=[
+            ("achats", "Achats"),
+            ("ventes", "Ventes"),
+            ("banque", "Banque"),
+            ("caisse", "Caisse"),
+            ("od", "Opérations diverses"),
+        ],
+        default="od",
+    )
+
+    compte_tva = models.ForeignKey(CompteComptable, on_delete=models.PROTECT, related_name="journal_tva", blank=True, null=True)
+    compte_ventilation = models.ForeignKey(CompteComptable, on_delete=models.PROTECT,
+                                           related_name="journal_ventilation", blank=True, null=True)
+    dernier_numero_piece = models.IntegerField(default=0)
+
     class Meta:
         unique_together = ('entreprise', 'type')
 
     def __str__(self):
         return f"{self.entreprise} – {self.libelle} - {self.type} - {self.code}"
+
 
 class EcritureJournal(models.Model):
     date = models.DateField()

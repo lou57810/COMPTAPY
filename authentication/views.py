@@ -76,8 +76,8 @@ def signup_owner(request):
 
 @login_required
 def creer_gerant(request):
-    entreprise_name = Entreprise.objects.filter(owner=request.user).first()
-    print('entreprise_manager_name', entreprise_name)
+    # entreprise_name = Entreprise.objects.filter(owner=request.user).first()
+    # print('entreprise_manager_name', entreprise_name)
     if request.method == "POST":
         form = AddUserForm(request.POST)
         if form.is_valid():
@@ -96,7 +96,10 @@ def creer_gerant(request):
                     gerant=gerant,
                     **data
                 )
-                print("ENTREPRISE", entreprise)
+                if entreprise:
+                    print("ENTREPRISE", entreprise)
+                else:
+                    print("No_entreprise")
                 # 4️⃣ import PGC
                 importer_pgc_pour_entreprise(entreprise)
 

@@ -1,33 +1,44 @@
-{% extends 'base_dossier.html' %}
+{% extends 'base_gerant.html' %}
 {% load static %}
 {% block content %}
 <section class="py-5">
   <div class="container">
 
     <h1 class="mb-4">Plan Comptable Général</h1>
+    <div id="entreprise" data-id="{{ entreprise.id }}"></div>
+
     <div class="container">
 
       <h2>Dossier <span> </span>{{ entreprise_nom }}</h2>
-      <h2>Id: <span> </span>{{ entreprise_id }}</h2>
+<!--      <h2>Id: <span> </span>{{ entreprise_id }}</h2>-->
       <h2>Id: <span> </span>{{ entreprise.id }}</h2>
     </div>
-    <!-- Navigation par classes -->
-    <div>
-      <strong>Classes :</strong>
-      {% for c in "1234567" %}
-        <a href="?classe={{ c }}" class="btn btn-outline-primary btn-sm">{{ c }}</a>
-      {% endfor %}
-    </div>
 
-    <!-- BOUTONS EN HAUT -->
-    <div class="d-flex justify-content-between mb-2">
-      <button id="prev-btn-top" class="btn btn-primary">
-        ◀️ Précédent
-      </button>
-      <button id="next-btn-top" class="btn btn-primary">
-        Suivant ▶️
-      </button>
-    </div>
+<div class="d-flex justify-content-between mb-2">
+  <div class="pagination">
+    <span class="step-links">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if classe %}&classe={{ classe }}{% endif %}"
+            class="btn btn-primary {% if not page_obj.has_previous %}disabled{% endif %}">
+            ◀️ Précédent
+        </a>
+      {% endif %}
+    </span>
+
+      <span class="current">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+      </span>
+    <span class="step-right">
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if classe %}&classe={{ classe }}{% endif %}"
+            class="btn btn-primary {% if not page_obj.has_next %}disabled{% endif %}">
+            Suivant ▶️
+        </a>
+      {% endif %}
+      </span>
+  </div>
+</div>
+
       <!-- NAVIGATION RAPIDE -->
       <div class="d-flex gap-2 my-3">
           <!-- Classes comptables -->
@@ -42,27 +53,65 @@
               <button class="btn btn-outline-primary btn-sm jump-class" data-class="7">7</button>
             </div>
       </div>
-        <div class="d-flex gap-2 mb-2">
-        <div id="class-buttons" class="btn-group" role="group" aria-label="Classes"></div>
-        <div id="alpha-buttons" class="btn-group ms-3" role="group" aria-label="Alphabet"></div>
-      </div>
+
+
     <!-----------------TABLE---------------------->
-    <table class="table" id="pgc-table" data-entreprise-id="{{ entreprise_id }}">
-      <thead>
+    <div class="row">
+    <table class="table table-bordered mt-3"  data-toggle="table" >
+        <thead>
+            <tr>
+                <th>Numéro</th>
+                <th>Nom</th>
+<!--                <th>Clients/Fournisseurs</th>-->
+                <th>Type</th>
+                <th>Origine</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for e in comptes %}
         <tr>
-          <th>Numéro</th>
-          <th>Libellé</th>
-          <th>Type</th>
-          <th>Origine</th>
-          <th>Action</th>
+          <td>{{ e.numero }}</td>
+<!--          <td>{\{ e.libelle }}</td>-->
+          <td>{{ e.nom }}</td>
+          <td>{{ e.type_compte }}</td>
+          <td>{{ e.origine }}</td>
+          <td><Button type="button" class="btn btn-outline-primary">
+            <a href="{% url 'update-compte' entreprise.id e.id %}">Modifier</a>
+            </Button>
+          </td>
         </tr>
-      </thead>
-      <tbody>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
-      </tbody>
-    </table>
+<div class="d-flex justify-content-between mb-2">
+  <div class="pagination">
+    <span class="step-links">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if classe %}&classe={{ classe }}{% endif %}"
+            class="btn btn-primary {% if not page_obj.has_previous %}disabled{% endif %}">
+            ◀️ Précédent
+        </a>
+      {% endif %}
+    </span>
 
-    <!-- BOUTONS EN BAS -->
+      <span class="current">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+      </span>
+    <span class="step-right">
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if classe %}&classe={{ classe }}{% endif %}"
+            class="btn btn-primary {% if not page_obj.has_next %}disabled{% endif %}">
+            Suivant ▶️
+        </a>
+      {% endif %}
+      </span>
+  </div>
+</div>
+
+<!--
     <div class="d-flex justify-content-between mt-2">
       <button id="prev-btn" class="btn btn-primary">
         ◀️ Précédent
@@ -71,124 +120,20 @@
         Suivant ▶️
       </button>
     </div>
-
-
+    -->
 
   </div>
 </section>
-
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-
-    let currentPage = 1;
-    const pageSize = 100;
-    const entrepriseId = document.querySelector("#pgc-table")
-                                 .dataset.entrepriseId;
-                                 console.log('entrepriseId:', entrepriseId);
-
-    const apiUrl = `frontend/pgc_entreprise/?entreprise_id=${entrepriseId}`;
-
-    console.log('apiUrl:', apiUrl)
-
-    const tbody = document.querySelector("#pgc-table tbody");
-    const prevBtn = document.getElementById("prev-btn");
-    const nextBtn = document.getElementById("next-btn");
-    const prevBtnTop = document.getElementById("prev-btn-top");
-    const nextBtnTop = document.getElementById("next-btn-top");
-
-    // 🔥 Charge une page de comptes
-    function loadPage(page) {
-    fetch(`api/comptes/?entreprise_id=${entrepriseId}&page=${page}&page_size=${pageSize}`)
-        .then(r => r.json())
-        .then(data => {
-            tbody.innerHTML = "";
-
-            data.results.forEach(compte => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${compte.numero}</td>
-                    <td>${compte.libelle}</td>
-                    <td>${compte.type_compte}</td>
-                    <td>${compte.origine}</td>
-                    <td>
-                        <a href="/api/modifier_compte/${entrepriseId}/${compte.id}/">Modifier</a>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-
-            prevBtn.disabled = data.previous === null;
-            nextBtn.disabled = data.next === null;
-            prevBtnTop.disabled = data.previous === null;
-            nextBtnTop.disabled = data.next === null;
-
-            currentPage = page;
-        })
-        .catch(err => console.error("Erreur API:", err));
-}
-
-    //-----------------------------------
-    // 📌 NAVIGATION PAR CLASSE
-    //-----------------------------------
-
-
-
-    function attachClassButtons() {
-        document.querySelectorAll(".jump-class").forEach(btn => {
-            btn.onclick = () => {
-
-                const targetClass = btn.dataset.class;
-                console.log('clik:', targetClass);
-
-                // Va à la première page
-                loadPage(1);
-
-                // Après chargement de la page, on filtre dans la table
-                setTimeout(() => {
-                    filterByClass(targetClass);
-                }, 300);
-            };
-        });
-    }
-
-
-
-    function filterByClass(classDigit) {
-        const rows = tbody.querySelectorAll("tr");
-        console.log('rows:', rows)
-        rows.forEach(row => {
-            const numero = row.children[0].innerText.trim();
-            console.log('numero:')
-            const firstDigit = numero.replace(/\D/g, '').charAt(0);  // extrait le premier chiffre réel
-            console.log('firstDigit:', firstDigit)
-            row.style.display = (firstDigit === classDigit) ? "" : "none";
-        });
-    }
-
-    //-----------------------------------
-
-    function goPrev() {
-        if (currentPage > 1) loadPage(currentPage - 1);
-    }
-
-    function goNext() {
-        loadPage(currentPage + 1);
-    }
-
-    prevBtn.addEventListener("click", goPrev);
-    nextBtn.addEventListener("click", goNext);
-    prevBtnTop.addEventListener("click", goPrev);
-    nextBtnTop.addEventListener("click", goNext);
-
-    // démarrage 1x
-    loadPage(1);
-    attachClassButtons();
-
-
+<script>
+document.querySelectorAll(".jump-class").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const classe = btn.dataset.class;
+    const url = new URL(window.location);
+    url.searchParams.set("classe", classe);
+    url.searchParams.delete("page"); // reset pagination
+    window.location.href = url.toString();
+  });
 });
 </script>
 
-{% endblock %}
-
-
-
+{% endblock content %}
