@@ -5,9 +5,9 @@
 
 <input type="hidden" id="entreprise_id" value="{{ entreprise.id }}">
 <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
-<input type="hidden" id="journal_type" value="{{ type_journal }}">
+<!--<input type="hidden" id="journal_type" value="{{ type_journal }}">-->
+<input type="hidden" id="journal_type_hidden" value="{{ type_journal }}">
 <input type="hidden" id="journal_url" value="{% url 'journal-ecritures' entreprise.id %}">
-
 
 <!--<div id="entreprise" data-id="{\{ entreprise.id }}"></div>-->
 
@@ -16,7 +16,10 @@
       <h3>Journal : <span> </span>{{ entreprise }}<span>    </span><span>Id: </span>{{ entreprise.id }}</h3>
       <form method="get" class="mb-4">
         <label for="journal">Choisir un journal :</label>
-        <select name="type" id="journal" onchange="this.form.submit()">
+<!--        <select name="type" id="journal" onchange="this.form.submit()">-->
+        <select name="type" id="journal_type" onchange="this.form.submit()">
+
+
 <!--            <option value="type" {% if type_journal == 'type' %}selected{% endif %}>Journal Type</option>-->
             <option value="" disabled {% if not type_journal %}selected{% endif %}>Choisir un journal</option>
             <option value="achats" {% if type_journal == 'achats' %}selected{% endif %}>Journal d'achats</option>
@@ -38,8 +41,13 @@
       {% if type_journal %}  <!-- Pas d'affichage sur la page d'accueil journal -->
   <h1>Journal {{ type_journal }}</h1>
 
-        <div id="hot"></div>
-        <div id="journal_display"></div>
+<!--        <div id="hot"></div>-->
+    <div id="journal-table"></div>
+    <div id="journal-totals"></div>
+
+
+
+<!--        <div id="journal_display"></div>-->
           <button type="button" id="validerEcritures"
             class="btn btn-success mt-3" data-url-validation="{% url 'valider-journal' type_journal %}?entreprise_id={{ entreprise.id }}">Valider les écritures
           </button>
@@ -52,7 +60,12 @@
   </div>
 </section>
 
+<script>
+    const entrepriseId = {{ entreprise.id }};
+    const journalType = "{{ journal.type }}";
+</script>
 
-<script type="module" src="{% static 'js/journal.js' %}"></script>
+<!--<script type="module" src="{% static 'js/journal.js' %}"></script>-->
+<script type="module" src="{% static 'js/journal/main.js' %}"></script>
 {% endblock %}
 

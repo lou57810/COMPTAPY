@@ -4,6 +4,9 @@ let hot = null;
 let hotTotals = null;
 let internalChange = false;
 let baseRowsCount = 0;  // Nombre de lignes déjà en base (lecture seule)
+// const journalType = document.getElementById("journal_type").value;
+const journalType = document.getElementById("journal_type")?.value;
+
 
 const entrepriseId = document.getElementById("entreprise_id")?.value;
 // const csrfToken = document.getElementById("csrf_token")?.value;
@@ -16,8 +19,8 @@ function getCookie(name) {
 
 const csrfToken = getCookie('csrftoken');
 
-console.log("CSRFToken:", csrfToken);
-console.log("entrepriseId:", entrepriseId);
+// console.log("CSRFToken:", csrfToken);
+// console.log("entrepriseId:", entrepriseId);
 
 if (!entrepriseId) {
   console.error("❌ entrepriseId manquant");
@@ -94,7 +97,7 @@ function initHandsontable(container, config) {
     columns: [
       { type: "date", dateFormat: "DD/MM/YYYY" }, // 0 - Date
       { type: "text" }, // 1 - Compte
-      { type: "text", readOnly: true }, // 2 - Nom
+      { type: "text",}, // 2 - Nom
       { type: "text" }, // 3 - N° Pièce
       { type: "text" }, // 4 - Libellé
       {
@@ -149,9 +152,9 @@ function initHandsontable(container, config) {
         cellProperties.readOnly = true;
       }
       // Colonne "Nom" toujours readOnly
-      if (col === 2) {
-        cellProperties.readOnly = true;
-      }
+      // if (col === 2) {
+        // cellProperties.readOnly = true;
+      // }
       return cellProperties;
     },
   });
@@ -162,7 +165,7 @@ function initHandsontable(container, config) {
   const journalUrl = document.getElementById("journal_url")?.value;
 
   console.log("journalUrl:", journalUrl);
-  console.log("journalType:", journalType);
+  console.log("JOURNAL_TYPE:", journalType);
 
   if (journalType && journalUrl) {
     internalChange = true; // Bloquer les hooks pendant le chargement
@@ -205,8 +208,94 @@ function initHandsontable(container, config) {
     // Ignorer débit / crédit dans ce hook
     const colonnesTTC = ["8", "9"];
     if (colonnesTTC.includes(String(prop))) return;
-
+    // ===================== COLONNE 1 : Numéro de compte =====================
     // Auto-complétion du nom du compte (colonne 1)
+    if (String(prop) === "1" && newValue && newValue !== oldValue) {
+
+    // Si l'utilisateur tape un NOM (ex: "Dupont")
+    if (isNaN(newValue)) {
+        console.log('auto_create started:')
+        fetch(`/api/comptes/${entrepriseId}/auto-create/`, {
+
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                nom: newValue,
+                journal_type: journalType
+            })
+        })
+
+        .then(r => r.json())
+        .then(created => {
+            internalChange = true;
+            hotInstance.setDataAtCell(row, 1, created.numero); // numéro généré
+            hotInstance.setDataAtCell(row, 2, created.nom);    // nom du tiers
+            internalChange = false;
+        });
+
+        return;
+    }
+
+    // Sinon → l'utilisateur a tapé un NUMÉRO
+    fetch(`/api/comptes/${entrepriseId}/numero/?numero=${newValue}`)
+        .then(r => r.json())
+        .then(data => {
+
+            if (data.nom) {
+                // Le compte existe
+                internalChange = true;
+                hotInstance.setDataAtCell(row, 2, data.nom);
+                internalChange = false;
+            } else {
+                // Le compte n'existe pas → création automatique
+                return fetch(`/api/comptes/${entrepriseId}/auto-create/`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        numero: newValue,
+                        journal_type: journalType
+                    })
+                })
+                .then(r => r.json())
+                .then(created => {
+                    internalChange = true;
+                    hotInstance.setDataAtCell(row, 1, created.numero);
+                    hotInstance.setDataAtCell(row, 2, created.nom);
+                    internalChange = false;
+                });
+            }
+        });
+      return;
+    }
+    // ===================== COLONNE 2 =====================
+    if (String(prop) === "2" && newValue && newValue !== oldValue) {
+
+        const numeroActuel = hotInstance.getDataAtCell(row, 1);
+
+        // Cas : l'utilisateur tape un NOM alors que le numéro est vide
+        if (!numeroActuel) {
+
+            fetch(`/api/comptes/${entrepriseId}/auto-create/`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    nom: newValue,
+                    journal_type: journalType
+                })
+            })
+            .then(r => r.json())
+            .then(created => {
+                internalChange = true;
+                hotInstance.setDataAtCell(row, 1, created.numero); // numéro généré
+                hotInstance.setDataAtCell(row, 2, created.nom);    // nom normalisé
+                internalChange = false;
+            });
+
+            return;
+        }
+    }
+
+    /*
     if (String(prop) === "1" && newValue !== oldValue) {
       internalChange = true;
       fetch(
@@ -230,7 +319,7 @@ function initHandsontable(container, config) {
         });
       return;
     }
-
+    */
     // Récupération des valeurs nécessaires pour calculer le TTC
     const date = hotInstance.getDataAtCell(row, 0);
     const numero = hotInstance.getDataAtCell(row, 1);
@@ -311,7 +400,6 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   // ==================== Validation des écritures ====================
-
   const btn = document.getElementById("validerEcritures");
   console.log("btn:", btn);
 

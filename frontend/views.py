@@ -22,8 +22,6 @@ from django.db.models import Q
 
 from api import forms
 from api.forms import CompteForm
-
-
 # from api.views import get_compte_by_numero
 # from django.views.decorators.csrf import csrf_exempt
 import json
@@ -33,41 +31,9 @@ import zipfile
 from django.utils.text import slugify
 from api.utils import create_user_and_entreprise, get_owner, get_entreprise_from_gerant
 
-
-from utils.session_utils import get_entreprise_active
-
-
 User = get_user_model()
 
-"""
-@login_required
-@role_required(["OWNER", "GERANT"])
-def afficher_modifier_dossier(request, entreprise_id):
-    # 'owner=request.user' : empêche un utilisateur connecté d’accéder à une autre entreprise juste en modifiant l’URL
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    print('entreprise:', entreprise)
-    if not entreprise:
-        return redirect("setup")
-
-    if request.method == "POST":
-        form = forms.EntrepriseForm(request.POST, instance=entreprise)
-        # form = forms.FolderForm(request.POST, instance=entreprise)
-        if form.is_valid():
-            form.save()
-            # return redirect("afficher-statuts", entreprise_id=entreprise.id)  # refresh
-            return redirect("afficher-statuts", entreprise_id=entreprise_id)  # refresh
-    else:
-        form = forms.EntrepriseForm(instance=entreprise)
-        # form = forms.FolderForm(instance=entreprise)
-
-    return render(request, "frontend/afficher_modifier_dossier.html", {"form": form, "entreprise": entreprise})
-"""
-
 # =============== Accueil =========================
-
-def start_app(request):
-    return render(request, "frontend/start_app.html")
-
 
 def accueil(request):
     user = request.user
@@ -166,7 +132,6 @@ def accueil_gerant(request):
 
 
 def pgc_entreprise(request, entreprise_id):
-    # entreprise = Entreprise.objects.get(id=entreprise_id)
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
 
     classe = request.GET.get("classe")  # ex: "4"
@@ -397,7 +362,6 @@ def valider_journal(request, type_journal):
 
     # Traitement des lignes
     for ligne in lignes:
-
         # Vérification des champs obligatoires
         required_fields = ["date", "numero", "numero_piece", "libelle", "pu_ht", "quantite", "taux"]
         for field in required_fields:
@@ -417,10 +381,27 @@ def valider_journal(request, type_journal):
                 entreprise=entreprise
             )
         except CompteComptable.DoesNotExist:
-            return JsonResponse(
-                {"error": f"Compte {ligne['numero']} introuvable pour cette entreprise"},
-                status=400
-            )
+
+            # Création automatique d’un compte tiers selon le journal
+            if journal.type == "achats":
+                compte = CompteComptable.objects.create(
+                    entreprise=entreprise,
+                    nom=f"Fournisseur {ligne['numero']}",
+                    is_fournisseur=True
+                )
+
+            elif journal.type == "ventes":
+                compte = CompteComptable.objects.create(
+                    entreprise=entreprise,
+                    nom=f"Client {ligne['numero']}",
+                    is_client=True
+                )
+
+            else:
+                return JsonResponse(
+                    {"error": "Impossible de créer automatiquement un compte pour ce type de journal."},
+                    status=400
+                )
 
         # Calculs
 
@@ -509,65 +490,41 @@ def valider_journal(request, type_journal):
 
         return JsonResponse({"data": data})
 
-        """
-        ecritures = EcritureJournal.objects.filter(journal=journal).order_by("date", "id")
-        print("POST =", request.POST)
-        data = []
-        for e in ecritures:
-            data.append([
-                e.date.strftime("%d/%m/%Y"),
-                e.compte.numero,
-                e.compte.nom,
-                e.numero_piece,
-                e.libelle,
-                float(e.pu_ht),
-                float(e.quantite),
-                float(e.taux),
-                float(e.debit),
-                float(e.credit),
-            ])
 
-        return JsonResponse({"data": data})
-        """
 # ========================== Comptes ===========================================
 
 @login_required
 def create_compte(request, entreprise_id):
     entreprise = Entreprise.objects.get(id=entreprise_id)
-    entreprise_nom = entreprise.nom
-    print('entreprise, e.nom:', entreprise, entreprise_nom)
-
-
-    # Sinon, la rendre propriétaire (OWNER)
-    # if not entreprise:
-        # entreprise = Entreprise.objects.filter(owner=request.user).first()
 
     if request.method == 'POST':
         compte_form = CompteForm(request.POST)
         if compte_form.is_valid():
             compte = compte_form.save(commit=False)
-            compte.entreprise = entreprise        # ✅ Lier explicitement
+            compte.entreprise = entreprise
             compte.origine = 'user'
-            # libelle = compte.nom
             compte.libelle = compte.nom
-            # ✅ Marquer comme créé par utilisateur
-            print('data_valid:', compte.origine, compte.nom, compte.entreprise, compte.libelle)
+
+            # Si c’est un compte tiers et que le numéro est vide → génération automatique
+            if (compte.is_client or compte.is_fournisseur) and not compte.numero:
+                # La génération se fera automatiquement dans CompteComptable.save()
+                pass
+
             compte.save()
             messages.success(request, 'Le compte a été créé avec succès !')
             return redirect('create-compte', entreprise_id=entreprise_id)
+
     else:
         compte_form = CompteForm()
 
     return render(request, 'frontend/create_compte.html', {
         'compte_form': compte_form,
         'entreprise': entreprise,
-        'entreprise_nom': entreprise_nom,
-        'nom': entreprise.nom,
+        'entreprise_nom': entreprise.nom,
     })
 
 
-def liste_compte(request):
-    return render(request, 'frontend/api_pgc.html')
+
 
 
 def display_compte(request, entreprise_id):
@@ -652,33 +609,6 @@ def afficher_compte(request, entreprise_id):
         nom, lignes = "", []
     return render(request, 'frontend/afficher_compte.html', {'entreprise_id': entreprise_id, 'lignes': lignes, 'numero': numero, 'nom': nom})
 
-
-"""
-
-def update_compte(request, entreprise_id, compte_id):
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
-
-    if request.method == "POST":
-        form = CompteForm(request.POST, instance=compte)
-        print("POST reçu")  # pour vérifier que tu arrives là
-        print(form.errors)  # <-- très important
-        if form.is_valid():
-            form.save()
-            return redirect('pgc-entreprise', entreprise_id=entreprise_id)
-
-    else:
-        form = CompteForm(instance=compte)
-
-    return render(request, "frontend/update_compte_back.html", {
-        "entreprise": entreprise,
-        "compte": compte,
-        "form": form,
-        "compte_id": compte_id,
-        "entreprise_id": entreprise_id,
-    })
-
-"""
 
 def ecritures_par_compte(numero):
     ecritures = EcritureJournal.objects.filter(compte=numero).values(

@@ -74,6 +74,7 @@ def signup_owner(request):
     return render(request, "authentication/owner_signup.html", {"form": form})
 
 
+# Création entreprise et son gérant
 @login_required
 def creer_gerant(request):
     # entreprise_name = Entreprise.objects.filter(owner=request.user).first()

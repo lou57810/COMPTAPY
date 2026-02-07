@@ -16,7 +16,6 @@
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
-<!--                {/{ form.non_field_errors }}-->
 
               <h4>Informations gérant</h4>
               <div class="mb-3">
@@ -25,8 +24,7 @@
               <!-- Email -->
               <div class="mb-3">
                 {{ form.email.label_tag }} {{ form.email }}
-    <!--        {\{ form.password1.label_tag }} {{ form.password1 }}-->
-    <!--        {\{ form.password2.label_tag }} {{ form.password2 }}-->
+
               </div>
               <!-- Password -->
               <div class="container mt-4">

@@ -6,6 +6,7 @@ from rest_framework import status
 from django.contrib.auth.decorators import login_required
 from authentication.permissions import role_required
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 from authentication.forms import SignupForm
 from .utils import create_user_and_entreprise
 from django.shortcuts import render, redirect, get_object_or_404
@@ -27,18 +28,6 @@ import json
 from . import forms
 
 
-"""
-class CreateEntrepriseAPIView(generics.CreateAPIView):
-    queryset = Entreprise.objects.all()
-    serializer_class = EntrepriseSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-    def perform_create(self, serializer):
-        # L’entreprise est liée à l’utilisateur connecté
-        serializer.save(owner=self.request.user)
-"""
-
 @login_required
 def liste_entreprises(request):
     # entreprise_name = Entreprise.objects.filter(owner=request.user).first()
@@ -51,87 +40,40 @@ def liste_entreprises(request):
                    "entreprise_nom": entreprise_nom
                    })
 
-"""
-@login_required
-def creer_dossier_gerant(request, gerant_id):
-    print('gerant_id:', gerant_id)
-    gerant = get_object_or_404(User, id=gerant_id)
+def liste_comptes(request):
+    return render(request, 'api/api_pgc.html')
 
-    if request.user.role != "OWNER":
-        return HttpResponseForbidden("Permission refusée")
 
-    if request.method == "POST":
-        form = FolderForm(request.POST)
-        print("DEBUG - folder form errors:", form.errors)  # <--- utile pour debug
-        if form.is_valid():
-            entreprise = form.save(commit=False)
-            # entreprise.created_by = gerant  # liaison entreprise → gérant
-            # Lier la bonne relation User <-> Entreprise selon ce qui existe dans le modèle
-            if hasattr(entreprise, "gerant"):
-                entreprise.gerant = gerant
-            elif hasattr(entreprise, "created_by"):
-                entreprise.created_by = gerant
-            else:
-                # Par défaut, on rattache le owner (le comptable) ; si tu veux rattacher le gérant,
-                # adapte selon ton modèle (ou ajoute le champ gerant dans le modèle Entreprise).
-                entreprise.owner = request.user
-            entreprise.save()
-            importer_pgc_pour_entreprise(entreprise)
-            # return redirect("dashboard")
-            return redirect("accueil-manager") # C'est le propriétaire manager qui créée les dossiers et leurs gérants.
-    else:
-        form = FolderForm()
+@require_POST
+def auto_create_compte(request, entreprise_id):
+    entreprise = Entreprise.objects.get(id=entreprise_id)
+    data = json.loads(request.body)
 
-    return render(request, "api/ajouter_dossier.html", {
-        "form": form,
-        "gerant": gerant,
-        "gerant_id": gerant_id
+    numero_saisi = data.get("numero")
+    nom_saisi = data.get("nom")
+    type_journal = data.get("journal_type")
+
+    # Déterminer client/fournisseur
+    if type_journal == "achats":
+        compte = CompteComptable.objects.create(
+            entreprise=entreprise,
+            nom=nom_saisi or f"Fournisseur {numero_saisi}",
+            is_fournisseur=True
+        )
+
+    elif type_journal == "ventes":
+        compte = CompteComptable.objects.create(
+            entreprise=entreprise,
+            nom=nom_saisi or f"Client {numero_saisi}",
+            is_client=True
+        )
+
+    return JsonResponse({
+        "numero": compte.numero,
+        "nom": compte.nom
     })
-"""
-"""
-@login_required
-def creer_dossier_owner(request, user_id):
-    print('user_id:', user_id)
-    gerant = get_object_or_404(User, id=user_id)
-
-    if request.user.role != "OWNER":
-        return HttpResponseForbidden("Permission refusée")
-
-    if request.method == "POST":
-        form = FolderForm(request.POST)
-        print("DEBUG - folder form errors:", form.errors)  # <--- utile pour debug
-        if form.is_valid():
-            entreprise = form.save(commit=False)
-            # entreprise.created_by = gerant  # liaison entreprise → gérant
-            # Lier la bonne relation User <-> Entreprise selon ce qui existe dans le modèle
-            if hasattr(entreprise, "gerant"):
-                entreprise.gerant = gerant
-            elif hasattr(entreprise, "created_by"):
-                entreprise.created_by = gerant
-            else:
-                # Par défaut, on rattache le owner (le comptable) ; si tu veux rattacher le gérant,
-                # adapte selon ton modèle (ou ajoute le champ gerant dans le modèle Entreprise).
-                entreprise.owner = request.user
-            entreprise.save()
-            importer_pgc_pour_entreprise(entreprise)
-            # return redirect("dashboard")
-            return redirect("accueil-manager")
-    else:
-        form = FolderForm()
-
-    return render(request, "api/ajouter_dossier.html", {
-        "form": form,
-        "gerant": gerant,
-        "gerant_id": user_id
-    })
-"""
 
 
-
-"""
-def liste_compte(request):
-    return render(request, 'api/api_pgc.html', )
-"""
 def update_compte(request, entreprise_id, compte_id):
     entreprise = get_object_or_404(Entreprise, id=entreprise_id)
     compte = get_object_or_404(
@@ -157,69 +99,7 @@ def update_compte(request, entreprise_id, compte_id):
 
 
 
-
-
-"""
-def update_compte(request, entreprise_id, compte_id):
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
-
-    if request.method == "POST":
-        form = CompteForm(request.POST, instance=compte)
-        print("POST reçu")  # pour vérifier que tu arrives là
-        print('form_errors:', form.errors)  # <-- très important
-        if form.is_valid():
-            form.save()
-            return redirect('pgc-entreprise', entreprise_id=entreprise_id)
-
-    else:
-        form = CompteForm(instance=compte)
-
-    return render(request, "api/update_compte_back.html", {
-        "entreprise": entreprise,
-        "compte": compte,
-        "form": form,
-        "compte_id": compte_id,
-        "entreprise_id": entreprise_id,
-    })
-
-
-def update_compte(request, entreprise_id):
-    entreprise = get_object_or_404(Entreprise, id=entreprise_id)
-    # compte = get_object_or_404(CompteComptable, id=compte_id, entreprise=entreprise)
-    compte = get_object_or_404(CompteComptable, entreprise=entreprise)
-    entreprise_nom = entreprise.nom
-    # compte_numero = compte.numero
-    # print('entreprise_nom:', entreprise_nom, compte_numero)
-
-
-    if request.method == "POST":
-        form = CompteForm(request.POST, instance=compte)
-        if form.is_valid():
-            compte_modifie = form.save(commit=False)
-
-            # 👉 Mise à jour du libellé uniquement pour les comptes user
-            if compte_modifie.origine == "user":
-                compte_modifie.libelle = compte_modifie.nom
-
-            compte_modifie.save()
-
-            return redirect('pgc-entreprise', entreprise_id=entreprise_id)
-
-    else:
-        form = CompteForm(instance=compte)
-
-    return render(request, "api/update_compte.html", {
-        "entreprise": entreprise,
-        "compte": compte,
-        "form": form,
-        # "compte_id": compte_id,
-        "entreprise_id": entreprise_id,
-        "entreprise_nom": entreprise_nom,
-    })
-"""
-
-
+# Affiche la liste des dossiers entreprises et modifiables avec des boutons
 @login_required
 @role_required(["OWNER"])
 def afficher_modifier_dossier(request, entreprise_id):
@@ -227,14 +107,6 @@ def afficher_modifier_dossier(request, entreprise_id):
 
     # Sinon, la rendre propriétaire (OWNER)
     if not entreprise:
-        # entreprise = Entreprise.objects.filter(owner=request.user).first()
-    # entreprise_nom = entreprise.nom
-    # print('entreprise_nom:', entreprise.nom)
-    # nom_gerant = entreprise.nom_gerant
-        # entreprise_nom = entreprise.nom
-        # print('entreprise_nom:', entreprise.nom)
-        # nom_gerant = entreprise.nom_gerant
-    # if not entreprise:
         return redirect("create-folder")
 
     if request.method == "POST":
@@ -272,41 +144,17 @@ def supprimer_entreprise(request, entreprise_id):
 
     # Vérifie si l'utilisateur connecté est bien le propriétaire
     print("Request_user_role", request.user.role, "entreprise_owner_email", entreprise.owner, "request_user", request.user)
-    # reponse requestuserrole = owner
-    # entrepriseowner = test@localhost
-    # request.user = ben@localhost
+
     if request.user.role == "OWNER": # and entreprise.owner == request.user:
         owner = entreprise.owner  # sauvegarde avant suppression
         entreprise.delete()
         messages.success(request, f"L'entreprise '{entreprise.nom}' a été supprimée.")
-        """
-        # Vérifie si c'était la dernière entreprise de ce propriétaire
-        if not Entreprise.objects.filter(owner=owner).exists():
-            owner.delete()  # supprime le compte propriétaire
-            messages.info(request, "Le compte propriétaire a été supprimé car il n'avait plus d'entreprises.")
-            return redirect("signup")  # retour vers l'écran d'inscription
-        else:
-        """
         return redirect("liste-entreprises")
 
     else:
         messages.error(request, "Action non autorisée.")
         return redirect("liste-entreprises")
 
-
-"""
-class CompteComptableViewSet(viewsets.ModelViewSet):
-    serializer_class = CompteComptableSerializer
-
-    # Tri numéro PGC en fonction des 3 premiers chiffres
-    def get_queryset(self):
-        return CompteComptable.objects.annotate(
-            numero_prefix=Substr('numero', 1, 3)
-        ).order_by('numero_prefix', 'numero')
-
-    def perform_create(self, serializer):
-        serializer.save(origine='user')
-"""
 
 class CompteComptableViewSet(viewsets.ModelViewSet):
     serializer_class = CompteComptableSerializer
@@ -369,6 +217,41 @@ def compte_par_numero(request, entreprise_id):
         "nom": compte.libelle,
     })
 
+
+
+@api_view(['GET'])
+def get_ecritures_par_compte(request):
+    numero = request.GET.get('numero')
+
+    if numero:
+        ecritures = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
+
+        data = [
+            {
+                'date': ecriture.date.strftime('%d/%m/%Y'),
+                'numero': ecriture.compte.numero,
+                'nom': ecriture.nom,
+                'numero_piece': ecriture.numero_piece,
+                'libelle': ecriture.libelle,
+                'debit': ecriture.debit,
+                'credit': ecriture.credit
+            }
+            for ecriture in ecritures
+        ]
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    return Response({'message': 'Numéro de compte manquant'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def ecritures_par_compte(request):
+    numero = request.GET.get('numero')
+    if numero:
+        ecritures = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
+        serializer = EcritureJournalSerializer(ecritures, many=True)
+        return Response(serializer.data)
+    return Response({'error': 'Numéro de compte requis'}, status=400)
 
 """
 def journal_ecritures(request, entreprise_id):
@@ -480,39 +363,6 @@ def enregistrer_ecritures(request):
     return Response({'message': 'Écritures enregistrées'}, status=status.HTTP_201_CREATED)
 
 """
-@api_view(['GET'])
-def get_ecritures_par_compte(request):
-    numero = request.GET.get('numero')
-
-    if numero:
-        ecritures = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
-
-        data = [
-            {
-                'date': ecriture.date.strftime('%d/%m/%Y'),
-                'numero': ecriture.compte.numero,
-                'nom': ecriture.nom,
-                'numero_piece': ecriture.numero_piece,
-                'libelle': ecriture.libelle,
-                'debit': ecriture.debit,
-                'credit': ecriture.credit
-            }
-            for ecriture in ecritures
-        ]
-
-        return Response(data, status=status.HTTP_200_OK)
-
-    return Response({'message': 'Numéro de compte manquant'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET'])
-def ecritures_par_compte(request):
-    numero = request.GET.get('numero')
-    if numero:
-        ecritures = EcritureJournal.objects.filter(compte__numero=numero).order_by('date')
-        serializer = EcritureJournalSerializer(ecritures, many=True)
-        return Response(serializer.data)
-    return Response({'error': 'Numéro de compte requis'}, status=400)
 
 
 

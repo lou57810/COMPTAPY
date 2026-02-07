@@ -14,7 +14,7 @@ urlpatterns = [
     path('login/', authentication.views.LoginPage.as_view(), name='login'),
     path('logout', logout_user, name='logout'),
     path('signup', signup_owner, name='signup'),                # Dossier manager
-    path('creer_gerant', creer_gerant, name='creer-gerant'),    # Dossier gérants
+    path('creer_gerant', creer_gerant, name='creer-gerant'),    # Dossier gérants et entreprise
     path('profile-photo/upload_profile_photo/', upload_profile_photo, name='upload_profile_photo')
 ]
 

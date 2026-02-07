@@ -4,6 +4,7 @@
     <div class="container">
     <h2>Créer un compte</h2>
     <h4>Entreprise: <span>{{ entreprise_nom }}</span></h4>
+      <p><em>Laissez le numéro vide pour générer automatiquement un compte 401xxx ou 411xxx.</em></p>
       <form method="post">
           {{ compte_form.as_p }}
           {% csrf_token %}

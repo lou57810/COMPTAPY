@@ -1,5 +1,9 @@
 from django.db import models
 from django.utils import timezone
+from django.db.models.functions import Cast
+from django.db.models import IntegerField
+
+
 
 """
 DEFAULT_JOURNAL_TYPES = [
@@ -138,11 +142,58 @@ class CompteComptable(models.Model):
         default='perso',
     )
     origine = models.CharField(max_length=20, choices=[('pgc', 'PCG'), ('user', 'Utilisateur')], default='pgc')
+    is_client = models.BooleanField(default=False)
+    is_fournisseur = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("numero", "entreprise") # Les numéros du PGC sont uniques mais à chaques entreprises)
         ordering = ["numero"]
         # D'ou, lever la contrainte d'unicité sur numero et la remplacer par une contrainte d'unicité composite (numero, entreprise)
+
+    def save(self, *args, **kwargs):
+
+        if self.is_fournisseur and not self.numero:
+            # On caste numero en entier pour un tri numérique
+            comptes = (
+                CompteComptable.objects.filter(
+                    entreprise=self.entreprise)
+                .annotate(numero_int=Cast("numero", IntegerField()))
+                .filter(numero_int__gte=401000, numero_int__lte=401999)
+                .order_by("numero_int")
+            )
+
+            dernier = comptes.last()
+
+            if dernier:
+                nouveau_num = str(dernier.numero_int + 1)
+            else:
+                nouveau_num = "401000"
+
+            self.numero = nouveau_num
+
+            super().save(*args, **kwargs)
+
+        # Génération automatique des comptes clients (411000 → 411999)
+        if self.is_client and not self.numero:
+
+            comptes = (
+                CompteComptable.objects.filter(
+                    entreprise=self.entreprise)
+                .annotate(numero_int=Cast("numero", IntegerField()))
+                .filter(numero_int__gte=411000, numero_int__lte=411999)
+                .order_by("numero_int")
+            )
+
+            dernier = comptes.last()
+
+            if dernier:
+                nouveau_num = str(dernier.numero_int + 1)
+            else:
+                nouveau_num = "411000"
+
+            self.numero = nouveau_num
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.numero} - {self.nom} ({self.entreprise.nom})"
